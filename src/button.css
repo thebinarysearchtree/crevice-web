@@ -1,0 +1,25 @@
+.btn, .btn-primary, .btn-danger, .btn-outline {
+  height: 32px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 2px;
+  padding-left: 20px;
+  padding-right: 20px;
+  cursor: pointer;
+}
+
+.btn {
+  background-color: #eee;
+}
+
+.btn-primary {
+  color: white;
+  background-color: #5555e2;
+  border: 1px solid #5555e2;
+}
+
+.btn-danger {
+  color: white;
+  background-color: #c14848;
+  border: 1px solid #c14848;
+}

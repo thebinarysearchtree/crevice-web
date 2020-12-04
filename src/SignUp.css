@@ -1,0 +1,36 @@
+.signup {
+  flex-direction: column;
+  width: 100%;
+  align-items: center;
+  padding-top: 30px;
+  color: #262626;
+}
+
+.signup form, .signup-question {
+  display: flex;
+  flex-direction: column;
+  width: 300px;
+  padding: 40px;
+  padding-top: 10px;
+  margin-bottom: 10px;
+}
+
+.signup-question {
+  padding-bottom: 10px;
+  align-items: center;
+}
+
+.signup form h1 {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.signup button {
+  margin-top: 30px;
+}
+
+.signup a {
+  color: #3897f0;
+  text-decoration: none;
+  margin-left: 5px;
+}
