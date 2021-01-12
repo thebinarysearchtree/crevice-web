@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import client from './client';
-import logo from './logo.svg';
+import client from '../client';
+import logo from '../logo.svg';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import { Link } from 'react-router-dom';

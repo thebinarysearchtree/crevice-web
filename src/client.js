@@ -4,7 +4,7 @@ let isLoggedIn = token != null;
 const getIsLoggedIn = () => isLoggedIn;
 
 const refreshToken = async () => {
-  const response = await fetch('/users/refreshtoken', {
+  const response = await fetch('/users/refreshToken', {
     body: JSON.stringify({ token }),
     headers: {
       'content-type': 'application/json'
@@ -80,7 +80,7 @@ const getData = async (url) => {
 };
 
 const checkEmailExists = async (email) => {
-  const response = await fetch('/users/checkemailexists', {
+  const response = await fetch('/users/checkEmailExists', {
     body: JSON.stringify({ email }),
     headers: {
       'content-type': 'application/json'
@@ -97,31 +97,18 @@ const checkEmailExists = async (email) => {
 };
 
 const signUp = async (user) => {
-  const response = await fetch('/users/create', {
+  const response = await fetch('/users/signUp', {
     body: JSON.stringify(user),
     headers: {
       'content-type': 'application/json'
     },
     method: 'POST'
   });
-  if (response.ok) {
-    const result = await response.json();
-    token = result.token;
-    localStorage.setItem('token', token);
-    isLoggedIn = true;
-    return true;
-  }
-  else if (response.status === 401) {
-    isLoggedIn = false;
-    return false;
-  }
-  else {
-    return false;
-  }
+  return response.ok;
 };
 
 const logIn = async (email, password) => {
-  const response = await fetch('/users/gettoken', {
+  const response = await fetch('/users/getToken', {
     body: JSON.stringify({ email, password }),
     headers: {
       'content-type': 'application/json'

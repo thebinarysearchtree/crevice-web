@@ -7,8 +7,9 @@ import {
 } from 'react-router-dom';
 import { ThemeProvider } from '@material-ui/core/styles';
 import theme from './theme';
-import SignUp from './SignUp';
-import Login from './Login';
+import SignUp from './user/SignUp';
+import Login from './user/Login';
+import Verify from './user/Verify';
 
 function App() {
   return (
@@ -23,6 +24,9 @@ function App() {
           </Route>
           <Route path="/login">
             <Login />
+          </Route>
+          <Route path="/verify">
+            <Verify />
           </Route>
         </Switch>
       </Router>

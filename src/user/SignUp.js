@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import client from './client';
-import logo from './logo.svg';
+import client from '../client';
+import logo from '../logo.svg';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import { Link } from 'react-router-dom';
@@ -8,9 +8,9 @@ import { useHistory } from 'react-router-dom';
 import useStyles from './styles';
 
 function SignUp() {
+  const [organisationName, setOrganisationName] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [organisationName, setOrganisationName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailIsValid, setEmailIsValid] = useState(true);
@@ -19,7 +19,7 @@ function SignUp() {
   const history = useHistory();
   const classes = useStyles();
 
-  const isValid = firstName && lastName && email && email.includes('@') && organisationName && password && password.length >= 6;
+  const isValid = organisationName && firstName && lastName && email && email.includes('@') && password && password.length >= 6;
   
   const handleEmailChange = (e) => {
     setEmail(e.target.value);
@@ -57,15 +57,14 @@ function SignUp() {
       return;
     }
     const result = await client.signUp({
+      organisationName,
       firstName,
       lastName,
       email,
-      username,
-      organisationName,
       password
     });
     if (result) {
-      history.push('/');
+      history.push('/verify');
     }
   };
 
@@ -79,6 +78,11 @@ function SignUp() {
         <h1 className={classes.heading}>Sign up</h1>
         <TextField
           className={classes.fc}
+          label="Company name"
+          value={organisationName}
+          onChange={(e) => setOrganisationName(e.target.value)} />
+        <TextField
+          className={classes.fc}
           label="First name"
           value={firstName}
           onChange={(e) => setFirstName(e.target.value)} />
@@ -87,11 +91,6 @@ function SignUp() {
           label="Last name"
           value={lastName}
           onChange={(e) => setLastName(e.target.value)} />
-        <TextField
-          className={classes.fc}
-          label="Company name"
-          value={organisationName}
-          onChange={(e) => setOrganisationName(e.target.value)} />
         <TextField
           className={classes.fc}
           type="email"
