@@ -11,13 +11,13 @@ const useStyles = makeStyles({
     paddingTop: '30px',
     color: '#262626'
   },
-  logo: {
-    height: '30px'
+  paper: {
+    marginBottom: '20px'
   },
   container: {
     display: 'flex',
     flexDirection: 'column',
-    width: '300px',
+    width: '370px',
     padding: '40px',
     paddingTop: '10px',
     marginBottom: '10px'
@@ -37,6 +37,13 @@ const useStyles = makeStyles({
     color: '#3897f0',
     marginLeft: '5px',
     textDecoration: 'none'
+  },
+  verify: {
+    paddingTop: '40px',
+    width: '400px',
+    flexDirection: 'column',
+    color: '#262626',
+    lineHeight: '1.5em',
   }
 });
 

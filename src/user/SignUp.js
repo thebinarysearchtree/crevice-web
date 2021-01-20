@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import client from '../client';
-import logo from '../logo.svg';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
+import Paper from '@material-ui/core/Paper';
 import { Link } from 'react-router-dom';
 import { useHistory } from 'react-router-dom';
 import useStyles from './styles';
@@ -70,60 +70,63 @@ function SignUp() {
 
   return (
     <div className={classes.signUp}>
-      <img className={classes.logo} src={logo} alt="Logo" />
-      <form
-        className={classes.container}
-        onSubmit={signUp}
-        noValidate>
-        <h1 className={classes.heading}>Sign up</h1>
-        <TextField
-          className={classes.fc}
-          label="Company name"
-          value={organisationName}
-          onChange={(e) => setOrganisationName(e.target.value)} />
-        <TextField
-          className={classes.fc}
-          label="First name"
-          value={firstName}
-          onChange={(e) => setFirstName(e.target.value)} />
-        <TextField
-          className={classes.fc}
-          label="Last name"
-          value={lastName}
-          onChange={(e) => setLastName(e.target.value)} />
-        <TextField
-          className={classes.fc}
-          type="email"
-          label="Email"
-          value={email}
-          onChange={handleEmailChange}
-          error={!emailIsValid}
-          helperText={emailIsValid ? '' : 'Please enter a valid email address'}
-          onBlur={handleEmailBlur} />
-        <TextField
-          className={classes.fc}
-          type="password"
-          label="Password"
-          value={password}
-          onChange={handlePasswordChange}
-          error={!passwordIsValid}
-          helperText={passwordIsValid ? '' : 'Password must contain at least 6 characters'}
-          onBlur={handlePasswordBlur} />
-        <Button
-          className={classes.button}
-          variant="contained"
-          color="primary"
-          type="submit"
-          disabled={!isValid}>Sign up</Button>
-      </form>
-      <div className={`${classes.container} ${classes.question}`}>
-        <p>
-          Have an account?
-          <Link
-            className={classes.link}
-            to="/login">Log in</Link>
-        </p>
-      </div>
+      <Paper className={classes.paper}>
+        <form
+          className={classes.container}
+          onSubmit={signUp}
+          noValidate>
+          <h1 className={classes.heading}>Sign up</h1>
+          <TextField
+            className={classes.fc}
+            label="Company name"
+            value={organisationName}
+            onChange={(e) => setOrganisationName(e.target.value)} />
+          <TextField
+            className={classes.fc}
+            label="First name"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)} />
+          <TextField
+            className={classes.fc}
+            label="Last name"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)} />
+          <TextField
+            className={classes.fc}
+            type="email"
+            label="Email"
+            value={email}
+            onChange={handleEmailChange}
+            error={!emailIsValid}
+            helperText={emailIsValid ? '' : 'Please enter a valid email address'}
+            onBlur={handleEmailBlur} />
+          <TextField
+            className={classes.fc}
+            type="password"
+            label="Password"
+            value={password}
+            onChange={handlePasswordChange}
+            error={!passwordIsValid}
+            helperText={passwordIsValid ? '' : 'Password must contain at least 6 characters'}
+            onBlur={handlePasswordBlur} />
+          <Button
+            className={classes.button}
+            variant="contained"
+            color="primary"
+            type="submit"
+            disabled={!isValid}>Sign up</Button>
+        </form>
+      </Paper>
+      <Paper>
+        <div className={`${classes.container} ${classes.question}`}>
+          <p>
+            Have an account?
+            <Link
+              className={classes.link}
+              to="/login">Log in</Link>
+          </p>
+        </div>
+      </Paper>
     </div>
   );
 }

@@ -1,5 +1,4 @@
 import React from 'react';
-import logo from '../logo.svg';
 import useStyles from './styles';
 
 function Verify() {
@@ -7,8 +6,13 @@ function Verify() {
 
   return (
     <div className={classes.signUp}>
-      A message has been sent to your email address with instructions
-      on how to continue the sign-up process.
+      <div className={classes.verify}>
+        <h1>Thanks</h1>
+        <p>
+          A message has been sent to your email address with instructions
+          on how to continue the sign-up process.
+        </p>
+      </div>
     </div>
   );
 }

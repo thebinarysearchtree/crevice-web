@@ -36,6 +36,7 @@ const postData = async (url, data) => {
       if (response.headers.get('content-type') === 'application/json; charset=utf-8') {
         return await response.json();
       }
+      return true;
     }
     else if (response.status === 401) {
       if (i === 0) {
