@@ -1,151 +1,141 @@
-let token = localStorage.getItem('token');
-let isLoggedIn = token != null;
+import React, { useContext, createContext, useState } from 'react';
 
-const getIsLoggedIn = () => isLoggedIn;
+function useProvideClient() {
+  const [user, setUser] = useState(localStorage.getItem('user'));
 
-const refreshToken = async () => {
-  const response = await fetch('/users/refreshToken', {
-    body: JSON.stringify({ token }),
-    headers: {
-      'content-type': 'application/json'
-    },
-    method: 'POST'
-  });
-  if (response.ok) {
-    const data = await response.json();
-    token = data.token;
-    localStorage.setItem('token', token);
-    return true;
-  }
-  else {
-    return false;
-  }
-};
-
-const postData = async (url, data) => {
-  for (let i = 0; i < 2; i++) {
-    const response = await fetch(url, {
-      body: JSON.stringify(data),
+  const refreshToken = async () => {
+    const response = await fetch('/users/refreshToken', {
+      body: JSON.stringify({ user.token }),
       headers: {
-        'Authorization': 'Bearer ' + token,
         'content-type': 'application/json'
       },
       method: 'POST'
-    }); 
+    });
     if (response.ok) {
-      if (response.headers.get('content-type') === 'application/json; charset=utf-8') {
+      const user = await response.json();
+      localStorage.setItem('user', user);
+      setUser(user);
+      return true;
+    }
+    else {
+      return false;
+    }
+  };
+
+  const postData = async (url, data) => {
+    const token = user ? user.token : '';
+    for (let i = 0; i < 2; i++) {
+      const response = await fetch(url, {
+        body: JSON.stringify(data),
+        headers: {
+          'Authorization': 'Bearer ' + user.token,
+          'content-type': 'application/json'
+        },
+        method: 'POST'
+      }); 
+      if (response.ok) {
+        if (response.headers.get('content-type') === 'application/json; charset=utf-8') {
+          return await response.json();
+        }
+        return true;
+      }
+      else if (response.status === 401) {
+        if (i === 0) {
+          await refreshToken();
+        }
+        else {
+          setUser(null);
+          return false;
+        }
+      }
+      else {
+        return false;
+      }
+    }
+  };
+
+  const getData = async (url) => {
+    const token = user ? user.token : '';
+    for (let i = 0; i < 2; i++) {
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'content-type': 'application/json'
+        },
+        method: 'GET'
+      });
+      if (response.ok) {
         return await response.json();
       }
+      else if (response.status === 401) {
+        if (i === 0) {
+          await refreshToken();
+        }
+        else {
+          setUser(null);
+          return false;
+        }
+      }
+      else {
+        return false;
+      }  
+    }
+  };
+
+  const logIn = async (email, password) => {
+    const response = await fetch('/users/getToken', {
+      body: JSON.stringify({ email, password }),
+      headers: {
+        'content-type': 'application/json'
+      },
+      method: 'POST'
+    });
+    if (response.ok) {
+      const user = await response.json();
+      localStorage.setItem('user', user);
+      setUser(user);
       return true;
     }
     else if (response.status === 401) {
-      if (i === 0) {
-        await refreshToken();
-      }
-      else {
-        isLoggedIn = false;
-        return false;
-      }
+      setUser(null);
+      return false;
     }
     else {
       return false;
     }
-  }
-};
+  };
+  
+  const signOut = () => {
+    localStorage.removeItem('user');
+    setUser(null);
+  };
 
-const getData = async (url) => {
-  for (let i = 0; i < 2; i++) {
-    const response = await fetch(url, {
-      headers: {
-        'Authorization': 'Bearer ' + token,
-        'content-type': 'application/json'
-      },
-      method: 'GET'
-    });
-    if (response.ok) {
-      return await response.json();
-    }
-    else if (response.status === 401) {
-      if (i === 0) {
-        await refreshToken();
-      }
-      else {
-        isLoggedIn = false;
-        return false;
-      }
-    }
-    else {
-      return false;
-    }  
-  }
-};
+  return {
+    user,
+    refreshToken,
+    postData,
+    getData,
+    logIn,
+    signOut
+  };
+}
 
-const checkEmailExists = async (email) => {
-  const response = await fetch('/users/checkEmailExists', {
-    body: JSON.stringify({ email }),
-    headers: {
-      'content-type': 'application/json'
-    },
-    method: 'GET'
-  });
-  if (response.ok) {
-    const result = await response.json();
-    return { exists: result.exists };
-  }
-  else {
-    return false;
-  }
-};
+const clientContext = createContext();
 
-const signUp = async (user) => {
-  const response = await fetch('/users/signUp', {
-    body: JSON.stringify(user),
-    headers: {
-      'content-type': 'application/json'
-    },
-    method: 'POST'
-  });
-  return response.ok;
-};
+const useClient = () => useContext(clientContext);
 
-const logIn = async (email, password) => {
-  const response = await fetch('/users/getToken', {
-    body: JSON.stringify({ email, password }),
-    headers: {
-      'content-type': 'application/json'
-    },
-    method: 'POST'
-  });
-  if (response.ok) {
-    const result = await response.json();
-    token = result.token;
-    localStorage.setItem('token', token);
-    isLoggedIn = true;
-    return true;
-  }
-  else if (response.status === 401) {
-    isLoggedIn = false;
-    return false;
-  }
-  else {
-    return false;
-  }
-};
+function ProvideClient({ children }) {
+  const client = useProvideClient();
+  return (
+    <clientContext.Provider value={client}>
+      {children}
+    </clientContext.Provider>
+  );
+}
 
-const signOut = () => {
-  token = null;
-  localStorage.removeItem('token');
-  isLoggedIn = false;
-};
-
-const client = { 
-  getIsLoggedIn,
-  postData,
-  getData,
-  checkEmailExists,
-  signUp,
-  logIn,
-  signOut
+const client = {
+  useClient,
+  ProvideClient
 };
 
 export default client;

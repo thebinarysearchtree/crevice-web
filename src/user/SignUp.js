@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import client from '../client';
+import { useClient } from '../client';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import Paper from '@material-ui/core/Paper';
@@ -18,6 +18,7 @@ function SignUp() {
 
   const history = useHistory();
   const classes = useStyles();
+  const client = useClient();
 
   const isValid = organisationName && firstName && lastName && email && email.includes('@') && password && password.length >= 6;
   
@@ -56,7 +57,7 @@ function SignUp() {
     if (!isValid) {
       return;
     }
-    const result = await client.signUp({
+    const result = await client.postData('/users/signUp', {
       organisationName,
       firstName,
       lastName,

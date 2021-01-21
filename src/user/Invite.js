@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import client from '../client';
+import { useClient } from '../client';
 import { useHistory, useParams } from 'react-router-dom';
 import useStyles from './styles';
 
@@ -8,6 +8,7 @@ function Invite() {
 
   const history = useHistory();
   const classes = useStyles();
+  const client = useClient();
 
   useEffect(() => {
     const verifyToken = async () => {
