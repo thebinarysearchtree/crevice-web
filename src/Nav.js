@@ -1,15 +1,50 @@
-import React from 'react';
+import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import { makeStyles } from '@material-ui/core/styles';
 import Drawer from '@material-ui/core/Drawer';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
+import IconButton from '@material-ui/core/IconButton';
+import InputBase from '@material-ui/core/InputBase';
+import MenuItem from '@material-ui/core/MenuItem';
+import Menu from '@material-ui/core/Menu';
 import List from '@material-ui/core/List';
 import Divider from '@material-ui/core/Divider';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
-import InboxIcon from '@material-ui/icons/MoveToInbox';
-import MailIcon from '@material-ui/icons/Mail';
+import SupervisorAccountIcon from '@material-ui/icons/SupervisorAccount';
+import RoomIcon from '@material-ui/icons/Room';
+import PersonIcon from '@material-ui/icons/Person';
+import LabelIcon from '@material-ui/icons/Label';
+import SearchIcon from '@material-ui/icons/Search';
+import AccountCircle from '@material-ui/icons/AccountCircle';
+import { useClient } from './client';
+import { Link as RouterLink } from 'react-router-dom';
+
+function ListItemLink(props) {
+  const { icon, primary, to } = props;
+
+  const renderLink = React.useMemo(
+    () => React.forwardRef((itemProps, ref) => <RouterLink to={to} ref={ref} {...itemProps} />),
+    [to],
+  );
+
+  return (
+    <li>
+      <ListItem button component={renderLink}>
+        {icon ? <ListItemIcon>{icon}</ListItemIcon> : null}
+        <ListItemText primary={primary} />
+      </ListItem>
+    </li>
+  );
+}
+
+ListItemLink.propTypes = {
+  icon: PropTypes.element,
+  primary: PropTypes.string.isRequired,
+  to: PropTypes.string.isRequired,
+};
 
 const drawerWidth = 240;
 
@@ -22,7 +57,38 @@ const useStyles = makeStyles((theme) => ({
     marginLeft: drawerWidth,
     backgroundColor: 'white',
     boxShadow: 'none',
-    borderBottom: '1px solid rgba(0, 0, 0, 0.12)'
+    borderBottom: `1px solid ${theme.palette.divider}`
+  },
+  search: {
+    position: 'relative',
+    borderRadius: theme.shape.borderRadius,
+    backgroundColor: theme.palette.grey[200],
+    marginRight: theme.spacing(2),
+    marginLeft: 0,
+    width: '100%',
+    [theme.breakpoints.up('sm')]: {
+      marginLeft: theme.spacing(3),
+      width: 'auto',
+    },
+  },
+  searchIcon: {
+    padding: theme.spacing(0, 2),
+    height: '100%',
+    position: 'absolute',
+    pointerEvents: 'none',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  inputInput: {
+    padding: theme.spacing(1, 1, 1, 0),
+    // vertical padding + font size from searchIcon
+    paddingLeft: `calc(1em + ${theme.spacing(4)}px)`,
+    transition: theme.transitions.create('width'),
+    width: '100%',
+    [theme.breakpoints.up('md')]: {
+      width: '20ch',
+    },
   },
   drawer: {
     width: drawerWidth,
@@ -37,15 +103,118 @@ const useStyles = makeStyles((theme) => ({
     backgroundColor: theme.palette.background.default,
     padding: theme.spacing(3),
   },
+  grow: {
+    flexGrow: 1
+  }
 }));
 
 function Nav(props) {
+  const [selectedItem, setSelectedItem] = useState('');
+  const [anchorEl, setAnchorEl] = React.useState(null);
+
   const classes = useStyles();
+  const client = useClient();
+
+  const isMenuOpen = Boolean(anchorEl);
+
+  const handleProfileMenuOpen = (e) => {
+    setAnchorEl(e.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const user = client.user;
+  const menuItemGroups = [];
+  if (true || user.isAdmin) {
+    menuItemGroups.push([
+      {
+        icon: <SupervisorAccountIcon />,
+        name: 'Roles',
+        url: '/roles'
+      },
+      {
+        icon: <RoomIcon />,
+        name: 'Areas',
+        url: '/areas'
+      },
+      {
+        icon: <PersonIcon />,
+        name: 'Users',
+        url: '/users'
+      },
+      {
+        icon: <LabelIcon />,
+        name: 'Tags',
+        url: '/tags'
+      }
+    ]);
+  }
+  const menuItems = menuItemGroups.map(group => {
+    const items = group.map(item => {
+      return (
+        <ListItemLink
+          to={item.url}
+          primary={item.name}
+          icon={item.icon}
+          key={item.name}
+          selected={selectedItem === item.name}
+          onClick={() => setSelectedItem(item.name)} />
+      );
+    });
+    const groupKey = group.map(i => i.name).join();
+    return (
+      <List key={groupKey}>{items}</List>
+    );
+  }).reduce((a, c) => {
+    a.push(c);
+    a.push(<Divider key={a.length + 1} />);
+    return a;
+  }, [<Divider key={1} />]);
+
+  const menuId = 'primary-search-account-menu';
+  const renderMenu = (
+    <Menu
+      anchorEl={anchorEl}
+      anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      id={menuId}
+      keepMounted
+      transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+      open={isMenuOpen}
+      onClose={handleMenuClose}>
+        <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
+        <MenuItem onClick={handleMenuClose}>My account</MenuItem>
+    </Menu>
+  );
 
   return (
     <div className={classes.root}>
       <AppBar position="fixed" className={classes.appBar}>
         <Toolbar>
+          <div className={classes.grow}></div>
+          <div className={classes.search}>
+              <div className={classes.searchIcon}>
+                <SearchIcon color="action" />
+              </div>
+              <InputBase
+                placeholder="Find people..."
+                classes={{
+                  root: classes.inputRoot,
+                  input: classes.inputInput,
+                }}
+                inputProps={{ 'aria-label': 'search' }} />
+          </div>
+          <div>
+            <IconButton
+              edge="end"
+              aria-label="account of current user"
+              aria-controls={menuId}
+              aria-haspopup="true"
+              onClick={handleProfileMenuOpen}>
+                <AccountCircle />
+            </IconButton>
+          </div>
         </Toolbar>
       </AppBar>
       <Drawer
@@ -56,29 +225,13 @@ function Nav(props) {
         }}
         anchor="left">
         <div className={classes.toolbar} />
-        <Divider />
-        <List>
-          {['Inbox', 'Starred', 'Send email', 'Drafts'].map((text, index) => (
-            <ListItem button key={text}>
-              <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
-              <ListItemText primary={text} />
-            </ListItem>
-          ))}
-        </List>
-        <Divider />
-        <List>
-          {['All mail', 'Trash', 'Spam'].map((text, index) => (
-            <ListItem button key={text}>
-              <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
-              <ListItemText primary={text} />
-            </ListItem>
-          ))}
-        </List>
+        {menuItems}
       </Drawer>
       <main className={classes.content}>
         <div className={classes.toolbar} />
         {props.children}
       </main>
+      {renderMenu}
     </div>
   );
 }

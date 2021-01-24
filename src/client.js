@@ -1,11 +1,25 @@
 import React, { useContext, createContext, useState } from 'react';
 
+const clientContext = createContext();
+
+const useClient = () => useContext(clientContext);
+
+function ProvideClient({ children }) {
+  const client = useProvideClient();
+  return (
+    <clientContext.Provider value={client}>
+      {children}
+    </clientContext.Provider>
+  );
+}
+
 function useProvideClient() {
   const [user, setUser] = useState(localStorage.getItem('user'));
 
   const refreshToken = async () => {
+    const token = user ? user.token : '';
     const response = await fetch('/users/refreshToken', {
-      body: JSON.stringify({ user.token }),
+      body: JSON.stringify({ token }),
       headers: {
         'content-type': 'application/json'
       },
@@ -28,7 +42,7 @@ function useProvideClient() {
       const response = await fetch(url, {
         body: JSON.stringify(data),
         headers: {
-          'Authorization': 'Bearer ' + user.token,
+          'Authorization': 'Bearer ' + token,
           'content-type': 'application/json'
         },
         method: 'POST'
@@ -120,22 +134,7 @@ function useProvideClient() {
   };
 }
 
-const clientContext = createContext();
-
-const useClient = () => useContext(clientContext);
-
-function ProvideClient({ children }) {
-  const client = useProvideClient();
-  return (
-    <clientContext.Provider value={client}>
-      {children}
-    </clientContext.Provider>
-  );
-}
-
-const client = {
+export {
   useClient,
   ProvideClient
 };
-
-export default client;
