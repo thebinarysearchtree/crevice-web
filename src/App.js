@@ -14,6 +14,7 @@ import Login from './user/Login';
 import Verify from './user/Verify';
 import Invite from './user/Invite';
 import Nav from './Nav';
+import List from './role/List';
 import { useClient, ProvideClient } from './client';
 
 function PrivateRoute({ children, ...rest }) {
@@ -63,6 +64,13 @@ function App() {
               <Nav />
             </Route>
           </Switch>
+          <Nav>
+            <Switch>
+              <Route path="/roles">
+                <List />
+              </Route>
+            </Switch>
+          </Nav>
         </Router>
       </ProvideClient>
     </ThemeProvider>

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import PropTypes from 'prop-types';
 import { makeStyles } from '@material-ui/core/styles';
 import Drawer from '@material-ui/core/Drawer';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import IconButton from '@material-ui/core/IconButton';
+import Typography from '@material-ui/core/Typography';
 import InputBase from '@material-ui/core/InputBase';
 import MenuItem from '@material-ui/core/MenuItem';
 import Menu from '@material-ui/core/Menu';
@@ -20,31 +20,7 @@ import LabelIcon from '@material-ui/icons/Label';
 import SearchIcon from '@material-ui/icons/Search';
 import AccountCircle from '@material-ui/icons/AccountCircle';
 import { useClient } from './client';
-import { Link as RouterLink } from 'react-router-dom';
-
-function ListItemLink(props) {
-  const { icon, primary, to } = props;
-
-  const renderLink = React.useMemo(
-    () => React.forwardRef((itemProps, ref) => <RouterLink to={to} ref={ref} {...itemProps} />),
-    [to],
-  );
-
-  return (
-    <li>
-      <ListItem button component={renderLink}>
-        {icon ? <ListItemIcon>{icon}</ListItemIcon> : null}
-        <ListItemText primary={primary} />
-      </ListItem>
-    </li>
-  );
-}
-
-ListItemLink.propTypes = {
-  icon: PropTypes.element,
-  primary: PropTypes.string.isRequired,
-  to: PropTypes.string.isRequired,
-};
+import { Link, useHistory } from 'react-router-dom';
 
 const drawerWidth = 240;
 
@@ -105,6 +81,17 @@ const useStyles = makeStyles((theme) => ({
   },
   grow: {
     flexGrow: 1
+  },
+  logoSection: {
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  appName: {
+    fontWeight: 600,
+    color: '#282828'
+  },
+  link: {
+    textDecoration: 'none'
   }
 }));
 
@@ -114,6 +101,7 @@ function Nav(props) {
 
   const classes = useStyles();
   const client = useClient();
+  const history = useHistory();
 
   const isMenuOpen = Boolean(anchorEl);
 
@@ -124,6 +112,16 @@ function Nav(props) {
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
+
+  const handleSignOut = () => {
+    client.signOut();
+    history.push('/login');
+  }
+
+  const handleItemClick = (name, url) => {
+    setSelectedItem(name);
+    history.push(url);
+  }
 
   const user = client.user;
   const menuItemGroups = [];
@@ -154,13 +152,14 @@ function Nav(props) {
   const menuItems = menuItemGroups.map(group => {
     const items = group.map(item => {
       return (
-        <ListItemLink
-          to={item.url}
-          primary={item.name}
-          icon={item.icon}
+        <ListItem 
+          button 
           key={item.name}
           selected={selectedItem === item.name}
-          onClick={() => setSelectedItem(item.name)} />
+          onClick={() => handleItemClick(item.name, item.url)}>
+            <ListItemIcon>{item.icon}</ListItemIcon>
+            <ListItemText primary={item.name} />
+        </ListItem>
       );
     });
     const groupKey = group.map(i => i.name).join();
@@ -185,6 +184,7 @@ function Nav(props) {
       onClose={handleMenuClose}>
         <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
         <MenuItem onClick={handleMenuClose}>My account</MenuItem>
+        <MenuItem onClick={handleSignOut}>Sign out</MenuItem>
     </Menu>
   );
 
@@ -192,7 +192,7 @@ function Nav(props) {
     <div className={classes.root}>
       <AppBar position="fixed" className={classes.appBar}>
         <Toolbar>
-          <div className={classes.grow}></div>
+          <div className={classes.grow} />
           <div className={classes.search}>
               <div className={classes.searchIcon}>
                 <SearchIcon color="action" />
@@ -224,7 +224,11 @@ function Nav(props) {
           paper: classes.drawerPaper,
         }}
         anchor="left">
-        <div className={classes.toolbar} />
+        <div className={`${classes.toolbar} ${classes.logoSection}`}>
+          <Link to="/" className={classes.link}>
+            <Typography variant="h5" className={classes.appName}>crevice</Typography>
+          </Link>
+        </div>
         {menuItems}
       </Drawer>
       <main className={classes.content}>
