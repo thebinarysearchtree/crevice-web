@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import PropTypes from 'prop-types';
 import { makeStyles } from '@material-ui/core/styles';
 import Drawer from '@material-ui/core/Drawer';
 import AppBar from '@material-ui/core/AppBar';
@@ -20,13 +21,44 @@ import LabelIcon from '@material-ui/icons/Label';
 import SearchIcon from '@material-ui/icons/Search';
 import AccountCircle from '@material-ui/icons/AccountCircle';
 import { useClient } from './client';
-import { Link, useHistory } from 'react-router-dom';
+import { Link, useHistory, useLocation } from 'react-router-dom';
+
+function ListItemLink(props) {
+  const { icon, primary, to, selected } = props;
+  const ref = useRef(null);
+
+  const renderLink = React.useMemo(
+    () => React.forwardRef((itemProps, ref) => <Link to={to} ref={ref} {...itemProps} />),
+    [to],
+  );
+
+  return (
+    <ListItem 
+      button 
+      component={renderLink}
+      key={primary}
+      selected={selected}
+      ref={ref}
+      onClick={() => ref.current.blur()}>
+        <ListItemIcon>{icon}</ListItemIcon>
+        <ListItemText primary={primary} />
+    </ListItem>
+  );
+}
+
+ListItemLink.propTypes = {
+  icon: PropTypes.element.isRequired,
+  primary: PropTypes.string.isRequired,
+  to: PropTypes.string.isRequired,
+  selected: PropTypes.bool.isRequired
+};
 
 const drawerWidth = 240;
 
 const useStyles = makeStyles((theme) => ({
   root: {
     display: 'flex',
+    width: '100%'
   },
   appBar: {
     width: `calc(100% - ${drawerWidth}px)`,
@@ -96,12 +128,12 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function Nav(props) {
-  const [selectedItem, setSelectedItem] = useState('');
-  const [anchorEl, setAnchorEl] = React.useState(null);
+  const [anchorEl, setAnchorEl] = useState(null);
 
   const classes = useStyles();
   const client = useClient();
   const history = useHistory();
+  const location = useLocation();
 
   const isMenuOpen = Boolean(anchorEl);
 
@@ -116,11 +148,6 @@ function Nav(props) {
   const handleSignOut = () => {
     client.signOut();
     history.push('/login');
-  }
-
-  const handleItemClick = (name, url) => {
-    setSelectedItem(name);
-    history.push(url);
   }
 
   const user = client.user;
@@ -152,14 +179,12 @@ function Nav(props) {
   const menuItems = menuItemGroups.map(group => {
     const items = group.map(item => {
       return (
-        <ListItem 
-          button 
-          key={item.name}
-          selected={selectedItem === item.name}
-          onClick={() => handleItemClick(item.name, item.url)}>
-            <ListItemIcon>{item.icon}</ListItemIcon>
-            <ListItemText primary={item.name} />
-        </ListItem>
+        <ListItemLink
+          icon={item.icon}
+          primary={item.name}
+          to={item.url}
+          selected={location.pathname === item.url}
+          key={item.name} />
       );
     });
     const groupKey = group.map(i => i.name).join();

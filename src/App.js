@@ -60,17 +60,15 @@ function App() {
             <Route path="/invite/:userId/:emailToken">
               <Invite />
             </Route>
-            <Route path="/nav">
-              <Nav />
-            </Route>
-          </Switch>
-          <Nav>
-            <Switch>
-              <Route path="/roles">
+            <Nav>
+              <Route exact path="/roles">
                 <List />
               </Route>
-            </Switch>
-          </Nav>
+              <Route path="/roles/:roleId">
+                <List />
+              </Route>
+            </Nav>
+          </Switch>
         </Router>
       </ProvideClient>
     </ThemeProvider>
