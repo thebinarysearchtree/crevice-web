@@ -11,7 +11,7 @@ import TableCell from '@material-ui/core/TableCell';
 import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
-import { Link, useHistory } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -47,7 +47,8 @@ const useStyles = makeStyles((theme) => ({
   },
   link: {
     textDecoration: 'none',
-    color: 'inherit'
+    color: 'inherit',
+    fontWeight: 600
   }
 }));
 
@@ -56,7 +57,6 @@ function List() {
 
   const client = useClient();
   const classes = useStyles();
-  const history = useHistory();
 
   useEffect(() => {
     const getRoles = async () => {
@@ -92,10 +92,7 @@ function List() {
   if (roles.length > 0) {
     const tableRows = roles.map(r => {
       return (
-        <TableRow 
-          hover
-          key={r.name}
-          onClick={() => history.push(`/roles/${r.id}`)}>
+        <TableRow key={r.name}>
             <TableCell component="th" scope="row">
               <Link 
                 className={classes.link} 

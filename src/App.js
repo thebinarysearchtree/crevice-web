@@ -15,6 +15,7 @@ import Verify from './user/Verify';
 import Invite from './user/Invite';
 import Nav from './Nav';
 import List from './role/List';
+import Detail from './role/Detail';
 import { useClient, ProvideClient } from './client';
 
 function PrivateRoute({ children, ...rest }) {
@@ -65,7 +66,7 @@ function App() {
                 <List />
               </Route>
               <Route path="/roles/:roleId">
-                <List />
+                <Detail />
               </Route>
             </Nav>
           </Switch>
