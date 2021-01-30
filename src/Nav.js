@@ -251,7 +251,7 @@ function Nav(props) {
         anchor="left">
         <div className={`${classes.toolbar} ${classes.logoSection}`}>
           <Link to="/" className={classes.link}>
-            <Typography variant="h5" className={classes.appName}>crevice</Typography>
+            <Typography variant="h5" className={classes.appName}>Crevice</Typography>
           </Link>
         </div>
         {menuItems}
