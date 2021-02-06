@@ -107,14 +107,18 @@ const useStyles = makeStyles((theme) => ({
   },
   toolbar: theme.mixins.toolbar,
   content: {
+    display: 'flex',
+    flexDirection: 'column',
+    height: '100vh',
     flexGrow: 1,
     backgroundColor: theme.palette.background.default,
-    padding: theme.spacing(3),
+    padding: theme.spacing(3)
   },
   grow: {
     flexGrow: 1
   },
   logoSection: {
+    display: 'flex',
     alignItems: 'center',
     justifyContent: 'center'
   },
@@ -183,7 +187,7 @@ function Nav(props) {
           icon={item.icon}
           primary={item.name}
           to={item.url}
-          selected={location.pathname === item.url}
+          selected={location.pathname === item.url || location.pathname.startsWith(`${item.url}/`)}
           key={item.name} />
       );
     });

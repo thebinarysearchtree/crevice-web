@@ -3,6 +3,7 @@ import { useClient } from '../client';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import Paper from '@material-ui/core/Paper';
+import Typography from '@material-ui/core/Typography';
 import { Link, useHistory } from 'react-router-dom';
 import useStyles from './styles';
 
@@ -71,11 +72,8 @@ function SignUp() {
   return (
     <div className={classes.signUp}>
       <Paper className={classes.paper}>
-        <form
-          className={classes.container}
-          onSubmit={signUp}
-          noValidate>
-          <h1 className={classes.heading}>Sign up</h1>
+        <form className={classes.container} onSubmit={signUp} noValidate>
+          <Typography className={classes.heading} variant="h3">Sign up</Typography>
           <TextField
             className={classes.fc}
             label="Company name"

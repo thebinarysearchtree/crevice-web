@@ -4,13 +4,13 @@ import { useClient } from '../client';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import TextField from '@material-ui/core/TextField';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
 import Divider from '@material-ui/core/Divider';
 import IconButton from '@material-ui/core/IconButton';
 import ArrowBackIos from '@material-ui/icons/ArrowBackIos';
-import DeleteIcon from '@material-ui/icons/Delete';
 import Button from '@material-ui/core/Button';
+import ConfirmButton from '../common/ConfirmButton';
+import Snackbar from '../common/Snackbar';
 import { Link, useParams, useHistory } from 'react-router-dom';
 
 const useStyles = makeStyles((theme) => ({
@@ -18,17 +18,20 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: 'column',
     width: '100%',
     paddingLeft: theme.spacing(5),
-    paddingRight: theme.spacing(5)
+    paddingRight: theme.spacing(5),
+    paddingBottom: theme.spacing(40)
   },
   content: {
     maxWidth: '700px',
     flexDirection: 'column'
   },
   heading: {
+    display: 'flex',
     marginBottom: theme.spacing(3),
     justifyContent: 'space-between'
   },
   header: {
+    display: 'flex',
     alignItems: 'center'
   },
   deleteButton: {
@@ -37,21 +40,40 @@ const useStyles = makeStyles((theme) => ({
   paper: {
     display: 'flex',
     flexDirection: 'column',
-    padding: theme.spacing(2),
-    marginBottom: theme.spacing(50)
+    padding: theme.spacing(2)
   },
   form: {
     display: 'flex',
     flexDirection: 'column'
   },
+  formControl: {
+    display: 'flex',
+    paddingTop: theme.spacing(1),
+    paddingBottom: theme.spacing(1),
+    justifyContent: 'space-between'
+  },
   label: {
     display: 'flex',
-    justifyContent: 'space-between',
-    marginLeft: '0px'
+    flexDirection: 'column'
+  },
+  description: {
+    color: theme.palette.text.secondary
   },
   iconButton: {
     paddingLeft: '18px',
     paddingRight: '6px'
+  },
+  permissions: {
+    marginTop: theme.spacing(4),
+    marginBottom: theme.spacing(2),
+    marginLeft: theme.spacing(2)
+  },
+  roleName: {
+    marginLeft: theme.spacing(2),
+    maxWidth: '240px'
+  },
+  button: {
+    marginTop: theme.spacing(2)
   }
 }));
 
@@ -59,21 +81,16 @@ function Detail() {
   const [role, setRole] = useState({
     name: '',
     defaultView: '',
-    canBookBefore: false,
-    canBookAfter: false,
-    canCancelBefore: false,
-    canCancelAfter: false,
-    canRequestCancellation: false,
-    canApproveCancellation: false,
-    canBookForOthers: false,
-    canCancelForOthers: false,
-    canDelete: false,
-    canEditBefore: false,
-    canEditAfter: false,
-    canChangeCapacity: false,
-    canAssignTasks: false,
-    canInviteUsers: false
+    canEditBookingBefore: false,
+    canEditBookingAfter: false,
+    canRequestEdit: false,
+    canApproveEdit: false,
+    canBookAndCancelForOthers: false,
+    canEditShift: false,
+    canViewProfiles: false,
+    canViewAnswers: false
   });
+  const [message, setMessage] = useState('');
 
   const { roleId } = useParams();
   const client = useClient();
@@ -87,11 +104,16 @@ function Detail() {
     setRole(r => ({ ...r, [name] : value }));
   }
 
-  const saveRole = async () => {
+  const saveRole = async (e) => {
+    e.preventDefault();
     const url = roleId === 'new' ? '/roles/insert' : '/roles/update';
-    const result = await client.postData(url, role);
+    const message = roleId === 'new' ? 'Role created' : 'Role updated';
+    const result = await client.postData(url, { roleId, ...role });
     if (result) {
-      history.push('/roles');
+      history.push('/roles', { message });
+    }
+    else {
+      setMessage('Something went wrong');
     }
   }
 
@@ -117,12 +139,33 @@ function Detail() {
 
   const title = roleId === 'new' ? 'Create a new role' : 'Edit role';
   const deleteButton = roleId !== 'new' ? (
-    <Button 
-      variant="contained" 
-      color="secondary"
-      onClick={deleteRole}>Delete</Button>) : null;
+      <ConfirmButton
+        className={classes.deleteButton}
+        name="Delete"
+        color="secondary"
+        title="Delete this role?"
+        content="Make sure no users have been assigned to this role before deleting it."
+        onClick={deleteRole} />) : null;
 
   const isValid = role.name !== '';
+
+  function Permission(props) {
+    return (
+      <div className={classes.formControl}>
+        <div className={classes.label}>
+          <Typography id={props.name}>{props.label}</Typography>
+          <Typography className={classes.description} variant="body2">{props.description}</Typography>
+        </div>
+        <div className={classes.checkbox}>
+          <Checkbox
+            checked={role[props.name]}
+            onChange={handleInputChange}
+            name={props.name}
+            inputProps={{ 'aria-labelledby': props.name }} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={classes.root}>
@@ -134,182 +177,68 @@ function Detail() {
             </IconButton>
             <Typography variant="h4">{title}</Typography>
           </div>
-          <div className={classes.deleteButton}>
-            {deleteButton}
-          </div>
+          {deleteButton}
         </div>
-        <Paper className={classes.paper}>
-          <form
-            className={classes.form}
-            onSubmit={saveRole} 
-            noValidate>
-              <TextField
-                name="name"
-                className={classes.fc}
-                label="Role name"
-                value={role.name}
-                onChange={handleInputChange} />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={role.canBookBefore}
-                    onChange={handleInputChange}
-                    name="canBookBefore" />
-                }
-                label="Book shifts before they start"
-                labelPlacement="start"
-                classes={{ root: classes.label }} />
-              <Divider />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={role.canBookAfter}
-                    onChange={handleInputChange}
-                    name="canBookAfter" />
-                }
-                label="Book shifts after they start"
-                labelPlacement="start"
-                classes={{ root: classes.label }} />
-              <Divider />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={role.canCancelBefore}
-                    onChange={handleInputChange}
-                    name="canCancelBefore" />
-                }
-                label="Cancel bookings before the shift starts"
-                labelPlacement="start"
-                classes={{ root: classes.label }} />
-              <Divider />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={role.canCancelAfter}
-                    onChange={handleInputChange}
-                    name="canCancelAfter" />
-                }
-                label="Cancel bookings after the shift starts"
-                labelPlacement="start"
-                classes={{ root: classes.label }} />
-              <Divider />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={role.canRequestCancellation}
-                    onChange={handleInputChange}
-                    name="canRequestCancellation" />
-                }
-                label="Request the cancellation of a booking"
-                labelPlacement="start"
-                classes={{ root: classes.label }} />
-              <Divider />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={role.canApproveCancellation}
-                    onChange={handleInputChange}
-                    name="canApproveCancellation" />
-                }
-                label="Approve the cancellation of a booking"
-                labelPlacement="start"
-                classes={{ root: classes.label }} />
-              <Divider />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={role.canBookForOthers}
-                    onChange={handleInputChange}
-                    name="canBookForOthers" />
-                }
-                label="Book shifts for other users"
-                labelPlacement="start"
-                classes={{ root: classes.label }} />
-              <Divider />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={role.canCancelForOthers}
-                    onChange={handleInputChange}
-                    name="canCancelForOthers" />
-                }
-                label="Cancel the shifts of other users"
-                labelPlacement="start"
-                classes={{ root: classes.label }} />
-              <Divider />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={role.canDelete}
-                    onChange={handleInputChange}
-                    name="canDelete" />
-                }
-                label="Delete shifts"
-                labelPlacement="start"
-                classes={{ root: classes.label }} />
-              <Divider />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={role.canEditBefore}
-                    onChange={handleInputChange}
-                    name="canEditBefore" />
-                }
-                label="Edit shift details before they start"
-                labelPlacement="start"
-                classes={{ root: classes.label }} />
-              <Divider />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={role.canEditAfter}
-                    onChange={handleInputChange}
-                    name="canEditAfter" />
-                }
-                label="Edit shift details after they start"
-                labelPlacement="start"
-                classes={{ root: classes.label }} />
-              <Divider />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={role.canChangeCapacity}
-                    onChange={handleInputChange}
-                    name="canChangeCapacity" />
-                }
-                label="Change the capacity of shifts"
-                labelPlacement="start"
-                classes={{ root: classes.label }} />
-              <Divider />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={role.canAssignTasks}
-                    onChange={handleInputChange}
-                    name="canAssignTasks" />
-                }
-                label="Assign tasks to shifts"
-                labelPlacement="start"
-                classes={{ root: classes.label }} />
-              <Divider />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={role.canInviteUsers}
-                    onChange={handleInputChange}
-                    name="canInviteUsers" />
-                }
-                label="Invite users"
-                labelPlacement="start"
-                classes={{ root: classes.label }} />
-              <Button
-                className={classes.button}
-                variant="contained"
-                color="primary"
-                type="submit"
-                disabled={!isValid}>Save</Button>
-          </form>
-        </Paper>
+        <form className={classes.form} onSubmit={saveRole} noValidate>
+          <TextField
+            className={classes.roleName}
+            name="name"
+            label="Role name"
+            value={role.name}
+            onChange={handleInputChange} />
+          <div className={classes.permissions}>
+            <Typography variant="h5">Permissions</Typography>
+            <Typography variant="subtitle1">Permissions only apply to the areas the user is assigned</Typography>
+          </div>
+          <Paper className={classes.paper}>
+            <Permission 
+              name="canEditBookingBefore"
+              label="Book shifts"
+              description="Book shifts and cancel bookings before the shift starts" />
+            <Divider />
+            <Permission 
+              name="canEditBookingAfter"
+              label="Book shifts retroactively"
+              description="Book shifts and cancel bookings after the shift starts" />
+            <Divider />
+            <Permission
+              name="canRequestEdit"
+              label="Request the change of a booking"
+              description="Request to cancel a booking, or report a shift worked" />
+            <Divider />
+            <Permission
+              name="canApproveEdit"
+              label="Approve the change of a booking"
+              description="Approve requests to cancel bookings, or validate shifts worked" />
+            <Divider />
+            <Permission
+              name="canBookAndCancelForOthers"
+              label="Book for other users"
+              description="Book shifts and cancel bookings for other users" />
+            <Divider />
+            <Permission
+              name="canEditShift"
+              label="Edit shifts"
+              description="Create, delete, and edit shifts and shift capacities" />
+            <Divider />
+            <Permission
+              name="canViewProfiles"
+              label="View profiles"
+              description="Search for users and view their profiles and shifts" />
+            <Divider />
+            <Permission
+              name="canViewAnswers"
+              label="View survey answers"
+              description="View the answers of other users to any questions asked at the end of shifts" />
+            <Button
+              className={classes.button}
+              variant="contained"
+              color="primary"
+              type="submit"
+              disabled={!isValid}>Save</Button>
+            <Snackbar message={message} setMessage={setMessage} />
+          </Paper>
+        </form>
       </div>
     </div>
   );

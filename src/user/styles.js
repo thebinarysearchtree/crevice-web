@@ -1,10 +1,11 @@
 import { makeStyles } from '@material-ui/core/styles';
 
-const useStyles = makeStyles({
+const useStyles = makeStyles((theme) => ({
   fc: {
     marginBottom: '10px'
   },
   signUp: {
+    display: 'flex',
     flexDirection: 'column',
     width: '100%',
     alignItems: 'center',
@@ -28,7 +29,8 @@ const useStyles = makeStyles({
   },
   heading: {
     textAlign: 'center',
-    marginBottom: '40px'
+    marginTop: theme.spacing(4),
+    marginBottom: theme.spacing(4)
   },
   button: {
     marginTop: '30px'
@@ -45,6 +47,6 @@ const useStyles = makeStyles({
     color: '#262626',
     lineHeight: '1.5em',
   }
-});
+}));
 
 export default useStyles;

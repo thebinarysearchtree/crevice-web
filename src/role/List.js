@@ -11,7 +11,8 @@ import TableCell from '@material-ui/core/TableCell';
 import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
-import { Link } from 'react-router-dom';
+import Snackbar from '../common/Snackbar';
+import { Link, useLocation } from 'react-router-dom';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -25,6 +26,7 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: 'column'
   },
   heading: {
+    display: 'flex',
     marginBottom: theme.spacing(3)
   },
   grow: {
@@ -54,9 +56,15 @@ const useStyles = makeStyles((theme) => ({
 
 function List() {
   const [roles, setRoles] = useState(null);
+  const [message, setMessage] = useState('');
 
   const client = useClient();
   const classes = useStyles();
+  const location = useLocation();
+
+  useEffect(() => {
+    setMessage(location.state?.message);
+  }, [location]);
 
   useEffect(() => {
     const getRoles = async () => {
@@ -111,7 +119,7 @@ function List() {
             <SupervisorAccountIcon className={classes.icon} color="action" />
             <div className={classes.title}>
               <Typography variant="h4">Roles</Typography>
-              <Typography>Assign permissions and create new roles.</Typography>
+              <Typography variant="subtitle1">Assign permissions and create new roles.</Typography>
             </div>
             <div className={classes.grow} />
             <Button 
@@ -121,22 +129,21 @@ function List() {
               component={Link}
               to="/roles/new">Add new role</Button>
           </div>
-          <div className={classes.table}>
-            <TableContainer component={Paper}>
-              <Table className={classes.table} aria-label="simple table">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Name</TableCell>
-                    <TableCell align="right">Created</TableCell>
-                    <TableCell align="right">User Count</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {tableRows}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </div>
+          <TableContainer component={Paper}>
+            <Table className={classes.table} aria-label="simple table">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Name</TableCell>
+                  <TableCell align="right">Created</TableCell>
+                  <TableCell align="right">User Count</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {tableRows}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          <Snackbar message={message} setMessage={setMessage} />
         </div>
       </div>
     );

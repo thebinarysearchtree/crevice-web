@@ -3,6 +3,7 @@ import { useClient } from '../client';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import Paper from '@material-ui/core/Paper';
+import Typography from '@material-ui/core/Typography';
 import { Link, useHistory } from 'react-router-dom';
 import useStyles from './styles';
 
@@ -56,7 +57,7 @@ function Login() {
     <div className={classes.signUp}>
       <Paper className={classes.paper}>
         <form className={classes.container} onSubmit={logIn} noValidate>
-          <h1 className={classes.heading}>Log in</h1>
+          <Typography className={classes.heading} variant="h3">Log in</Typography>
           <TextField
             className={classes.fc}
             type="email"
