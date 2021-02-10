@@ -18,8 +18,7 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: 'column',
     width: '100%',
     paddingLeft: theme.spacing(5),
-    paddingRight: theme.spacing(5),
-    paddingBottom: theme.spacing(40)
+    paddingRight: theme.spacing(5)
   },
   content: {
     maxWidth: '700px',
@@ -74,6 +73,9 @@ const useStyles = makeStyles((theme) => ({
   },
   button: {
     marginTop: theme.spacing(2)
+  },
+  labelHeading: {
+    cursor: 'pointer'
   }
 }));
 
@@ -113,6 +115,7 @@ function Detail() {
       history.push('/roles', { message });
     }
     else {
+      history.push('/roles', { message });
       setMessage('Something went wrong');
     }
   }
@@ -120,7 +123,10 @@ function Detail() {
   const deleteRole = async () => {
     const result = await client.postData('/roles/deleteRole', { roleId });
     if (result) {
-      history.push('/roles');
+      history.push('/roles', { message: 'Role deleted' });
+    }
+    else {
+      setMessage('Something went wrong');
     }
   }
 
@@ -147,21 +153,30 @@ function Detail() {
         content="Make sure no users have been assigned to this role before deleting it."
         onClick={deleteRole} />) : null;
 
-  const isValid = role.name !== '';
-
   function Permission(props) {
+    const { name, label, description } = props;
+
+    const handleLabelClick = (name) => {
+      const value = !role[name];
+
+      setRole(r => ({ ...r, [name] : value }));
+    }
+
     return (
       <div className={classes.formControl}>
         <div className={classes.label}>
-          <Typography id={props.name}>{props.label}</Typography>
-          <Typography className={classes.description} variant="body2">{props.description}</Typography>
+          <Typography 
+            id={name}
+            className={classes.labelHeading}
+            onClick={() => handleLabelClick(name)}>{label}</Typography>
+          <Typography className={classes.description} variant="body2">{description}</Typography>
         </div>
         <div className={classes.checkbox}>
           <Checkbox
-            checked={role[props.name]}
+            checked={role[name]}
             onChange={handleInputChange}
-            name={props.name}
-            inputProps={{ 'aria-labelledby': props.name }} />
+            name={name}
+            inputProps={{ 'aria-labelledby': name }} />
         </div>
       </div>
     );
@@ -234,8 +249,7 @@ function Detail() {
               className={classes.button}
               variant="contained"
               color="primary"
-              type="submit"
-              disabled={!isValid}>Save</Button>
+              type="submit">Save</Button>
             <Snackbar message={message} setMessage={setMessage} />
           </Paper>
         </form>

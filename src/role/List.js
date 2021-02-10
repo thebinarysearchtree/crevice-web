@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { makeStyles } from '@material-ui/core/styles';
 import { useClient } from '../client';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
@@ -12,64 +11,21 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Snackbar from '../common/Snackbar';
-import { Link, useLocation } from 'react-router-dom';
-
-const useStyles = makeStyles((theme) => ({
-  root: {
-    flexDirection: 'column',
-    width: '100%',
-    paddingLeft: theme.spacing(5),
-    paddingRight: theme.spacing(5)
-  },
-  content: {
-    maxWidth: '700px',
-    flexDirection: 'column'
-  },
-  heading: {
-    display: 'flex',
-    marginBottom: theme.spacing(3)
-  },
-  grow: {
-    flexGrow: 1
-  },
-  icon: {
-    fontSize: '2.525rem',
-    marginRight: theme.spacing(2)
-  },
-  title: {
-    flexDirection: 'column'
-  },
-  button: {
-    alignSelf: 'flex-start'
-  },
-  paper: {
-    display: 'flex',
-    flexDirection: 'column',
-    padding: theme.spacing(2)
-  },
-  link: {
-    textDecoration: 'none',
-    color: 'inherit',
-    fontWeight: 600
-  }
-}));
+import { Link } from 'react-router-dom';
+import useMessage from '../hooks/useMessage';
+import useStyles from '../styles/list';
 
 function List() {
   const [roles, setRoles] = useState(null);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useMessage();
 
   const client = useClient();
   const classes = useStyles();
-  const location = useLocation();
-
-  useEffect(() => {
-    setMessage(location.state?.message);
-  }, [location]);
 
   useEffect(() => {
     const getRoles = async () => {
-      const roles = await client.postData('/roles/find');
-      if (!roles) {
+      const result = await client.postData('/roles/find');
+      if (!result) {
         setRoles([
           {
             id: 1,
@@ -86,7 +42,7 @@ function List() {
         ]);
       }
       else {
-        setRoles(roles);
+        setRoles(result.roles);
       }
     };
     getRoles();
@@ -130,12 +86,12 @@ function List() {
               to="/roles/new">Add new role</Button>
           </div>
           <TableContainer component={Paper}>
-            <Table className={classes.table} aria-label="simple table">
+            <Table className={classes.table} aria-label="roles table">
               <TableHead>
                 <TableRow>
                   <TableCell>Name</TableCell>
                   <TableCell align="right">Created</TableCell>
-                  <TableCell align="right">User Count</TableCell>
+                  <TableCell align="right">Users</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>

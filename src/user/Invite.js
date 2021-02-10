@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useClient } from '../client';
 import { useHistory, useParams } from 'react-router-dom';
-import useStyles from './styles';
+import useStyles from '../styles/form';
 
 function Invite() {
   const { userId, emailToken } = useParams();
@@ -24,7 +24,7 @@ function Invite() {
   });
 
   return (
-    <div className={classes.signUp}>
+    <div className={classes.root}>
       <h1>Verifying...</h1>
     </div>
   );

@@ -1,10 +1,10 @@
 import { makeStyles } from '@material-ui/core/styles';
 
 const useStyles = makeStyles((theme) => ({
-  fc: {
+  formControl: {
     marginBottom: '10px'
   },
-  signUp: {
+  root: {
     display: 'flex',
     flexDirection: 'column',
     width: '100%',

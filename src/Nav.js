@@ -16,6 +16,7 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import SupervisorAccountIcon from '@material-ui/icons/SupervisorAccount';
 import RoomIcon from '@material-ui/icons/Room';
+import HomeIcon from '@material-ui/icons/Home';
 import PersonIcon from '@material-ui/icons/Person';
 import LabelIcon from '@material-ui/icons/Label';
 import SearchIcon from '@material-ui/icons/Search';
@@ -112,7 +113,8 @@ const useStyles = makeStyles((theme) => ({
     height: '100vh',
     flexGrow: 1,
     backgroundColor: theme.palette.background.default,
-    padding: theme.spacing(3)
+    padding: theme.spacing(3),
+    marginBottom: theme.spacing(40)
   },
   grow: {
     flexGrow: 1
@@ -165,6 +167,11 @@ function Nav(props) {
       },
       {
         icon: <RoomIcon />,
+        name: 'Locations',
+        url: '/locations'
+      },
+      {
+        icon: <HomeIcon />,
         name: 'Areas',
         url: '/areas'
       },

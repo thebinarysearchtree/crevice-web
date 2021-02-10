@@ -5,7 +5,7 @@ import Button from '@material-ui/core/Button';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import { Link, useHistory } from 'react-router-dom';
-import useStyles from './styles';
+import useStyles from '../styles/form';
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -54,18 +54,18 @@ function Login() {
   };
 
   return (
-    <div className={classes.signUp}>
+    <div className={classes.root}>
       <Paper className={classes.paper}>
         <form className={classes.container} onSubmit={logIn} noValidate>
           <Typography className={classes.heading} variant="h3">Log in</Typography>
           <TextField
-            className={classes.fc}
+            className={classes.formControl}
             type="email"
             label="Email"
             value={email}
             onChange={handleEmailChange} />
           <TextField
-            className={classes.fc}
+            className={classes.formControl}
             type="password"
             label="Password"
             value={password}
@@ -76,8 +76,7 @@ function Login() {
             className={classes.button}
             variant="contained"
             color="primary"
-            type="submit"
-            disabled={!isValid}>Log in</Button>
+            type="submit">Log in</Button>
         </form>
       </Paper>
       <Paper>

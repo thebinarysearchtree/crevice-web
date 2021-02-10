@@ -14,7 +14,7 @@ function Snackbar(props) {
         vertical: 'bottom',
         horizontal: 'left'
       }}
-      open={message}
+      open={Boolean(message)}
       autoHideDuration={6000}
       onClose={handleClose}
       message={message}

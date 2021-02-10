@@ -1,11 +1,11 @@
 import React from 'react';
-import useStyles from './styles';
+import useStyles from '../styles/form';
 
 function Verify() {
   const classes = useStyles();
 
   return (
-    <div className={classes.signUp}>
+    <div className={classes.root}>
       <div className={classes.verify}>
         <h1>Thanks</h1>
         <p>

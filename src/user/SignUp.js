@@ -5,7 +5,7 @@ import Button from '@material-ui/core/Button';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import { Link, useHistory } from 'react-router-dom';
-import useStyles from './styles';
+import useStyles from '../styles/form';
 
 function SignUp() {
   const [organisationName, setOrganisationName] = useState('');
@@ -46,7 +46,7 @@ function SignUp() {
 
   const handlePasswordBlur = (e) => {
     if (e.target.value !== '') {
-      if (!e.target.value.length < 6) {
+      if (e.target.value.length < 6) {
         setPasswordIsValid(false);
       }
     }
@@ -70,27 +70,27 @@ function SignUp() {
   };
 
   return (
-    <div className={classes.signUp}>
+    <div className={classes.root}>
       <Paper className={classes.paper}>
         <form className={classes.container} onSubmit={signUp} noValidate>
           <Typography className={classes.heading} variant="h3">Sign up</Typography>
           <TextField
-            className={classes.fc}
+            className={classes.formControl}
             label="Company name"
             value={organisationName}
             onChange={(e) => setOrganisationName(e.target.value)} />
           <TextField
-            className={classes.fc}
+            className={classes.formControl}
             label="First name"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)} />
           <TextField
-            className={classes.fc}
+            className={classes.formControl}
             label="Last name"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)} />
           <TextField
-            className={classes.fc}
+            className={classes.formControl}
             type="email"
             label="Email"
             value={email}
@@ -99,7 +99,7 @@ function SignUp() {
             helperText={emailIsValid ? '' : 'Please enter a valid email address'}
             onBlur={handleEmailBlur} />
           <TextField
-            className={classes.fc}
+            className={classes.formControl}
             type="password"
             label="Password"
             value={password}
@@ -111,8 +111,7 @@ function SignUp() {
             className={classes.button}
             variant="contained"
             color="primary"
-            type="submit"
-            disabled={!isValid}>Sign up</Button>
+            type="submit">Sign up</Button>
         </form>
       </Paper>
       <Paper>
