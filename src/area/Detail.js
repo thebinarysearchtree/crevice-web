@@ -24,15 +24,15 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function Detail(props) {
-  const [location, setLocation] = useState(null);
+  const [area, setArea] = useState(null);
   const [isDisabled, setIsDisabled] = useState(true);
 
   useEffect(() => {
-    setLocation(props.selectedLocation);
+    setArea(props.selectedArea);
     setIsDisabled(true);
-  }, [props.selectedLocation]);
+  }, [props.selectedArea]);
 
-  const { setLocations, open, setOpen, setMessage } = props;
+  const { setAreas, open, setOpen, setMessage } = props;
   const client = useClient();
   const classes = useStyles();
 
@@ -40,44 +40,44 @@ function Detail(props) {
     const name = e.target.name;
     const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
 
-    setLocation(l => {
-      const updatedLocation = { ...l, [name] : value };
-      const isValid = updatedLocation.name && updatedLocation.timeZone;
+    setArea(a => {
+      const updatedArea = { ...a, [name] : value };
+      const isValid = updatedArea.name;
       if (!isValid) {
         setIsDisabled(true);
       }
       else {
         setIsDisabled(false);
       }
-      return updatedLocation;
+      return updatedArea;
     });
   }
 
-  const saveLocation = async (e) => {
+  const saveArea = async (e) => {
     e.preventDefault();
     setOpen(false);
-    if (location.id !== -1) {
-      const result = await client.postData('/locations/update', { location });
+    if (area.id !== -1) {
+      const result = await client.postData('/areas/update', { area });
       if (result) {
-        setLocations(locations => locations.map(l => {
-          if (l.id === location.id) {
-            return { ...location };
+        setAreas(areas => areas.map(a => {
+          if (a.id === area.id) {
+            return { ...area };
           }
-          return l;
+          return a;
         }));
-        setMessage('Location updated');
+        setMessage('Area updated');
       }
       else {
         setMessage('Something went wrong');
       }
     }
     else {
-      const result = await client.postData('/locations/insert', { location });
+      const result = await client.postData('/areas/insert', { area });
       if (result) {
-        const { locationId } = result;
-        const savedLocation = { ...location, id: locationId };
-        setLocations(locations => [savedLocation, ...locations]);
-        setMessage('Location created');
+        const { areaId } = result;
+        const savedArea = { ...area, id: areaId };
+        setAreas(areas => [savedArea, ...areas]);
+        setMessage('Area created');
       }
       else {
         setMessage('Something went wrong');
@@ -85,11 +85,11 @@ function Detail(props) {
     }
   }
 
-  if (!location) {
+  if (!area) {
     return null;
   }
 
-  const title = location.id !== -1 ? 'Edit location' : 'Create a new location';
+  const title = area.id !== -1 ? 'Edit area' : 'Create a new area';
 
   return (
     <Dialog 
@@ -101,35 +101,15 @@ function Detail(props) {
         <TextField
           className={classes.formControl}
           name="name"
-          label="Location name"
-          value={location.name}
+          label="Area name"
+          value={area.name}
           onChange={handleInputChange}
           autoComplete="off" />
-        <FormControl className={classes.formControl}>
-          <InputLabel id="time-zone">Time zone</InputLabel>
-          <Select
-            name="timeZone"
-            labelId="time-zone"
-            value={location.timeZone}
-            onChange={handleInputChange}>
-              <MenuItem value="Australia/Adelaide">Adelaide</MenuItem>
-              <MenuItem value="Australia/Brisbane">Brisbane</MenuItem>
-              <MenuItem value="Australia/Broken_Hill">Broken Hill</MenuItem>
-              <MenuItem value="Australia/Darwin">Darwin</MenuItem>
-              <MenuItem value="Australia/Eucla">Eucla</MenuItem>
-              <MenuItem value="Australia/Hobart">Hobart</MenuItem>
-              <MenuItem value="Australia/Lindeman">Lindeman</MenuItem>
-              <MenuItem value="Australia/Lord_Howe">Lord Howe Island</MenuItem>
-              <MenuItem value="Australia/Melbourne">Melbourne</MenuItem>
-              <MenuItem value="Australia/Perth">Perth</MenuItem>
-              <MenuItem value="Australia/Sydney">Sydney</MenuItem>
-          </Select>
-        </FormControl>
         <TextField
           className={classes.formControl}
-          name="address"
-          label="Address (optional)"
-          value={location.address}
+          name="notes"
+          label="Notes (optional)"
+          value={area.notes}
           onChange={handleInputChange}
           multiline
           rows={4} />
@@ -139,7 +119,7 @@ function Detail(props) {
           onClick={() => setOpen(false)} 
           color="primary">Cancel</Button>
         <Button 
-          onClick={saveLocation} 
+          onClick={saveArea} 
           variant="contained" 
           color="primary"
           disabled={isDisabled}>Save</Button>

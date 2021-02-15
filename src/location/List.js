@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useClient } from '../client';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
-import RoomIcon from '@material-ui/icons/Room';
 import Button from '@material-ui/core/Button';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
@@ -11,14 +10,13 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Snackbar from '../common/Snackbar';
-import useMessage from '../hooks/useMessage';
 import useStyles from '../styles/list';
 import Detail from './Detail';
 import ConfirmButton from '../common/ConfirmButton';
 
 function List() {
   const [locations, setLocations] = useState(null);
-  const [message, setMessage] = useMessage();
+  const [message, setMessage] = useState('');
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [open, setOpen] = useState(false);
 
@@ -52,15 +50,6 @@ function List() {
       setMessage('Something went wrong');
     }
   }
-
-  const deleteButton = (
-    <ConfirmButton
-      className={classes.deleteButton}
-      name="Delete"
-      color="secondary"
-      title="Delete this location?"
-      content="Make sure this location has no areas before deleting it."
-      onClick={deleteLocation} />);
 
   useEffect(() => {
     const getLocations = async () => {
@@ -99,16 +88,21 @@ function List() {
     const tableRows = locations.map(l => {
       return (
         <TableRow key={l.name}>
-            <TableCell
-              className={classes.locationName}
-              component="th"
-              scope="row"
-              onClick={() => handleNameClick(l)}>
-                {l.name}
+            <TableCell component="th" scope="row">
+              <span 
+                className={classes.locationName}
+                onClick={() => handleNameClick(l)}>{l.name}</span>
             </TableCell>
             <TableCell align="right">{l.timeZone.split('/')[1].replace('_', ' ')}</TableCell>
             <TableCell align="right">{l.createdAt.toLocaleDateString()}</TableCell>
             <TableCell align="right">{l.areaCount}</TableCell>
+            <TableCell align="right">
+              <ConfirmButton
+                className={classes.deleteButton}
+                title={`Delete ${l.name}?`}
+                content="Make sure this location has no areas before deleting it."
+                onClick={() => deleteLocation(l.id)} />
+            </TableCell>
         </TableRow>
       );
     });
@@ -117,17 +111,11 @@ function List() {
       <div className={classes.root}>
         <div className={classes.content}>
           <div className={classes.heading}>
-            <RoomIcon className={classes.icon} color="action" />
-            <div className={classes.title}>
-              <Typography variant="h4">Locations</Typography>
-              <Typography variant="subtitle1">Add physical locations and set timezones</Typography>
-            </div>
-            <div className={classes.grow} />
+            <Typography variant="h5">Locations</Typography>
             <Button 
-              className={classes.button}
               variant="contained"
               color="primary"
-              onClick={handleNewClick}>Add new location</Button>
+              onClick={handleNewClick}>New location</Button>
           </div>
           <TableContainer component={Paper}>
             <Table className={classes.table} aria-label="locations table">
@@ -137,6 +125,7 @@ function List() {
                   <TableCell align="right">Time zone</TableCell>
                   <TableCell align="right">Created</TableCell>
                   <TableCell align="right">Areas</TableCell>
+                  <TableCell align="right"></TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -152,6 +141,7 @@ function List() {
             setMessage={setMessage} />
           <Snackbar message={message} setMessage={setMessage} />
         </div>
+        <div className={classes.rightSection} />
       </div>
     );
   }

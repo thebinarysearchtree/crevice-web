@@ -23,6 +23,7 @@ import SearchIcon from '@material-ui/icons/Search';
 import AccountCircle from '@material-ui/icons/AccountCircle';
 import { useClient } from './client';
 import { Link, useHistory, useLocation } from 'react-router-dom';
+import SearchBox from './common/SearchBox';
 
 function ListItemLink(props) {
   const { icon, primary, to, selected } = props;
@@ -62,42 +63,15 @@ const useStyles = makeStyles((theme) => ({
     width: '100%'
   },
   appBar: {
-    width: `calc(100% - ${drawerWidth}px)`,
-    marginLeft: drawerWidth,
+    backgroundColor: 'white',
+    boxShadow: 'none',
+    borderBottom: `1px solid ${theme.palette.divider}`,
+    zIndex: theme.zIndex.drawer + 1
+  },
+  appBarOnly: {
     backgroundColor: 'white',
     boxShadow: 'none',
     borderBottom: `1px solid ${theme.palette.divider}`
-  },
-  search: {
-    position: 'relative',
-    borderRadius: theme.shape.borderRadius,
-    backgroundColor: theme.palette.grey[200],
-    marginRight: theme.spacing(2),
-    marginLeft: 0,
-    width: '100%',
-    [theme.breakpoints.up('sm')]: {
-      marginLeft: theme.spacing(3),
-      width: 'auto',
-    },
-  },
-  searchIcon: {
-    padding: theme.spacing(0, 2),
-    height: '100%',
-    position: 'absolute',
-    pointerEvents: 'none',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  inputInput: {
-    padding: theme.spacing(1, 1, 1, 0),
-    // vertical padding + font size from searchIcon
-    paddingLeft: `calc(1em + ${theme.spacing(4)}px)`,
-    transition: theme.transitions.create('width'),
-    width: '100%',
-    [theme.breakpoints.up('md')]: {
-      width: '20ch',
-    },
   },
   drawer: {
     width: drawerWidth,
@@ -113,7 +87,10 @@ const useStyles = makeStyles((theme) => ({
     height: '100vh',
     flexGrow: 1,
     backgroundColor: theme.palette.background.default,
-    padding: theme.spacing(3),
+    paddingLeft: theme.spacing(2),
+    paddingRight: theme.spacing(2),
+    paddingTop: theme.spacing(3),
+    paddingBottom: theme.spacing(3),
     marginBottom: theme.spacing(40)
   },
   grow: {
@@ -122,7 +99,8 @@ const useStyles = makeStyles((theme) => ({
   logoSection: {
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    width: drawerWidth - 49
   },
   appName: {
     fontWeight: 600,
@@ -194,7 +172,7 @@ function Nav(props) {
           icon={item.icon}
           primary={item.name}
           to={item.url}
-          selected={location.pathname === item.url || location.pathname.startsWith(`${item.url}/`)}
+          selected={location.pathname === item.url}
           key={item.name} />
       );
     });
@@ -224,23 +202,29 @@ function Nav(props) {
     </Menu>
   );
 
+  const drawer = !props.appBarOnly ? (
+    <Drawer
+      className={classes.drawer}
+      variant="permanent"
+      classes={{
+        paper: classes.drawerPaper,
+      }}
+      anchor="left">
+      <div className={classes.toolbar} />
+      {menuItems}
+    </Drawer>) : null;
+  
   return (
     <div className={classes.root}>
-      <AppBar position="fixed" className={classes.appBar}>
+      <AppBar position="fixed" className={props.appBarOnly ? classes.appBarOnly : classes.appBar}>
         <Toolbar>
-          <div className={classes.grow} />
-          <div className={classes.search}>
-              <div className={classes.searchIcon}>
-                <SearchIcon color="action" />
-              </div>
-              <InputBase
-                placeholder="Find people..."
-                classes={{
-                  root: classes.inputRoot,
-                  input: classes.inputInput,
-                }}
-                inputProps={{ 'aria-label': 'search' }} />
+          <div className={classes.logoSection}>
+            <Link to="/" className={classes.link}>
+              <Typography variant="h5" className={classes.appName}>Crevice</Typography>
+            </Link>
           </div>
+          <div className={classes.grow} />
+          <SearchBox placeholder="Find people..." />
           <div>
             <IconButton
               edge="end"
@@ -253,20 +237,7 @@ function Nav(props) {
           </div>
         </Toolbar>
       </AppBar>
-      <Drawer
-        className={classes.drawer}
-        variant="permanent"
-        classes={{
-          paper: classes.drawerPaper,
-        }}
-        anchor="left">
-        <div className={`${classes.toolbar} ${classes.logoSection}`}>
-          <Link to="/" className={classes.link}>
-            <Typography variant="h5" className={classes.appName}>Crevice</Typography>
-          </Link>
-        </div>
-        {menuItems}
-      </Drawer>
+      {drawer}
       <main className={classes.content}>
         <div className={classes.toolbar} />
         {props.children}

@@ -17,7 +17,7 @@ import Nav from './Nav';
 import RoleList from './role/List';
 import RoleDetail from './role/Detail';
 import LocationList from './location/List';
-import LocationDetail from './location/Detail';
+import AreaList from './area/List';
 import { useClient, ProvideClient } from './client';
 
 function PrivateRoute({ children, ...rest }) {
@@ -74,20 +74,26 @@ function App() {
             <Route path="/invite/:userId/:emailToken">
               <Invite />
             </Route>
-            <Nav>
-              <Route exact path="/roles">
+            <Route exact path="/roles">
+              <Nav>
                 <RoleList />
-              </Route>
-              <Route path="/roles/:roleId">
-                <RoleDetail />
-              </Route>
-              <Route exact path="/locations">
+              </Nav>
+            </Route>
+            <Route exact path="/locations">
+              <Nav>
                 <LocationList />
-              </Route>
-              <Route path="/locations/:locationId">
-                <LocationDetail />
-              </Route>
-            </Nav>
+              </Nav>
+            </Route>
+            <Route exact path="/areas">
+              <Nav>
+                <AreaList />
+              </Nav>
+            </Route>
+            <Route path="/roles/:roleId">
+              <Nav appBarOnly>
+                <RoleDetail />
+              </Nav>
+            </Route>
           </Switch>
         </Router>
       </ProvideClient>

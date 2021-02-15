@@ -9,16 +9,17 @@ import Divider from '@material-ui/core/Divider';
 import IconButton from '@material-ui/core/IconButton';
 import ArrowBackIos from '@material-ui/icons/ArrowBackIos';
 import Button from '@material-ui/core/Button';
-import ConfirmButton from '../common/ConfirmButton';
 import Snackbar from '../common/Snackbar';
 import { Link, useParams, useHistory } from 'react-router-dom';
 
 const useStyles = makeStyles((theme) => ({
   root: {
+    display: 'flex',
     flexDirection: 'column',
     width: '100%',
     paddingLeft: theme.spacing(5),
-    paddingRight: theme.spacing(5)
+    paddingRight: theme.spacing(5),
+    alignItems: 'center'
   },
   content: {
     maxWidth: '700px',
@@ -115,17 +116,6 @@ function Detail() {
       history.push('/roles', { message });
     }
     else {
-      history.push('/roles', { message });
-      setMessage('Something went wrong');
-    }
-  }
-
-  const deleteRole = async () => {
-    const result = await client.postData('/roles/deleteRole', { roleId });
-    if (result) {
-      history.push('/roles', { message: 'Role deleted' });
-    }
-    else {
       setMessage('Something went wrong');
     }
   }
@@ -144,14 +134,6 @@ function Detail() {
   }, [roleId, client]);
 
   const title = roleId === 'new' ? 'Create a new role' : 'Edit role';
-  const deleteButton = roleId !== 'new' ? (
-      <ConfirmButton
-        className={classes.deleteButton}
-        name="Delete"
-        color="secondary"
-        title="Delete this role?"
-        content="Make sure no users have been assigned to this role before deleting it."
-        onClick={deleteRole} />) : null;
 
   function Permission(props) {
     const { name, label, description } = props;
@@ -192,7 +174,6 @@ function Detail() {
             </IconButton>
             <Typography variant="h4">{title}</Typography>
           </div>
-          {deleteButton}
         </div>
         <form className={classes.form} onSubmit={saveRole} noValidate>
           <TextField
@@ -245,13 +226,13 @@ function Detail() {
               name="canViewAnswers"
               label="View survey answers"
               description="View the answers of other users to any questions asked at the end of shifts" />
-            <Button
-              className={classes.button}
-              variant="contained"
-              color="primary"
-              type="submit">Save</Button>
             <Snackbar message={message} setMessage={setMessage} />
           </Paper>
+          <Button
+            className={classes.button}
+            variant="contained"
+            color="primary"
+            type="submit">Save</Button>
         </form>
       </div>
     </div>

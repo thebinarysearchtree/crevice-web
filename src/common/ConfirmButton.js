@@ -9,7 +9,7 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 function ConfirmButton(props) {
   const [open, setOpen] = useState(false);
 
-  const { name, color, title, content, onClick, className } = props;
+  const { title, content, onClick, className } = props;
 
   const handleButtonClick = (e) => {
     setOpen(false);
@@ -17,11 +17,10 @@ function ConfirmButton(props) {
   }
 
   return (
-    <div className={className}>
-      <Button 
-        variant="contained" 
-        color={color}
-        onClick={() => setOpen(true)}>{name}</Button>
+    <React.Fragment>
+      <span 
+        className={className} 
+        onClick={() => setOpen(true)}>delete</span>
       <Dialog
         open={open}
         onClose={() => setOpen(false)}
@@ -35,10 +34,10 @@ function ConfirmButton(props) {
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setOpen(false)} color="primary">Cancel</Button>
-            <Button onClick={handleButtonClick} color="primary" autoFocus>{name}</Button>
+            <Button onClick={handleButtonClick} color="primary" autoFocus>Delete</Button>
           </DialogActions>
       </Dialog>
-    </div>
+    </React.Fragment>
   );
 }
 
