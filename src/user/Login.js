@@ -33,10 +33,10 @@ function Login() {
     if (!isValid) {
       return;
     }
-    const result = await client.logIn(email, password);
-    if (result) {
-      if (result.tasks) {
-        const tasks = result.tasks;
+    const user = await client.logIn(email, password);
+    if (user) {
+      if (user.tasks) {
+        const tasks = user.tasks;
         if (tasks.needsRoles) {
           history.push('/roles');
         }
@@ -45,7 +45,7 @@ function Login() {
         }
       }
       else {
-        history.push(result.defaultView);
+        history.push(user.defaultView);
       }
     }
     else {

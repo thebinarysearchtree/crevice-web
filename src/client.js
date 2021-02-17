@@ -48,10 +48,7 @@ function useProvideClient() {
         method: 'POST'
       }); 
       if (response.ok) {
-        if (response.headers.get('content-type') === 'application/json; charset=utf-8') {
-          return await response.json();
-        }
-        return true;
+        return response;
       }
       else if (response.status === 401) {
         if (i === 0) {
@@ -59,11 +56,11 @@ function useProvideClient() {
         }
         else {
           setUser(null);
-          return false;
+          return response;
         }
       }
       else {
-        return false;
+        return response;
       }
     }
   };
@@ -79,7 +76,7 @@ function useProvideClient() {
         method: 'GET'
       });
       if (response.ok) {
-        return await response.json();
+        return response;
       }
       else if (response.status === 401) {
         if (i === 0) {
@@ -87,11 +84,11 @@ function useProvideClient() {
         }
         else {
           setUser(null);
-          return false;
+          return response;
         }
       }
       else {
-        return false;
+        return response;
       }  
     }
   };
@@ -108,14 +105,14 @@ function useProvideClient() {
       const user = await response.json();
       localStorage.setItem('user', user);
       setUser(user);
-      return true;
+      return user;
     }
     else if (response.status === 401) {
       setUser(null);
-      return false;
+      return null;
     }
     else {
-      return false;
+      return null;
     }
   };
   

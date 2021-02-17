@@ -23,8 +23,8 @@ function List() {
   const classes = useStyles();
 
   const deleteRole = async (roleId) => {
-    const result = await client.postData('/roles/deleteRole', { roleId });
-    if (result) {
+    const response = await client.postData('/roles/deleteRole', { roleId });
+    if (response.ok) {
       setRoles(r => r.filter(r.id !== roleId));
       setMessage('Role deleted');
     }
@@ -35,8 +35,12 @@ function List() {
 
   useEffect(() => {
     const getRoles = async () => {
-      const result = await client.postData('/roles/find');
-      if (!result) {
+      const response = await client.postData('/roles/find');
+      if (response.ok) {
+        const roles = await response.json();
+        setRoles(roles);
+      }
+      else {
         setRoles([
           {
             id: 1,
@@ -51,9 +55,6 @@ function List() {
             userCount: 3
           }
         ]);
-      }
-      else {
-        setRoles(result.roles);
       }
     };
     getRoles();

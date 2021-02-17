@@ -12,11 +12,11 @@ function Invite() {
 
   useEffect(() => {
     const verifyToken = async () => {
-      const verified = await client.postData('/users/verify', {
+      const response = await client.postData('/users/verify', {
         userId,
         emailToken
       });
-      if (verified) {
+      if (response.ok) {
         history.push('/login');
       }
     }

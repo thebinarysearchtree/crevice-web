@@ -2,10 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { useClient } from '../client';
 import TextField from '@material-ui/core/TextField';
-import InputLabel from '@material-ui/core/InputLabel';
-import MenuItem from '@material-ui/core/MenuItem';
-import FormControl from '@material-ui/core/FormControl';
-import Select from '@material-ui/core/Select';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
@@ -57,8 +53,8 @@ function Detail(props) {
     e.preventDefault();
     setOpen(false);
     if (area.id !== -1) {
-      const result = await client.postData('/areas/update', { area });
-      if (result) {
+      const response = await client.postData('/areas/update', { area });
+      if (response.ok) {
         setAreas(areas => areas.map(a => {
           if (a.id === area.id) {
             return { ...area };
@@ -72,8 +68,9 @@ function Detail(props) {
       }
     }
     else {
-      const result = await client.postData('/areas/insert', { area });
-      if (result) {
+      const response = await client.postData('/areas/insert', { area });
+      if (response.ok) {
+        const result = await response.json();
         const { areaId } = result;
         const savedArea = { ...area, id: areaId };
         setAreas(areas => [savedArea, ...areas]);
@@ -103,6 +100,13 @@ function Detail(props) {
           name="name"
           label="Area name"
           value={area.name}
+          onChange={handleInputChange}
+          autoComplete="off" />
+        <TextField
+          className={classes.formControl}
+          name="abbreviation"
+          label="Abbreviation"
+          value={area.abbreviation}
           onChange={handleInputChange}
           autoComplete="off" />
         <TextField

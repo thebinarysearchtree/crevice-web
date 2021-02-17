@@ -57,14 +57,14 @@ function SignUp() {
     if (!isValid) {
       return;
     }
-    const result = await client.postData('/users/signUp', {
+    const response = await client.postData('/users/signUp', {
       organisationName,
       firstName,
       lastName,
       email,
       password
     });
-    if (result) {
+    if (response.ok) {
       history.push('/verify');
     }
   };

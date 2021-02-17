@@ -32,6 +32,7 @@ function List() {
     setSelectedLocation({
       id: -1,
       name: '',
+      abbreviation: '',
       timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       address: '',
       createdAt: new Date(),
@@ -41,8 +42,8 @@ function List() {
   }
 
   const deleteLocation = async (locationId) => {
-    const result = await client.postData('/locations/deleteLocation', { locationId });
-    if (result) {
+    const response = await client.postData('/locations/deleteLocation', { locationId });
+    if (response.ok) {
       setLocations(l => l.filter(l.id !== locationId));
       setMessage('Location deleted');
     }
@@ -53,12 +54,17 @@ function List() {
 
   useEffect(() => {
     const getLocations = async () => {
-      const result = await client.postData('/locations/find');
-      if (!result) {
+      const response = await client.postData('/locations/find');
+      if (response.ok) {
+        const locations = await response.json();
+        setLocations(locations);
+      }
+      else {
         setLocations([
           {
             id: 1,
             name: 'Sunshine Coast University Hospital',
+            abbreviation: 'SCUH',
             timeZone: 'Australia/Brisbane',
             createdAt: new Date(),
             areaCount: 30
@@ -66,14 +72,12 @@ function List() {
           {
             id: 2,
             name: 'Gold Coast University Hospital',
+            abbreviation: 'GCUH',
             timeZone: 'Australia/Brisbane',
             createdAt: new Date(),
             areaCount: 49
           }
         ]);
-      }
-      else {
-        setLocations(result.locations);
       }
     };
     getLocations();

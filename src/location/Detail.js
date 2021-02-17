@@ -57,8 +57,8 @@ function Detail(props) {
     e.preventDefault();
     setOpen(false);
     if (location.id !== -1) {
-      const result = await client.postData('/locations/update', { location });
-      if (result) {
+      const response = await client.postData('/locations/update', { location });
+      if (response.ok) {
         setLocations(locations => locations.map(l => {
           if (l.id === location.id) {
             return { ...location };
@@ -72,8 +72,9 @@ function Detail(props) {
       }
     }
     else {
-      const result = await client.postData('/locations/insert', { location });
-      if (result) {
+      const response = await client.postData('/locations/insert', { location });
+      if (response.ok) {
+        const result = await response.json();
         const { locationId } = result;
         const savedLocation = { ...location, id: locationId };
         setLocations(locations => [savedLocation, ...locations]);
@@ -103,6 +104,13 @@ function Detail(props) {
           name="name"
           label="Location name"
           value={location.name}
+          onChange={handleInputChange}
+          autoComplete="off" />
+        <TextField
+          className={classes.formControl}
+          name="abbreviation"
+          label="Abbreviation"
+          value={location.abbreviation}
           onChange={handleInputChange}
           autoComplete="off" />
         <FormControl className={classes.formControl}>

@@ -111,8 +111,8 @@ function Detail() {
     e.preventDefault();
     const url = roleId === 'new' ? '/roles/insert' : '/roles/update';
     const message = roleId === 'new' ? 'Role created' : 'Role updated';
-    const result = await client.postData(url, { roleId, ...role });
-    if (result) {
+    const response = await client.postData(url, { roleId, ...role });
+    if (response.ok) {
       history.push('/roles', { message });
     }
     else {
@@ -122,9 +122,9 @@ function Detail() {
 
   useEffect(() => {
     const getRole = async () => {
-      const result = await client.postData('/roles/getById', { roleId });
-      if (result) {
-        const { role } = result;
+      const response = await client.postData('/roles/getById', { roleId });
+      if (response.ok) {
+        const role = await response.json();
         setRole(role);
       }
     };

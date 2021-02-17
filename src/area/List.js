@@ -18,6 +18,11 @@ import TableFooter from '@material-ui/core/TableFooter';
 import TablePagination from '@material-ui/core/TablePagination';
 import TableSortLabel from '@material-ui/core/TableSortLabel';
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
+import Menu from '@material-ui/core/Menu';
+import MenuItem from '@material-ui/core/MenuItem';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import Fade from '@material-ui/core/Fade';
+import { useHistory } from 'react-router-dom';
 
 function List() {
   const [areas, setAreas] = useState(null);
@@ -29,9 +34,12 @@ function List() {
   const [order, setOrder] = useState('asc');
   const [orderBy, setOrderBy] = useState('name');
   const [locationId, setLocationId] = useState(null);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const client = useClient();
   const classes = useStyles();
+  const history = useHistory();
 
   const handleNameClick = (area) => {
     setSelectedArea({ ...area });
@@ -42,6 +50,7 @@ function List() {
     setSelectedArea({
       id: -1,
       name: '',
+      abbreviation: '',
       locationId: -1,
       locationName: '',
       notes: '',
@@ -64,6 +73,10 @@ function List() {
     setLocationId(e.target.value);
   }
 
+  const handleLocationFilterClick = (e) => {
+    setAnchorEl(e.currentTarget);
+  }
+
   const sortByLocationName = () => {
     const isAsc = orderBy === 'locationName' && order === 'asc';
     setOrder(isAsc ? 'desc' : 'asc');
@@ -84,31 +97,20 @@ function List() {
 
   useEffect(() => {
     const getAreas = async () => {
-      const result = await client.postData('/areas/find');
-      if (!result) {
-        setAreas([
-          {
-            id: 1,
-            name: '10B',
-            locationId: 1,
-            locationName: 'Sunshine Coast University Hospital',
-            notes: '',
-            createdAt: new Date(),
-            activeUserCount: 17
-          },
-          {
-            id: 2,
-            name: 'ICU',
-            locationId: 2,
-            locationName: 'Gold Coast University Hospital',
-            notes: '',
-            createdAt: new Date(),
-            activeUserCount: 32
-          }
-        ]);
+      const response = await client.postData('/areas/find');
+      setLoading(false);
+      if (response.ok) {
+        const areas = await response.json();
+        console.log(areas);
+        setAreas(areas);
       }
       else {
-        setAreas(result.areas);
+        if (response.status === 401) {
+          history.push('/login');
+        }
+        else {
+          history.push('/error');
+        }
       }
     };
     getAreas();
@@ -116,9 +118,55 @@ function List() {
 
   if (areas === null) {
     return (
-      <div></div>
+      <div className={classes.root}>
+        <div className={classes.content}>
+          <div className={classes.progress}>
+            <Fade
+              in={loading}
+              style={{
+                transitionDelay: loading ? '800ms' : '0ms'
+              }}
+              unmountOnExit
+              className={classes.root}>
+                <CircularProgress />
+            </Fade>
+          </div>
+        </div>
+        <div className={classes.rightSection} />
+      </div>
     );
   }
+
+  if (areas.length === 0) {
+    return (
+      <div className={classes.root}>
+        <div className={classes.content}>
+          <div className={classes.heading}>
+            <Typography variant="h5">Areas</Typography>
+          </div>
+          <Paper className={classes.emptyPaper}>
+            <Typography>There are no areas.</Typography>
+            <div className={classes.grow} />
+            <div>
+              <Button 
+                variant="contained"
+                color="primary"
+                onClick={handleNewClick}>New area</Button>
+            </div>
+          </Paper>
+          <Detail 
+            open={open}
+            setOpen={setOpen}
+            selectedArea={selectedArea}
+            setAreas={setAreas}
+            setMessage={setMessage} />
+          <Snackbar message={message} setMessage={setMessage} />
+        </div>
+        <div className={classes.rightSection} />
+      </div>
+    );
+  }
+  
   if (areas.length > 0) {
     const tableRows = areas.map(a => {
       return (
@@ -126,7 +174,7 @@ function List() {
             <TableCell component="th" scope="row">
               <span 
                 className={classes.locationName}
-                onClick={() => handleNameClick(a)}>{a.name}</span>
+                onClick={() => handleNameClick(a)}>{a.abbreviation}</span>
             </TableCell>
             <TableCell align="right">{a.locationName}</TableCell>
             <TableCell align="right">{a.createdAt.toLocaleDateString()}</TableCell>
@@ -150,9 +198,21 @@ function List() {
           </div>
           <div className={classes.toolbar}>
             <SearchBox placeholder="Search by name..." />
-            <Button 
-              variant="outlined" 
-              endIcon={<ArrowDropDownIcon />}>Location</Button>
+            <Button
+              variant="outlined"
+              endIcon={<ArrowDropDownIcon />}
+              aria-controls="location-menu"
+              aria-haspopup="true"
+              onClick={handleLocationFilterClick}>Location</Button>
+            <Menu
+              id="location-menu"
+              anchorEl={anchorEl}
+              keepMounted
+              open={Boolean(anchorEl)}
+              onClose={() => setAnchorEl(null)}>
+                <MenuItem>SCUH</MenuItem>
+                <MenuItem>GCUH</MenuItem>
+            </Menu>
             <div className={classes.grow} />
             <Button 
               variant="contained"
