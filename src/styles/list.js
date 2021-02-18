@@ -69,10 +69,6 @@ const useStyles = makeStyles((theme) => ({
   emptyPaper: {
     display: 'flex',
     padding: theme.spacing(2)
-  },
-  progress: {
-    display: 'flex',
-    justifyContent: 'center'
   }
 }));
 

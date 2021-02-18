@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { useClient } from '../client';
+import client from '../client';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
@@ -29,7 +29,6 @@ function Detail(props) {
   }, [props.selectedArea]);
 
   const { setAreas, open, setOpen, setMessage } = props;
-  const client = useClient();
   const classes = useStyles();
 
   const handleInputChange = (e) => {

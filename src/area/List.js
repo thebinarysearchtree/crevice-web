@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useClient } from '../client';
+import React, { useState } from 'react';
+import client from '../client';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
@@ -16,13 +16,12 @@ import ConfirmButton from '../common/ConfirmButton';
 import SearchBox from '../common/SearchBox';
 import TableFooter from '@material-ui/core/TableFooter';
 import TablePagination from '@material-ui/core/TablePagination';
-import TableSortLabel from '@material-ui/core/TableSortLabel';
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
-import CircularProgress from '@material-ui/core/CircularProgress';
-import Fade from '@material-ui/core/Fade';
-import { useHistory } from 'react-router-dom';
+import useFetch from '../hooks/useFetch';
+import Progress from '../common/Progress';
+import TableSortCell from '../common/TableSortCell';
 
 function List() {
   const [areas, setAreas] = useState(null);
@@ -37,9 +36,7 @@ function List() {
   const [anchorEl, setAnchorEl] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const client = useClient();
   const classes = useStyles();
-  const history = useHistory();
 
   const handleNameClick = (area) => {
     setSelectedArea({ ...area });
@@ -95,42 +92,20 @@ function List() {
     }
   }
 
-  useEffect(() => {
-    const getAreas = async () => {
-      const response = await client.postData('/areas/find');
-      setLoading(false);
-      if (response.ok) {
-        const areas = await response.json();
-        console.log(areas);
-        setAreas(areas);
-      }
-      else {
-        if (response.status === 401) {
-          history.push('/login');
-        }
-        else {
-          history.push('/error');
-        }
-      }
-    };
-    getAreas();
-  }, [client]);
+  useFetch('/areas/find', setAreas, setLoading);
+
+  const dialog = <Detail 
+    open={open}
+    setOpen={setOpen}
+    selectedArea={selectedArea}
+    setAreas={setAreas}
+    setMessage={setMessage} />;
 
   if (areas === null) {
     return (
       <div className={classes.root}>
         <div className={classes.content}>
-          <div className={classes.progress}>
-            <Fade
-              in={loading}
-              style={{
-                transitionDelay: loading ? '800ms' : '0ms'
-              }}
-              unmountOnExit
-              className={classes.root}>
-                <CircularProgress />
-            </Fade>
-          </div>
+          <Progress loading={loading} />
         </div>
         <div className={classes.rightSection} />
       </div>
@@ -154,12 +129,7 @@ function List() {
                 onClick={handleNewClick}>New area</Button>
             </div>
           </Paper>
-          <Detail 
-            open={open}
-            setOpen={setOpen}
-            selectedArea={selectedArea}
-            setAreas={setAreas}
-            setMessage={setMessage} />
+          {dialog}
           <Snackbar message={message} setMessage={setMessage} />
         </div>
         <div className={classes.rightSection} />
@@ -224,14 +194,12 @@ function List() {
               <TableHead>
                 <TableRow>
                   <TableCell>Name</TableCell>
-                  <TableCell 
+                  <TableSortCell
                     align="right"
-                    sortDirection={orderBy === 'locationName' ? order : false}>
-                      <TableSortLabel
-                        active={orderBy === 'locationName'}
-                        direction={orderBy === 'locationName' ? order : 'asc'}
-                        onClick={sortByLocationName}>Location</TableSortLabel>
-                  </TableCell>
+                    name="locationName"
+                    orderBy={orderBy}
+                    order={order}
+                    onClick={sortByLocationName}>Location</TableSortCell>
                   <TableCell align="right">Created</TableCell>
                   <TableCell align="right">Active users</TableCell>
                   <TableCell align="right"></TableCell>
@@ -254,12 +222,7 @@ function List() {
               </TableFooter>
             </Table>
           </TableContainer>
-          <Detail 
-            open={open}
-            setOpen={setOpen}
-            selectedArea={selectedArea}
-            setAreas={setAreas}
-            setMessage={setMessage} />
+          {dialog}
           <Snackbar message={message} setMessage={setMessage} />
         </div>
         <div className={classes.rightSection} />

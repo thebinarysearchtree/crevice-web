@@ -6,7 +6,6 @@ import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import IconButton from '@material-ui/core/IconButton';
 import Typography from '@material-ui/core/Typography';
-import InputBase from '@material-ui/core/InputBase';
 import MenuItem from '@material-ui/core/MenuItem';
 import Menu from '@material-ui/core/Menu';
 import List from '@material-ui/core/List';
@@ -19,9 +18,8 @@ import RoomIcon from '@material-ui/icons/Room';
 import HomeIcon from '@material-ui/icons/Home';
 import PersonIcon from '@material-ui/icons/Person';
 import LabelIcon from '@material-ui/icons/Label';
-import SearchIcon from '@material-ui/icons/Search';
 import AccountCircle from '@material-ui/icons/AccountCircle';
-import { useClient } from './client';
+import client from './client';
 import { Link, useHistory, useLocation } from 'react-router-dom';
 import SearchBox from './common/SearchBox';
 
@@ -115,7 +113,6 @@ function Nav(props) {
   const [anchorEl, setAnchorEl] = useState(null);
 
   const classes = useStyles();
-  const client = useClient();
   const history = useHistory();
   const location = useLocation();
 

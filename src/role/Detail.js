@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { useClient } from '../client';
+import client from '../client';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import TextField from '@material-ui/core/TextField';
@@ -96,7 +96,6 @@ function Detail() {
   const [message, setMessage] = useState('');
 
   const { roleId } = useParams();
-  const client = useClient();
   const history = useHistory();
   const classes = useStyles();
 
@@ -131,7 +130,7 @@ function Detail() {
     if (roleId !== 'new') {
       getRole();
     }
-  }, [roleId, client]);
+  }, [roleId]);
 
   const title = roleId === 'new' ? 'Create a new role' : 'Edit role';
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useClient } from '../client';
+import client from '../client';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
@@ -20,7 +20,6 @@ function List() {
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [open, setOpen] = useState(false);
 
-  const client = useClient();
   const classes = useStyles();
 
   const handleNameClick = (location) => {
@@ -81,7 +80,7 @@ function List() {
       }
     };
     getLocations();
-  }, [client]);
+  }, []);
 
   if (locations === null) {
     return (

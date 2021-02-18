@@ -18,15 +18,16 @@ import RoleList from './role/List';
 import RoleDetail from './role/Detail';
 import LocationList from './location/List';
 import AreaList from './area/List';
-import { useClient, ProvideClient } from './client';
+import { useAuth, ProvideAuth } from './auth';
 
 function PrivateRoute({ children, ...rest }) {
-  const client = useClient();
+  const auth = useAuth();
+  
   return (
     <Route
       {...rest}
       render={({ location }) =>
-        client.user ? (
+        auth.user ? (
           children
         ) : (
           <Redirect
@@ -55,7 +56,7 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <ProvideClient>
+      <ProvideAuth>
         <Router>
           <ScrollToTop />
           <Switch>
@@ -96,7 +97,7 @@ function App() {
             </Route>
           </Switch>
         </Router>
-      </ProvideClient>
+      </ProvideAuth>
     </ThemeProvider>
   );
 }

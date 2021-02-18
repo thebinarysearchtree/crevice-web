@@ -1,137 +1,110 @@
-import React, { useContext, createContext, useState } from 'react';
+let user = JSON.parse(localStorage.getItem('user'));
 
-const clientContext = createContext();
+const refreshToken = async () => {
+  const token = user ? user.token : '';
+  const response = await fetch('/users/refreshToken', {
+    body: JSON.stringify({ token }),
+    headers: {
+      'content-type': 'application/json'
+    },
+    method: 'POST'
+  });
+  if (response.ok) {
+    const updatedUser = await response.json();
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+    user = updatedUser;
+  }
+};
 
-const useClient = () => useContext(clientContext);
-
-function ProvideClient({ children }) {
-  const client = useProvideClient();
-  return (
-    <clientContext.Provider value={client}>
-      {children}
-    </clientContext.Provider>
-  );
-}
-
-function useProvideClient() {
-  const [user, setUser] = useState(localStorage.getItem('user'));
-
-  const refreshToken = async () => {
+const postData = async (url, data) => {
+  for (let i = 0; i < 2; i++) {
     const token = user ? user.token : '';
-    const response = await fetch('/users/refreshToken', {
-      body: JSON.stringify({ token }),
+    const response = await fetch(url, {
+      body: JSON.stringify(data),
       headers: {
+        'Authorization': 'Bearer ' + token,
         'content-type': 'application/json'
       },
       method: 'POST'
-    });
+    }); 
     if (response.ok) {
-      const user = await response.json();
-      localStorage.setItem('user', user);
-      setUser(user);
-      return true;
-    }
-    else {
-      return false;
-    }
-  };
-
-  const postData = async (url, data) => {
-    const token = user ? user.token : '';
-    for (let i = 0; i < 2; i++) {
-      const response = await fetch(url, {
-        body: JSON.stringify(data),
-        headers: {
-          'Authorization': 'Bearer ' + token,
-          'content-type': 'application/json'
-        },
-        method: 'POST'
-      }); 
-      if (response.ok) {
-        return response;
-      }
-      else if (response.status === 401) {
-        if (i === 0) {
-          await refreshToken();
-        }
-        else {
-          setUser(null);
-          return response;
-        }
-      }
-      else {
-        return response;
-      }
-    }
-  };
-
-  const getData = async (url) => {
-    const token = user ? user.token : '';
-    for (let i = 0; i < 2; i++) {
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': 'Bearer ' + token,
-          'content-type': 'application/json'
-        },
-        method: 'GET'
-      });
-      if (response.ok) {
-        return response;
-      }
-      else if (response.status === 401) {
-        if (i === 0) {
-          await refreshToken();
-        }
-        else {
-          setUser(null);
-          return response;
-        }
-      }
-      else {
-        return response;
-      }  
-    }
-  };
-
-  const logIn = async (email, password) => {
-    const response = await fetch('/users/getToken', {
-      body: JSON.stringify({ email, password }),
-      headers: {
-        'content-type': 'application/json'
-      },
-      method: 'POST'
-    });
-    if (response.ok) {
-      const user = await response.json();
-      localStorage.setItem('user', user);
-      setUser(user);
-      return user;
+      return response;
     }
     else if (response.status === 401) {
-      setUser(null);
-      return null;
+      if (i === 0) {
+        await refreshToken();
+      }
+      else {
+        user = null;
+        return response;
+      }
     }
     else {
-      return null;
+      return response;
     }
-  };
-  
-  const signOut = () => {
-    localStorage.removeItem('user');
-    setUser(null);
-  };
+  }
+};
 
-  return {
-    user,
-    refreshToken,
-    postData,
-    getData,
-    logIn,
-    signOut
-  };
-}
+const getData = async (url) => {
+  for (let i = 0; i < 2; i++) {
+    const token = user ? user.token : '';
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'content-type': 'application/json'
+      },
+      method: 'GET'
+    });
+    if (response.ok) {
+      return response;
+    }
+    else if (response.status === 401) {
+      if (i === 0) {
+        await refreshToken();
+      }
+      else {
+        user = null;
+        return response;
+      }
+    }
+    else {
+      return response;
+    }  
+  }
+};
 
-export {
-  useClient,
-  ProvideClient
+const logIn = async (email, password) => {
+  const response = await fetch('/users/getToken', {
+    body: JSON.stringify({ email, password }),
+    headers: {
+      'content-type': 'application/json'
+    },
+    method: 'POST'
+  });
+  if (response.ok) {
+    const updatedUser = await response.json();
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+    user = updatedUser;
+    return user;
+  }
+  else if (response.status === 401) {
+    user = null;
+    return null;
+  }
+  else {
+    return null;
+  }
+};
+
+const signOut = () => {
+  localStorage.removeItem('user');
+  user = null;
+};
+
+export default {
+  refreshToken,
+  postData,
+  getData,
+  logIn,
+  signOut
 };

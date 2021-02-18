@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { useClient } from '../client';
+import client from '../client';
 import TextField from '@material-ui/core/TextField';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -33,7 +33,6 @@ function Detail(props) {
   }, [props.selectedLocation]);
 
   const { setLocations, open, setOpen, setMessage } = props;
-  const client = useClient();
   const classes = useStyles();
 
   const handleInputChange = (e) => {
