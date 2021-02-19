@@ -16,12 +16,10 @@ import ConfirmButton from '../common/ConfirmButton';
 import SearchBox from '../common/SearchBox';
 import TableFooter from '@material-ui/core/TableFooter';
 import TablePagination from '@material-ui/core/TablePagination';
-import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
-import Menu from '@material-ui/core/Menu';
-import MenuItem from '@material-ui/core/MenuItem';
 import useFetch from '../hooks/useFetch';
 import Progress from '../common/Progress';
 import TableSortCell from '../common/TableSortCell';
+import FilterButton from '../common/FilterButton';
 
 function List() {
   const [areas, setAreas] = useState(null);
@@ -32,9 +30,8 @@ function List() {
   const [page, setPage] = useState(0);
   const [order, setOrder] = useState('asc');
   const [orderBy, setOrderBy] = useState('name');
-  const [locationId, setLocationId] = useState(null);
-  const [anchorEl, setAnchorEl] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [locations, setLocations] = useState([]);
 
   const classes = useStyles();
 
@@ -66,12 +63,8 @@ function List() {
     setPage(0);
   }
 
-  const handleLocationIdChange = (e) => {
-    setLocationId(e.target.value);
-  }
-
-  const handleLocationFilterClick = (e) => {
-    setAnchorEl(e.currentTarget);
+  const filterByLocationId = (locationId) => {
+    setAreas(a => a.filter(a => a.locationId === locationId));
   }
 
   const sortByLocationName = () => {
@@ -92,7 +85,14 @@ function List() {
     }
   }
 
-  useFetch('/areas/find', setAreas, setLoading);
+  useFetch(setLoading, [
+    { url: '/areas/find', setState: setAreas },
+    { url: '/locations/getSelectListItems', setState: setLocations }]);
+
+  const newButton = <Button 
+    variant="contained"
+    color="primary"
+    onClick={handleNewClick}>New area</Button>;
 
   const dialog = <Detail 
     open={open}
@@ -122,12 +122,7 @@ function List() {
           <Paper className={classes.emptyPaper}>
             <Typography>There are no areas.</Typography>
             <div className={classes.grow} />
-            <div>
-              <Button 
-                variant="contained"
-                color="primary"
-                onClick={handleNewClick}>New area</Button>
-            </div>
+            <div>{newButton}</div>
           </Paper>
           {dialog}
           <Snackbar message={message} setMessage={setMessage} />
@@ -168,26 +163,12 @@ function List() {
           </div>
           <div className={classes.toolbar}>
             <SearchBox placeholder="Search by name..." />
-            <Button
-              variant="outlined"
-              endIcon={<ArrowDropDownIcon />}
-              aria-controls="location-menu"
-              aria-haspopup="true"
-              onClick={handleLocationFilterClick}>Location</Button>
-            <Menu
-              id="location-menu"
-              anchorEl={anchorEl}
-              keepMounted
-              open={Boolean(anchorEl)}
-              onClose={() => setAnchorEl(null)}>
-                <MenuItem>SCUH</MenuItem>
-                <MenuItem>GCUH</MenuItem>
-            </Menu>
+            <FilterButton
+              id="location-filter"
+              items={locations}
+              filterBy={filterByLocationId}>Location</FilterButton>
             <div className={classes.grow} />
-            <Button 
-              variant="contained"
-              color="primary"
-              onClick={handleNewClick}>New area</Button>
+            {newButton}
           </div>
           <TableContainer component={Paper}>
             <Table className={classes.table} aria-label="areas table">
@@ -229,7 +210,6 @@ function List() {
       </div>
     );
   }
-  return (<div></div>);
 }
 
 export default List;
