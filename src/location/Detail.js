@@ -11,6 +11,7 @@ import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
+import makeInputHandler from '../common/input';
 
 const useStyles = makeStyles((theme) => ({
   form: {
@@ -35,28 +36,16 @@ function Detail(props) {
   const { setLocations, open, setOpen, setMessage } = props;
   const classes = useStyles();
 
-  const handleInputChange = (e) => {
-    const name = e.target.name;
-    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
-
-    setLocation(l => {
-      const updatedLocation = { ...l, [name] : value };
-      const isValid = updatedLocation.name && updatedLocation.timeZone;
-      if (!isValid) {
-        setIsDisabled(true);
-      }
-      else {
-        setIsDisabled(false);
-      }
-      return updatedLocation;
-    });
-  }
+  const handleInputChange = makeInputHandler(
+    setLocation, 
+    setIsDisabled, 
+    (l) => l.name && l.timeZone);
 
   const saveLocation = async (e) => {
     e.preventDefault();
     setOpen(false);
     if (location.id !== -1) {
-      const response = await client.postData('/locations/update', { location });
+      const response = await client.postData('/locations/update', location);
       if (response.ok) {
         setLocations(locations => locations.map(l => {
           if (l.id === location.id) {
@@ -71,7 +60,7 @@ function Detail(props) {
       }
     }
     else {
-      const response = await client.postData('/locations/insert', { location });
+      const response = await client.postData('/locations/insert', location);
       if (response.ok) {
         const result = await response.json();
         const { locationId } = result;

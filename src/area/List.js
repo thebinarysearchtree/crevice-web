@@ -16,13 +16,14 @@ import ConfirmButton from '../common/ConfirmButton';
 import SearchBox from '../common/SearchBox';
 import TableFooter from '@material-ui/core/TableFooter';
 import TablePagination from '@material-ui/core/TablePagination';
-import useFetch from '../hooks/useFetch';
+import useFetchMany from '../hooks/useFetchMany';
 import Progress from '../common/Progress';
 import TableSortCell from '../common/TableSortCell';
 import FilterButton from '../common/FilterButton';
 
 function List() {
   const [areas, setAreas] = useState(null);
+  const [filteredAreas, setFilteredAreas] = useState(null);
   const [message, setMessage] = useState('');
   const [selectedArea, setSelectedArea] = useState(null);
   const [open, setOpen] = useState(false);
@@ -48,7 +49,7 @@ function List() {
       locationId: -1,
       locationName: '',
       notes: '',
-      createdAt: new Date(),
+      createdAt: new Date().toISOString(),
       activeUserCount: 0
     });
     setOpen(true);
@@ -63,8 +64,23 @@ function List() {
     setPage(0);
   }
 
+  const handleSearch = (e) => {
+    const term = e.target.value;
+    if (!term) {
+      setFilteredAreas(areas);
+    }
+    else {
+      setFilteredAreas(a => a.filter(a => a.abbreviation.startsWith(term)));
+    }
+  }
+
   const filterByLocationId = (locationId) => {
-    setAreas(a => a.filter(a => a.locationId === locationId));
+    if (locationId === -1) {
+      setFilteredAreas(areas);
+    }
+    else {
+      setFilteredAreas(areas.filter(a => a.locationId === locationId));
+    }
   }
 
   const sortByLocationName = () => {
@@ -75,9 +91,13 @@ function List() {
   }
 
   const deleteArea = async (areaId) => {
-    const result = await client.postData('/areas/deleteArea', { areaId });
+    const result = await client.postData('/areas/remove', { areaId });
     if (result) {
-      setAreas(a => a.filter(a.id !== areaId));
+      setAreas(areas => {
+        const filteredAreas = areas.filter(area => area.id !== areaId);
+        setFilteredAreas(filteredAreas);
+        return filteredAreas;
+      });
       setMessage('Area deleted');
     }
     else {
@@ -85,9 +105,16 @@ function List() {
     }
   }
 
-  useFetch(setLoading, [
-    { url: '/areas/find', setState: setAreas },
-    { url: '/locations/getSelectListItems', setState: setLocations }]);
+  const areasHandler = (areas) => {
+    setAreas(areas);
+    setFilteredAreas(areas);
+  }
+
+  const locationsHandler = (locations) => setLocations(locations);
+
+  useFetchMany(setLoading, [
+    { url: '/areas/find', handler: areasHandler },
+    { url: '/locations/getSelectListItems', handler: locationsHandler }]);
 
   const newButton = <Button 
     variant="contained"
@@ -99,9 +126,13 @@ function List() {
     setOpen={setOpen}
     selectedArea={selectedArea}
     setAreas={setAreas}
-    setMessage={setMessage} />;
+    setFilteredAreas={setFilteredAreas}
+    setMessage={setMessage}
+    locations={locations} />;
 
-  if (areas === null) {
+  const snackbar = <Snackbar message={message} setMessage={setMessage} />;
+
+  if (filteredAreas === null) {
     return (
       <div className={classes.root}>
         <div className={classes.content}>
@@ -125,7 +156,7 @@ function List() {
             <div>{newButton}</div>
           </Paper>
           {dialog}
-          <Snackbar message={message} setMessage={setMessage} />
+          {snackbar}
         </div>
         <div className={classes.rightSection} />
       </div>
@@ -133,7 +164,7 @@ function List() {
   }
   
   if (areas.length > 0) {
-    const tableRows = areas.map(a => {
+    const tableRows = filteredAreas.map(a => {
       return (
         <TableRow key={a.name}>
             <TableCell component="th" scope="row">
@@ -142,7 +173,7 @@ function List() {
                 onClick={() => handleNameClick(a)}>{a.abbreviation}</span>
             </TableCell>
             <TableCell align="right">{a.locationName}</TableCell>
-            <TableCell align="right">{a.createdAt.toLocaleDateString()}</TableCell>
+            <TableCell align="right">{new Date(a.createdAt).toLocaleDateString()}</TableCell>
             <TableCell align="right">{a.activeUserCount}</TableCell>
             <TableCell align="right">
               <ConfirmButton
@@ -162,7 +193,9 @@ function List() {
             <Typography variant="h5">Areas</Typography>
           </div>
           <div className={classes.toolbar}>
-            <SearchBox placeholder="Search by name..." />
+            <SearchBox 
+              placeholder="Search by name..."
+              onChange={handleSearch} />
             <FilterButton
               id="location-filter"
               items={locations}
@@ -192,9 +225,9 @@ function List() {
               <TableFooter>
                 <TableRow>
                   <TablePagination
-                    rowsPerPageOptions={[10, 20]}
+                    rowsPerPageOptions={[]}
                     colSpan={5}
-                    count={areas.length}
+                    count={filteredAreas.length}
                     rowsPerPage={rowsPerPage}
                     page={page}
                     onChangePage={handleChangePage}
@@ -204,7 +237,7 @@ function List() {
             </Table>
           </TableContainer>
           {dialog}
-          <Snackbar message={message} setMessage={setMessage} />
+          {snackbar}
         </div>
         <div className={classes.rightSection} />
       </div>

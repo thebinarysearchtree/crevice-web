@@ -34,18 +34,7 @@ function Login() {
     }
     const user = await client.logIn(email, password);
     if (user) {
-      if (user.tasks) {
-        const tasks = user.tasks;
-        if (tasks.needsRoles) {
-          history.push('/roles');
-        }
-        else if (tasks.needsAreas) {
-          history.push('/areas');
-        }
-      }
-      else {
-        history.push(user.defaultView);
-      }
+      history.push(user.defaultView);
     }
     else {
       setLoginFailed(true);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import client from '../client';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
@@ -13,12 +13,19 @@ import Snackbar from '../common/Snackbar';
 import useStyles from '../styles/list';
 import Detail from './Detail';
 import ConfirmButton from '../common/ConfirmButton';
+import Progress from '../common/Progress';
+import TableFooter from '@material-ui/core/TableFooter';
+import TablePagination from '@material-ui/core/TablePagination';
+import useFetch from '../hooks/useFetch';
 
 function List() {
   const [locations, setLocations] = useState(null);
   const [message, setMessage] = useState('');
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [open, setOpen] = useState(false);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [page, setPage] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   const classes = useStyles();
 
@@ -34,14 +41,23 @@ function List() {
       abbreviation: '',
       timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       address: '',
-      createdAt: new Date(),
+      createdAt: new Date().toISOString(),
       areaCount: 0
     });
     setOpen(true);
   }
 
+  const handleChangePage = (e, newPage) => {
+    setPage(newPage);
+  }
+
+  const handleChangeRowsPerPage = (e) => {
+    setRowsPerPage(parseInt(e.target.value, 10));
+    setPage(0);
+  }
+
   const deleteLocation = async (locationId) => {
-    const response = await client.postData('/locations/deleteLocation', { locationId });
+    const response = await client.postData('/locations/remove', { locationId });
     if (response.ok) {
       setLocations(l => l.filter(l.id !== locationId));
       setMessage('Location deleted');
@@ -51,42 +67,53 @@ function List() {
     }
   }
 
-  useEffect(() => {
-    const getLocations = async () => {
-      const response = await client.postData('/locations/find');
-      if (response.ok) {
-        const locations = await response.json();
-        setLocations(locations);
-      }
-      else {
-        setLocations([
-          {
-            id: 1,
-            name: 'Sunshine Coast University Hospital',
-            abbreviation: 'SCUH',
-            timeZone: 'Australia/Brisbane',
-            createdAt: new Date(),
-            areaCount: 30
-          },
-          {
-            id: 2,
-            name: 'Gold Coast University Hospital',
-            abbreviation: 'GCUH',
-            timeZone: 'Australia/Brisbane',
-            createdAt: new Date(),
-            areaCount: 49
-          }
-        ]);
-      }
-    };
-    getLocations();
-  }, []);
+  useFetch(setLoading, '/locations/find', setLocations);
+
+  const newButton = <Button 
+    variant="contained"
+    color="primary"
+    onClick={handleNewClick}>New location</Button>;
+
+  const dialog = <Detail 
+    open={open}
+    setOpen={setOpen}
+    selectedLocation={selectedLocation}
+    setLocations={setLocations}
+    setMessage={setMessage} />;
+
+  const snackbar = <Snackbar message={message} setMessage={setMessage} />;
 
   if (locations === null) {
     return (
-      <div></div>
+      <div className={classes.root}>
+        <div className={classes.content}>
+          <Progress loading={loading} />
+        </div>
+        <div className={classes.rightSection} />
+      </div>
     );
   }
+
+  if (locations.length === 0) {
+    return (
+      <div className={classes.root}>
+        <div className={classes.content}>
+          <div className={classes.heading}>
+            <Typography variant="h5">Locations</Typography>
+          </div>
+          <Paper className={classes.emptyPaper}>
+            <Typography>There are no locations.</Typography>
+            <div className={classes.grow} />
+            <div>{newButton}</div>
+          </Paper>
+          {dialog}
+          {snackbar}
+        </div>
+        <div className={classes.rightSection} />
+      </div>
+    );
+  }
+
   if (locations.length > 0) {
     const tableRows = locations.map(l => {
       return (
@@ -97,7 +124,7 @@ function List() {
                 onClick={() => handleNameClick(l)}>{l.name}</span>
             </TableCell>
             <TableCell align="right">{l.timeZone.split('/')[1].replace('_', ' ')}</TableCell>
-            <TableCell align="right">{l.createdAt.toLocaleDateString()}</TableCell>
+            <TableCell align="right">{new Date(l.createdAt).toLocaleDateString()}</TableCell>
             <TableCell align="right">{l.areaCount}</TableCell>
             <TableCell align="right">
               <ConfirmButton
@@ -115,10 +142,7 @@ function List() {
         <div className={classes.content}>
           <div className={classes.heading}>
             <Typography variant="h5">Locations</Typography>
-            <Button 
-              variant="contained"
-              color="primary"
-              onClick={handleNewClick}>New location</Button>
+            {newButton}
           </div>
           <TableContainer component={Paper}>
             <Table className={classes.table} aria-label="locations table">
@@ -134,21 +158,27 @@ function List() {
               <TableBody>
                 {tableRows}
               </TableBody>
+              <TableFooter>
+                <TableRow>
+                  <TablePagination
+                    rowsPerPageOptions={[]}
+                    colSpan={5}
+                    count={locations.length}
+                    rowsPerPage={rowsPerPage}
+                    page={page}
+                    onChangePage={handleChangePage}
+                    onChangeRowsPerPage={handleChangeRowsPerPage} />
+                </TableRow>
+              </TableFooter>
             </Table>
           </TableContainer>
-          <Detail 
-            open={open}
-            setOpen={setOpen}
-            selectedLocation={selectedLocation}
-            setLocations={setLocations}
-            setMessage={setMessage} />
-          <Snackbar message={message} setMessage={setMessage} />
+          {dialog}
+          {snackbar}
         </div>
         <div className={classes.rightSection} />
       </div>
     );
   }
-  return (<div></div>);
 }
 
 export default List;

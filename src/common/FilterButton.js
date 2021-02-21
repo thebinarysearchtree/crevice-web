@@ -14,6 +14,7 @@ function FilterButton(props) {
     setAnchorEl(null);
     if (!item) {
       setLabel(props.children);
+      filterBy(-1);
     }
     else {
       setLabel(item.name);
@@ -23,7 +24,8 @@ function FilterButton(props) {
 
   const menuItems = items.map(item => {
     return (
-      <MenuItem 
+      <MenuItem
+        key={item.id}
         onClick={() => handleItemClick(item)}>{item.name}</MenuItem>
     );
   });

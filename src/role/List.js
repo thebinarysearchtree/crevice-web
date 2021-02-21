@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import client from '../client';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
@@ -14,17 +14,33 @@ import { Link } from 'react-router-dom';
 import useMessage from '../hooks/useMessage';
 import useStyles from '../styles/list';
 import ConfirmButton from '../common/ConfirmButton';
+import useFetch from '../hooks/useFetch';
+import Progress from '../common/Progress';
+import TableFooter from '@material-ui/core/TableFooter';
+import TablePagination from '@material-ui/core/TablePagination';
 
 function List() {
   const [roles, setRoles] = useState(null);
   const [message, setMessage] = useMessage();
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [page, setPage] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   const classes = useStyles();
 
+  const handleChangePage = (e, newPage) => {
+    setPage(newPage);
+  }
+
+  const handleChangeRowsPerPage = (e) => {
+    setRowsPerPage(parseInt(e.target.value, 10));
+    setPage(0);
+  }
+
   const deleteRole = async (roleId) => {
-    const response = await client.postData('/roles/deleteRole', { roleId });
+    const response = await client.postData('/roles/remove', { roleId });
     if (response.ok) {
-      setRoles(r => r.filter(r.id !== roleId));
+      setRoles(roles => roles.filter(role => role.id !== roleId));
       setMessage('Role deleted');
     }
     else {
@@ -32,38 +48,46 @@ function List() {
     }
   }
 
-  useEffect(() => {
-    const getRoles = async () => {
-      const response = await client.postData('/roles/find');
-      if (response.ok) {
-        const roles = await response.json();
-        setRoles(roles);
-      }
-      else {
-        setRoles([
-          {
-            id: 1,
-            name: 'Student',
-            createdAt: new Date(),
-            userCount: 100
-          },
-          {
-            id: 2,
-            name: 'Supervisor',
-            createdAt: new Date(),
-            userCount: 3
-          }
-        ]);
-      }
-    };
-    getRoles();
-  }, []);
+  useFetch(setLoading, '/roles/find', setRoles);
+
+  const newButton = <Button 
+    variant="contained"
+    color="primary"
+    component={Link}
+    to="/roles/new">New role</Button>;
+
+  const snackbar = <Snackbar message={message} setMessage={setMessage} />;
 
   if (roles === null) {
     return (
-      <div></div>
+      <div className={classes.root}>
+        <div className={classes.content}>
+          <Progress loading={loading} />
+        </div>
+        <div className={classes.rightSection} />
+      </div>
     );
   }
+
+  if (roles.length === 0) {
+    return (
+      <div className={classes.root}>
+        <div className={classes.content}>
+          <div className={classes.heading}>
+            <Typography variant="h5">Roles</Typography>
+          </div>
+          <Paper className={classes.emptyPaper}>
+            <Typography>There are no roles.</Typography>
+            <div className={classes.grow} />
+            <div>{newButton}</div>
+          </Paper>
+          {snackbar}
+        </div>
+        <div className={classes.rightSection} />
+      </div>
+    );
+  }
+
   if (roles.length > 0) {
     const tableRows = roles.map(r => {
       return (
@@ -73,7 +97,7 @@ function List() {
                 className={classes.link} 
                 to={`/roles/${r.id}`}>{r.name}</Link>
             </TableCell>
-            <TableCell align="right">{r.createdAt.toLocaleDateString()}</TableCell>
+            <TableCell align="right">{new Date(r.createdAt).toLocaleDateString()}</TableCell>
             <TableCell align="right">{r.userCount}</TableCell>
             <TableCell align="right">
               <ConfirmButton
@@ -91,11 +115,7 @@ function List() {
         <div className={classes.content}>
           <div className={classes.heading}>
             <Typography variant="h5">Roles</Typography>
-            <Button 
-              variant="contained"
-              color="primary"
-              component={Link}
-              to="/roles/new">New role</Button>
+            {newButton}
           </div>
           <TableContainer component={Paper}>
             <Table className={classes.table} aria-label="roles table">
@@ -110,15 +130,26 @@ function List() {
               <TableBody>
                 {tableRows}
               </TableBody>
+              <TableFooter>
+                <TableRow>
+                  <TablePagination
+                    rowsPerPageOptions={[]}
+                    colSpan={5}
+                    count={roles.length}
+                    rowsPerPage={rowsPerPage}
+                    page={page}
+                    onChangePage={handleChangePage}
+                    onChangeRowsPerPage={handleChangeRowsPerPage} />
+                </TableRow>
+              </TableFooter>
             </Table>
           </TableContainer>
-          <Snackbar message={message} setMessage={setMessage} />
+          {snackbar}
         </div>
         <div className={classes.rightSection} />
       </div>
     );
   }
-  return (<div></div>);
 }
 
 export default List;

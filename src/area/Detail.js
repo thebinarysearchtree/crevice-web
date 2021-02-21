@@ -7,6 +7,11 @@ import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
+import makeInputHandler from '../common/input';
+import InputLabel from '@material-ui/core/InputLabel';
+import MenuItem from '@material-ui/core/MenuItem';
+import FormControl from '@material-ui/core/FormControl';
+import Select from '@material-ui/core/Select';
 
 const useStyles = makeStyles((theme) => ({
   form: {
@@ -28,38 +33,34 @@ function Detail(props) {
     setIsDisabled(true);
   }, [props.selectedArea]);
 
-  const { setAreas, open, setOpen, setMessage } = props;
+  const { setAreas, setFilteredAreas, open, setOpen, setMessage } = props;
   const classes = useStyles();
 
-  const handleInputChange = (e) => {
-    const name = e.target.name;
-    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
-
-    setArea(a => {
-      const updatedArea = { ...a, [name] : value };
-      const isValid = updatedArea.name;
-      if (!isValid) {
-        setIsDisabled(true);
-      }
-      else {
-        setIsDisabled(false);
-      }
-      return updatedArea;
-    });
-  }
+  const handleInputChange = makeInputHandler(
+    setArea, 
+    setIsDisabled, 
+    (a) => a.name && a.abbreviation && a.locationId !== -1);
 
   const saveArea = async (e) => {
     e.preventDefault();
     setOpen(false);
+    const locationName = props
+      .locations
+      .find(l => l.id === area.locationId)
+      .name;
     if (area.id !== -1) {
-      const response = await client.postData('/areas/update', { area });
+      const response = await client.postData('/areas/update', area);
       if (response.ok) {
-        setAreas(areas => areas.map(a => {
-          if (a.id === area.id) {
-            return { ...area };
-          }
-          return a;
-        }));
+        setAreas(areas => {
+          const updatedAreas = areas.map(a => {
+            if (a.id === area.id) {
+              return { ...area, locationName };
+            }
+            return a;
+          });
+          setFilteredAreas(updatedAreas);
+          return updatedAreas;
+        });
         setMessage('Area updated');
       }
       else {
@@ -67,12 +68,16 @@ function Detail(props) {
       }
     }
     else {
-      const response = await client.postData('/areas/insert', { area });
+      const response = await client.postData('/areas/insert', area);
       if (response.ok) {
         const result = await response.json();
         const { areaId } = result;
-        const savedArea = { ...area, id: areaId };
-        setAreas(areas => [savedArea, ...areas]);
+        const savedArea = { ...area, id: areaId, locationName };
+        setAreas(areas => {
+          const newAreas = [...areas, savedArea];
+          setFilteredAreas(newAreas);
+          return newAreas;
+        });
         setMessage('Area created');
       }
       else {
@@ -86,6 +91,10 @@ function Detail(props) {
   }
 
   const title = area.id !== -1 ? 'Edit area' : 'Create a new area';
+
+  const menuItems = props
+    .locations
+    .map(l => <MenuItem key={l.id} value={l.id}>{l.name}</MenuItem>);
 
   return (
     <Dialog 
@@ -108,6 +117,16 @@ function Detail(props) {
           value={area.abbreviation}
           onChange={handleInputChange}
           autoComplete="off" />
+        <FormControl className={classes.formControl}>
+          <InputLabel id="location">Location</InputLabel>
+          <Select
+            name="locationId"
+            labelId="location"
+            value={area.locationId === -1 ? '' : area.locationId}
+            onChange={handleInputChange}>
+              {menuItems}
+          </Select>
+        </FormControl>
         <TextField
           className={classes.formControl}
           name="notes"

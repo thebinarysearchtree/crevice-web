@@ -81,18 +81,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function Detail() {
-  const [role, setRole] = useState({
-    name: '',
-    defaultView: '',
-    canEditBookingBefore: false,
-    canEditBookingAfter: false,
-    canRequestEdit: false,
-    canApproveEdit: false,
-    canBookAndCancelForOthers: false,
-    canEditShift: false,
-    canViewProfiles: false,
-    canViewAnswers: false
-  });
+  const [role, setRole] = useState(null);
   const [message, setMessage] = useState('');
 
   const { roleId } = useParams();
@@ -110,7 +99,7 @@ function Detail() {
     e.preventDefault();
     const url = roleId === 'new' ? '/roles/insert' : '/roles/update';
     const message = roleId === 'new' ? 'Role created' : 'Role updated';
-    const response = await client.postData(url, { roleId, ...role });
+    const response = await client.postData(url, role);
     if (response.ok) {
       history.push('/roles', { message });
     }
@@ -127,7 +116,22 @@ function Detail() {
         setRole(role);
       }
     };
-    if (roleId !== 'new') {
+    if (roleId === 'new') {
+      setRole({
+        id: -1,
+        name: '',
+        defaultView: '',
+        canEditBookingBefore: false,
+        canEditBookingAfter: false,
+        canRequestEdit: false,
+        canApproveEdit: false,
+        canBookAndCancelForOthers: false,
+        canEditShift: false,
+        canViewProfiles: false,
+        canViewAnswers: false
+      });
+    }
+    else {
       getRole();
     }
   }, [roleId]);
@@ -161,6 +165,10 @@ function Detail() {
         </div>
       </div>
     );
+  }
+
+  if (role === null) {
+    return null;
   }
 
   return (

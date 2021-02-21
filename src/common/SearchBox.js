@@ -39,18 +39,21 @@ const useStyles = makeStyles((theme) => ({
 function SearchBox(props) {
   const classes = useStyles();
 
+  const { placeholder, onChange } = props;
+
   return (
     <div className={classes.search}>
       <div className={classes.searchIcon}>
         <SearchIcon color="action" />
       </div>
       <InputBase
-        placeholder={props.placeholder}
+        placeholder={placeholder}
         classes={{
           root: classes.inputRoot,
           input: classes.inputInput,
         }}
-        inputProps={{ 'aria-label': 'search' }} />
+        inputProps={{ 'aria-label': 'search' }}
+        onChange={onChange} />
     </div>
   );
 }
