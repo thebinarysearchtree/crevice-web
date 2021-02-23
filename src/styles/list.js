@@ -65,10 +65,6 @@ const useStyles = makeStyles((theme) => ({
   toolbar: {
     display: 'flex',
     marginBottom: theme.spacing(2)
-  },
-  emptyPaper: {
-    display: 'flex',
-    padding: theme.spacing(2)
   }
 }));
 

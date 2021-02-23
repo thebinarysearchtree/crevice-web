@@ -8,8 +8,9 @@ function useFetchMany(setLoading, requests) {
   useEffect(() => {
     const getState = async () => {
       const token = await client.getToken();
-      const requestPromises = requests.map(r => {
-        return client.postData(r.url, null, token);
+      const requestPromises = requests.map(request => {
+        const { url, data } = request;
+        return client.postData(url, data, token);
       });
       const responses = await Promise.all(requestPromises);
       const responsePromises = responses

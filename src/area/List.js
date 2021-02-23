@@ -20,6 +20,7 @@ import useFetchMany from '../hooks/useFetchMany';
 import Progress from '../common/Progress';
 import TableSortCell from '../common/TableSortCell';
 import FilterButton from '../common/FilterButton';
+import { useLocation } from 'react-router-dom';
 
 function List() {
   const [areas, setAreas] = useState(null);
@@ -27,14 +28,21 @@ function List() {
   const [message, setMessage] = useState('');
   const [selectedArea, setSelectedArea] = useState(null);
   const [open, setOpen] = useState(false);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [page, setPage] = useState(0);
   const [order, setOrder] = useState('asc');
-  const [orderBy, setOrderBy] = useState('name');
+  const [orderBy, setOrderBy] = useState('');
   const [loading, setLoading] = useState(true);
   const [locations, setLocations] = useState([]);
 
   const classes = useStyles();
+  const params = new URLSearchParams(useLocation().search);
+
+  const locationId = parseInt(params.get('locationId'), 10);
+
+  const rowsPerPage = 10;
+
+  const sliceStart = page * rowsPerPage;
+  const sliceEnd = sliceStart + rowsPerPage;
 
   const handleNameClick = (area) => {
     setSelectedArea({ ...area });
@@ -59,11 +67,6 @@ function List() {
     setPage(newPage);
   }
 
-  const handleChangeRowsPerPage = (e) => {
-    setRowsPerPage(parseInt(e.target.value, 10));
-    setPage(0);
-  }
-
   const handleSearch = (e) => {
     const term = e.target.value;
     if (!term) {
@@ -83,12 +86,38 @@ function List() {
     }
   }
 
-  const sortByLocationName = () => {
-    const isAsc = orderBy === 'locationName' && order === 'asc';
-    setOrder(isAsc ? 'desc' : 'asc');
-    setOrderBy('locationName');
-    setAreas(a => [ ...a].reverse());
+  const makeSortHandler = (orderName, comparitor) => {
+    return () => {
+      const isAsc = orderBy === orderName && order === 'asc';
+      setOrder(isAsc ? 'desc' : 'asc');
+      setOrderBy(orderName);
+      if (orderBy === orderName) {
+        setFilteredAreas(a => [ ...a].reverse());
+      }
+      else {
+        setFilteredAreas(a => [ ...a].sort(comparitor));
+      }
+    }
   }
+
+  const sortByName = makeSortHandler(
+    'name',
+    (a, b) => a.abbreviation.localeCompare(b.abbreviation)
+  );
+
+  const sortByLocationName = makeSortHandler(
+    'locationName',
+    (a, b) => a.locationName.localeCompare(b.locationName)
+  );
+
+  const sortByCreatedAt = makeSortHandler(
+    'createdAt',
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  );
+
+  const sortByActiveUserCount = makeSortHandler(
+    'activeUserCount',
+    (a, b) => a.activeUserCount - b.activeUserCount);
 
   const deleteArea = async (areaId) => {
     const result = await client.postData('/areas/remove', { areaId });
@@ -107,7 +136,12 @@ function List() {
 
   const areasHandler = (areas) => {
     setAreas(areas);
-    setFilteredAreas(areas);
+    if (locationId) {
+      setFilteredAreas(areas.filter(a => a.locationId === locationId));
+    }
+    else {
+      setFilteredAreas(areas);
+    }
   }
 
   const locationsHandler = (locations) => setLocations(locations);
@@ -116,23 +150,7 @@ function List() {
     { url: '/areas/find', handler: areasHandler },
     { url: '/locations/getSelectListItems', handler: locationsHandler }]);
 
-  const newButton = <Button 
-    variant="contained"
-    color="primary"
-    onClick={handleNewClick}>New area</Button>;
-
-  const dialog = <Detail 
-    open={open}
-    setOpen={setOpen}
-    selectedArea={selectedArea}
-    setAreas={setAreas}
-    setFilteredAreas={setFilteredAreas}
-    setMessage={setMessage}
-    locations={locations} />;
-
-  const snackbar = <Snackbar message={message} setMessage={setMessage} />;
-
-  if (filteredAreas === null) {
+  if (loading) {
     return (
       <div className={classes.root}>
         <div className={classes.content}>
@@ -142,107 +160,110 @@ function List() {
       </div>
     );
   }
-
-  if (areas.length === 0) {
-    return (
-      <div className={classes.root}>
-        <div className={classes.content}>
-          <div className={classes.heading}>
-            <Typography variant="h5">Areas</Typography>
-          </div>
-          <Paper className={classes.emptyPaper}>
-            <Typography>There are no areas.</Typography>
-            <div className={classes.grow} />
-            <div>{newButton}</div>
-          </Paper>
-          {dialog}
-          {snackbar}
-        </div>
-        <div className={classes.rightSection} />
-      </div>
-    );
-  }
   
-  if (areas.length > 0) {
-    const tableRows = filteredAreas.map(a => {
-      return (
-        <TableRow key={a.name}>
-            <TableCell component="th" scope="row">
-              <span 
-                className={classes.locationName}
-                onClick={() => handleNameClick(a)}>{a.abbreviation}</span>
-            </TableCell>
-            <TableCell align="right">{a.locationName}</TableCell>
-            <TableCell align="right">{new Date(a.createdAt).toLocaleDateString()}</TableCell>
-            <TableCell align="right">{a.activeUserCount}</TableCell>
-            <TableCell align="right">
-              <ConfirmButton
-                className={classes.deleteButton}
-                title={`Delete ${a.name}?`}
-                content="Make sure this areas has no users before deleting it."
-                onClick={() => deleteArea(a.id)} />
-            </TableCell>
-        </TableRow>
-      );
-    });
-
+  const tableRows = filteredAreas.slice(sliceStart, sliceEnd).map(a => {
     return (
-      <div className={classes.root}>
-        <div className={classes.content}>
-          <div className={classes.heading}>
-            <Typography variant="h5">Areas</Typography>
-          </div>
-          <div className={classes.toolbar}>
-            <SearchBox 
-              placeholder="Search by name..."
-              onChange={handleSearch} />
-            <FilterButton
-              id="location-filter"
-              items={locations}
-              filterBy={filterByLocationId}>Location</FilterButton>
-            <div className={classes.grow} />
-            {newButton}
-          </div>
-          <TableContainer component={Paper}>
-            <Table className={classes.table} aria-label="areas table">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Name</TableCell>
-                  <TableSortCell
-                    align="right"
-                    name="locationName"
-                    orderBy={orderBy}
-                    order={order}
-                    onClick={sortByLocationName}>Location</TableSortCell>
-                  <TableCell align="right">Created</TableCell>
-                  <TableCell align="right">Active users</TableCell>
-                  <TableCell align="right"></TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {tableRows}
-              </TableBody>
-              <TableFooter>
-                <TableRow>
-                  <TablePagination
-                    rowsPerPageOptions={[]}
-                    colSpan={5}
-                    count={filteredAreas.length}
-                    rowsPerPage={rowsPerPage}
-                    page={page}
-                    onChangePage={handleChangePage}
-                    onChangeRowsPerPage={handleChangeRowsPerPage} />
-                </TableRow>
-              </TableFooter>
-            </Table>
-          </TableContainer>
-          {dialog}
-          {snackbar}
-        </div>
-        <div className={classes.rightSection} />
-      </div>
+      <TableRow key={a.id}>
+          <TableCell component="th" scope="row">
+            <span 
+              className={classes.locationName}
+              title={a.name}
+              onClick={() => handleNameClick(a)}>{a.abbreviation}</span>
+          </TableCell>
+          <TableCell align="right">{a.locationName}</TableCell>
+          <TableCell align="right">{new Date(a.createdAt).toLocaleDateString()}</TableCell>
+          <TableCell align="right">{a.activeUserCount}</TableCell>
+          <TableCell align="right">
+            <ConfirmButton
+              className={classes.deleteButton}
+              title={`Delete ${a.name}?`}
+              content="Make sure this areas has no users before deleting it."
+              onClick={() => deleteArea(a.id)} />
+          </TableCell>
+      </TableRow>
     );
-  }
+  });
+
+  return (
+    <div className={classes.root}>
+      <div className={classes.content}>
+        <div className={classes.heading}>
+          <Typography variant="h5">Areas</Typography>
+        </div>
+        <div className={classes.toolbar}>
+          <SearchBox 
+            placeholder="Search by name..."
+            onChange={handleSearch} />
+          <FilterButton
+            id="location-filter"
+            items={locations}
+            selectedItemId={locationId}
+            filterBy={filterByLocationId}>Location</FilterButton>
+          <div className={classes.grow} />
+          <Button 
+            variant="contained"
+            color="primary"
+            onClick={handleNewClick}>New area</Button>
+        </div>
+        <TableContainer component={Paper}>
+          <Table className={classes.table} aria-label="areas table">
+            <TableHead>
+              <TableRow>
+                <TableSortCell
+                  name="name"
+                  orderBy={orderBy}
+                  order={order}
+                  onClick={sortByName}>Name</TableSortCell>
+                <TableSortCell
+                  align="right"
+                  name="locationName"
+                  orderBy={orderBy}
+                  order={order}
+                  onClick={sortByLocationName}>Location</TableSortCell>
+                <TableSortCell
+                  align="right"
+                  name="createdAt"
+                  orderBy={orderBy}
+                  order={order}
+                  onClick={sortByCreatedAt}>Created</TableSortCell>
+                <TableSortCell
+                  align="right"
+                  name="activeUserCount"
+                  orderBy={orderBy}
+                  order={order}
+                  onClick={sortByActiveUserCount}>Active users</TableSortCell>
+                <TableCell align="right"></TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {tableRows}
+            </TableBody>
+            <TableFooter>
+              <TableRow>
+                <TablePagination
+                  rowsPerPageOptions={[]}
+                  colSpan={5}
+                  count={filteredAreas.length}
+                  rowsPerPage={rowsPerPage}
+                  page={page}
+                  onChangePage={handleChangePage} />
+              </TableRow>
+            </TableFooter>
+          </Table>
+        </TableContainer>
+        <Detail 
+          open={open}
+          setOpen={setOpen}
+          selectedArea={selectedArea}
+          setAreas={setAreas}
+          setFilteredAreas={setFilteredAreas}
+          setMessage={setMessage}
+          locations={locations} />
+        <Snackbar message={message} setMessage={setMessage} />
+      </div>
+      <div className={classes.rightSection} />
+    </div>
+  );
 }
 
 export default List;

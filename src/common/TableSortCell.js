@@ -5,13 +5,15 @@ import TableSortLabel from '@material-ui/core/TableSortLabel';
 function TableSortCell(props) {
   const { align, name, orderBy, order, onClick } = props;
 
+  const active = orderBy === name;
+
   return (
     <TableCell 
       align={align}
-      sortDirection={orderBy === name ? order : false}>
+      sortDirection={active ? order : false}>
         <TableSortLabel
-          active={orderBy === name}
-          direction={orderBy === name ? order : 'asc'}
+          active={active}
+          direction={active ? order : 'asc'}
           onClick={onClick}>{props.children}</TableSortLabel>
     </TableCell>
   );
