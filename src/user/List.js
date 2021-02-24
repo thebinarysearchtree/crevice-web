@@ -23,25 +23,36 @@ import { useLocation } from 'react-router-dom';
 function List() {
   const [users, setUsers] = useState(null);
   const [message, setMessage] = useState('');
-  const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
   const [roles, setRoles] = useState([]);
   const [areas, setAreas] = useState([]);
   const [count, setCount] = useState(0);
+  const [searchTimeout, setSearchTimeout] = useState(0);
+  const [query, setQuery] = useState(() => {
+    const params = new URLSearchParams(useLocation().search);
+
+    const roleId = parseInt(params.get('roleId'), 10);
+    const areaId = parseInt(params.get('areaId'), 10);
+    
+    return {
+      term: '',
+      roleId,
+      areaId,
+      page: 0
+    };
+  });
 
   const classes = useStyles();
-  const params = new URLSearchParams(useLocation().search);
-
-  const roleId = parseInt(params.get('roleId'), 10);
-  const areaId = parseInt(params.get('areaId'), 10);
 
   const usersHandler = (result) => {
     const { users, count } = result;
     setUsers(users);
-    setCount(count);
+    if (count !== -1) {
+      setCount(count);
+    }
   }
 
-  const search = async () => {
+  const search = async (query) => {
     const response = await client.postData('/areas/find', query);
     if (response.ok) {
       const result = await response.json();
@@ -52,27 +63,46 @@ function List() {
     }
   }
 
-  const handleChangePage = (e, newPage) => {
-    setPage(newPage);
+  const handleChangePage = (e, page) => {
+    setQuery(query => {
+      const updatedQuery = { ...query, page };
+      search(updatedQuery);
+
+      return updatedQuery;
+    });
   }
 
   const handleSearch = (e) => {
-    const term = e.target.value;
-    if (!term) {
-      setUsers([]);
-    }
+    setQuery(query => {
+      const term = e.target.value;
+      const updatedQuery = { ...query, term };
+
+      clearTimeout(searchTimeout);
+      if (term.length > 2 && term.length > query.term.length) {
+        search(updatedQuery);
+      }
+      else {
+        setSearchTimeout(setTimeout(() => search(updatedQuery), 5000));
+      }
+    });
   }
 
   const filterByRoleId = (roleId) => {
-    if (roleId === -1) {
-      setUsers([]);
-    }
+    setQuery(query => {
+      const updatedQuery = { ...query, roleId };
+      search(updatedQuery);
+
+      return updatedQuery;
+    });
   }
 
   const filterByAreaId = (areaId) => {
-    if (areaId === -1) {
-      setUsers([]);
-    }
+    setQuery(query => {
+      const updatedQuery = { ...query, areaId };
+      search(updatedQuery);
+
+      return updatedQuery;
+    });
   }
 
   const deleteUser = async (userId) => {
@@ -139,12 +169,12 @@ function List() {
           <FilterButton
             id="role-filter"
             items={roles}
-            selectedItemId={roleId}
+            selectedItemId={query.roleId}
             filterBy={filterByRoleId}>Role</FilterButton>
           <FilterButton
             id="area-filter"
             items={areas}
-            selectedItemId={areaId}
+            selectedItemId={query.areaId}
             filterBy={filterByAreaId}>Area</FilterButton>
           <div className={classes.grow} />
           <Button 
@@ -173,7 +203,7 @@ function List() {
                   colSpan={5}
                   count={count}
                   rowsPerPage={10}
-                  page={page}
+                  page={query.page}
                   onChangePage={handleChangePage} />
               </TableRow>
             </TableFooter>

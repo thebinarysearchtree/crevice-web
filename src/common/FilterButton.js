@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 import Button from '@material-ui/core/Button';
 import Menu from '@material-ui/core/Menu';
@@ -6,15 +6,16 @@ import MenuItem from '@material-ui/core/MenuItem';
 
 function FilterButton(props) {
   const [anchorEl, setAnchorEl] = useState(null);
-  const [label, setLabel] = useState(props.children);
-
-  const { id, items, selectedItemId, filterBy } = props;
-
-  useEffect(() => {
+  const [label, setLabel] = useState(() => {
+    const { selectedItemId, items } = props;
+    
     if (selectedItemId) {
-      setLabel(items.find(item => item.id === selectedItemId).name);
+      return items.find(item => item.id === selectedItemId).name;
     }
-  }, []);
+    return props.children;
+  });
+
+  const { id, items, filterBy } = props;
 
   const handleItemClick = (item) => {
     setAnchorEl(null);
