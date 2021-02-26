@@ -10,18 +10,22 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Snackbar from '../common/Snackbar';
-import { Link } from 'react-router-dom';
 import useMessage from '../hooks/useMessage';
 import useStyles from '../styles/list';
+import Detail from './Detail';
 import ConfirmButton from '../common/ConfirmButton';
-import useFetch from '../hooks/useFetch';
 import Progress from '../common/Progress';
 import TableFooter from '@material-ui/core/TableFooter';
 import TablePagination from '@material-ui/core/TablePagination';
+import useFetch from '../hooks/useFetch';
+import Link from '@material-ui/core/Link';
+import { Link as RouterLink } from 'react-router-dom';
 
 function List() {
   const [roles, setRoles] = useState(null);
   const [message, setMessage] = useMessage();
+  const [selectedRole, setSelectedRole] = useState(null);
+  const [open, setOpen] = useState(false);
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -31,6 +35,21 @@ function List() {
 
   const sliceStart = page * rowsPerPage;
   const sliceEnd = sliceStart + rowsPerPage;
+
+  const handleNameClick = (role) => {
+    setSelectedRole({ ...role });
+    setOpen(true);
+  }
+
+  const handleNewClick = () => {
+    setSelectedRole({
+      id: -1,
+      name: '',
+      createdAt: new Date().toISOString(),
+      userCount: 0
+    });
+    setOpen(true);
+  }
 
   const handleChangePage = (e, newPage) => {
     setPage(newPage);
@@ -69,12 +88,14 @@ function List() {
     return (
       <TableRow key={r.id} className={classes.tableRow}>
           <TableCell component="th" scope="row">
-            <Link 
-              className={classes.link} 
-              to={`/roles/${r.id}`}>{r.name}</Link>
+            <span 
+              className={classes.locationName}
+              onClick={() => handleNameClick(r)}>{r.name}</span>
           </TableCell>
           <TableCell align="right">{new Date(r.createdAt).toLocaleDateString()}</TableCell>
-          <TableCell align="right">{r.userCount}</TableCell>
+          <TableCell align="right">
+            <Link to={`/users?roleId=${r.id}`} component={RouterLink}>{r.userCount}</Link>
+          </TableCell>
           <TableCell align="right">
             <ConfirmButton
               className={classes.deleteButton}
@@ -94,8 +115,7 @@ function List() {
           <Button 
             variant="contained"
             color="primary"
-            component={Link}
-            to="/roles/new">New role</Button>
+            onClick={handleNewClick}>New role</Button>
         </div>
         <TableContainer component={Paper}>
           <Table className={classes.table} aria-label="roles table">
@@ -123,6 +143,12 @@ function List() {
             </TableFooter>
           </Table>
         </TableContainer>
+        <Detail 
+          open={open}
+          setOpen={setOpen}
+          selectedRole={selectedRole}
+          setRoles={setRoles}
+          setMessage={setMessage} />
         <Snackbar message={message} setMessage={setMessage} />
       </div>
       <div className={classes.rightSection} />
