@@ -7,7 +7,8 @@ import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
-import makeInputHandler from '../common/input';
+import InputAdornment from '@material-ui/core/InputAdornment';
+import ColourGrid from '../common/ColourGrid';
 
 const useStyles = makeStyles((theme) => ({
   form: {
@@ -20,22 +21,32 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
+const hex = /^[0-9a-fA-F]{6}$/;
+
 function Detail(props) {
-  const [role, setRole] = useState(null);
-  const [isDisabled, setIsDisabled] = useState(true);
+  const [name, setName] = useState('');
+  const [colour, setColour] = useState('');
+
+  const error = colour && !hex.test(colour);
+  const isDisabled = !name || !hex.test(colour);
 
   useEffect(() => {
-    setRole(props.selectedRole);
-    setIsDisabled(true);
+    if (props.selectedRole) {
+      const { name, colour } = props.selectedRole;
+
+      setName(name);
+      setColour(colour);
+    }
   }, [props.selectedRole]);
 
   const { setRoles, open, setOpen, setMessage } = props;
   const classes = useStyles();
 
-  const handleInputChange = makeInputHandler(
-    setRole, 
-    setIsDisabled, 
-    (r) => r.name);
+  if (!props.selectedRole) {
+    return null;
+  }
+
+  const role = { ...props.selectedRole, name, colour };
 
   const saveRole = async (e) => {
     e.preventDefault();
@@ -45,7 +56,7 @@ function Detail(props) {
       if (response.ok) {
         setRoles(roles => roles.map(r => {
           if (r.id === role.id) {
-            return { ...role };
+            return role;
           }
           return r;
         }));
@@ -70,10 +81,6 @@ function Detail(props) {
     }
   }
 
-  if (!role) {
-    return null;
-  }
-
   const title = role.id !== -1 ? 'Edit role' : 'Create a new role';
 
   return (
@@ -85,11 +92,20 @@ function Detail(props) {
       <DialogContent className={classes.form}>
         <TextField
           className={classes.formControl}
-          name="name"
           label="Role name"
-          value={role.name}
-          onChange={handleInputChange}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
           autoComplete="off" />
+        <TextField
+          className={classes.formControl}
+          label="Colour"
+          value={colour}
+          onChange={(e) => setColour(e.target.value)}
+          InputProps={{ startAdornment: <InputAdornment position="start">#</InputAdornment>}}
+          autoComplete="off"
+          error={error}
+          helperText={error ? 'Invalid colour' : ''} />
+        <ColourGrid selectedColour={colour} onClick={(c) => setColour(c)} />
       </DialogContent>
       <DialogActions>
         <Button 

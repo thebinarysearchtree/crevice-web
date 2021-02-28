@@ -45,6 +45,7 @@ function List() {
     setSelectedRole({
       id: -1,
       name: '',
+      colour: '',
       createdAt: new Date().toISOString(),
       userCount: 0
     });
@@ -58,7 +59,7 @@ function List() {
   const deleteRole = async (roleId) => {
     const response = await client.postData('/roles/remove', { roleId });
     if (response.ok) {
-      setRoles(roles => roles.filter(role => role.id !== roleId));
+      setRoles(roles.filter(r => r.id !== roleId));
       setMessage('Role deleted');
     }
     else {

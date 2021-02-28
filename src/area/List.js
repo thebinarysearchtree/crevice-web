@@ -120,13 +120,11 @@ function List() {
     (a, b) => a.activeUserCount - b.activeUserCount);
 
   const deleteArea = async (areaId) => {
-    const result = await client.postData('/areas/remove', { areaId });
-    if (result) {
-      setAreas(areas => {
-        const filteredAreas = areas.filter(area => area.id !== areaId);
-        setFilteredAreas(filteredAreas);
-        return filteredAreas;
-      });
+    const response = await client.postData('/areas/remove', { areaId });
+    if (response.ok) {
+      const updatedAreas = areas.filter(a => a.id !== areaId);
+      setAreas(updatedAreas);
+      setFilteredAreas(updatedAreas);
       setMessage('Area deleted');
     }
     else {

@@ -7,7 +7,6 @@ import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
-import makeInputHandler from '../common/input';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import FormControl from '@material-ui/core/FormControl';
@@ -25,21 +24,32 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function Detail(props) {
-  const [area, setArea] = useState(null);
-  const [isDisabled, setIsDisabled] = useState(true);
+  const [name, setName] = useState('');
+  const [abbreviation, setAbbreviation] = useState('');
+  const [locationId, setLocationId] = useState(-1);
+  const [notes, setNotes] = useState('');
+
+  const isDisabled = !name || !abbreviation || locationId === -1;
 
   useEffect(() => {
-    setArea(props.selectedArea);
-    setIsDisabled(true);
+    if (props.selectedArea) {
+      const { name, abbreviation, locationId, notes } = props.selectedArea;
+
+      setName(name);
+      setAbbreviation(abbreviation);
+      setLocationId(locationId);
+      setNotes(notes);
+    }
   }, [props.selectedArea]);
 
   const { setAreas, setFilteredAreas, open, setOpen, setMessage } = props;
   const classes = useStyles();
 
-  const handleInputChange = makeInputHandler(
-    setArea, 
-    setIsDisabled, 
-    (a) => a.name && a.abbreviation && a.locationId !== -1);
+  if (!props.selectedArea) {
+    return null;
+  }
+
+  const area = { ...props.selectedArea, name, abbreviation, locationId, notes };
 
   const saveArea = async (e) => {
     e.preventDefault();
@@ -86,10 +96,6 @@ function Detail(props) {
     }
   }
 
-  if (!area) {
-    return null;
-  }
-
   const title = area.id !== -1 ? 'Edit area' : 'Create a new area';
 
   const menuItems = props
@@ -105,34 +111,30 @@ function Detail(props) {
       <DialogContent className={classes.form}>
         <TextField
           className={classes.formControl}
-          name="name"
           label="Area name"
-          value={area.name}
-          onChange={handleInputChange}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
           autoComplete="off" />
         <TextField
           className={classes.formControl}
-          name="abbreviation"
           label="Abbreviation"
-          value={area.abbreviation}
-          onChange={handleInputChange}
+          value={abbreviation}
+          onChange={(e) => setAbbreviation(e.target.value)}
           autoComplete="off" />
         <FormControl className={classes.formControl}>
           <InputLabel id="location">Location</InputLabel>
           <Select
-            name="locationId"
             labelId="location"
-            value={area.locationId === -1 ? '' : area.locationId}
-            onChange={handleInputChange}>
+            value={locationId === -1 ? '' : locationId}
+            onChange={(e) => setLocationId(e.target.value)}>
               {menuItems}
           </Select>
         </FormControl>
         <TextField
           className={classes.formControl}
-          name="notes"
           label="Notes (optional)"
-          value={area.notes}
-          onChange={handleInputChange}
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
           multiline
           rows={4} />
       </DialogContent>

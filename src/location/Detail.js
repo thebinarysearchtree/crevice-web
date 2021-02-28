@@ -11,7 +11,6 @@ import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
-import makeInputHandler from '../common/input';
 
 const useStyles = makeStyles((theme) => ({
   form: {
@@ -25,21 +24,32 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function Detail(props) {
-  const [location, setLocation] = useState(null);
-  const [isDisabled, setIsDisabled] = useState(true);
+  const [name, setName] = useState('');
+  const [abbreviation, setAbbreviation] = useState('');
+  const [timeZone, setTimeZone] = useState('');
+  const [address, setAddress] = useState('');
+
+  const isDisabled = !name || !abbreviation || !timeZone;
 
   useEffect(() => {
-    setLocation(props.selectedLocation);
-    setIsDisabled(true);
+    if (props.selectedLocation) {
+      const { name, abbreviation, timeZone, address } = props.selectedLocation;
+
+      setName(name);
+      setAbbreviation(abbreviation);
+      setTimeZone(timeZone);
+      setAddress(address);
+    }
   }, [props.selectedLocation]);
 
   const { setLocations, open, setOpen, setMessage } = props;
   const classes = useStyles();
 
-  const handleInputChange = makeInputHandler(
-    setLocation, 
-    setIsDisabled, 
-    (l) => l.name && l.timeZone);
+  if (!props.selectedLocation) {
+    return null;
+  }
+
+  const location = { ...props.selectedLocation, name, abbreviation, timeZone, address };
 
   const saveLocation = async (e) => {
     e.preventDefault();
@@ -49,7 +59,7 @@ function Detail(props) {
       if (response.ok) {
         setLocations(locations => locations.map(l => {
           if (l.id === location.id) {
-            return { ...location };
+            return location;
           }
           return l;
         }));
@@ -74,10 +84,6 @@ function Detail(props) {
     }
   }
 
-  if (!location) {
-    return null;
-  }
-
   const title = location.id !== -1 ? 'Edit location' : 'Create a new location';
 
   return (
@@ -89,25 +95,22 @@ function Detail(props) {
       <DialogContent className={classes.form}>
         <TextField
           className={classes.formControl}
-          name="name"
           label="Location name"
-          value={location.name}
-          onChange={handleInputChange}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
           autoComplete="off" />
         <TextField
           className={classes.formControl}
-          name="abbreviation"
           label="Abbreviation"
-          value={location.abbreviation}
-          onChange={handleInputChange}
+          value={abbreviation}
+          onChange={(e) => setAbbreviation(e.target.value)}
           autoComplete="off" />
         <FormControl className={classes.formControl}>
           <InputLabel id="time-zone">Time zone</InputLabel>
           <Select
-            name="timeZone"
             labelId="time-zone"
-            value={location.timeZone}
-            onChange={handleInputChange}>
+            value={timeZone}
+            onChange={(e) => setTimeZone(e.target.value)}>
               <MenuItem value="Australia/Adelaide">Adelaide</MenuItem>
               <MenuItem value="Australia/Brisbane">Brisbane</MenuItem>
               <MenuItem value="Australia/Broken_Hill">Broken Hill</MenuItem>
@@ -123,10 +126,9 @@ function Detail(props) {
         </FormControl>
         <TextField
           className={classes.formControl}
-          name="address"
           label="Address (optional)"
-          value={location.address}
-          onChange={handleInputChange}
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
           multiline
           rows={4} />
       </DialogContent>

@@ -60,7 +60,7 @@ function List() {
   const deleteLocation = async (locationId) => {
     const response = await client.postData('/locations/remove', { locationId });
     if (response.ok) {
-      setLocations(l => l.filter(l.id !== locationId));
+      setLocations(locations.filter(l => l.id !== locationId));
       setMessage('Location deleted');
     }
     else {
