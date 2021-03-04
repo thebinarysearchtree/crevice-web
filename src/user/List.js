@@ -142,9 +142,9 @@ function List() {
               className={classes.link} 
               to={`/users/${u.id}`}>{u.name}</Link>
           </TableCell>
-          <TableCell align="right">{u.roles.join(', ')}</TableCell>
-          <TableCell align="right">{u.areas.join(', ')}</TableCell>
-          <TableCell align="right">{u.shiftCount}</TableCell>
+          <TableCell align="right">{new Date(u.createdAt).toLocaleDateString()}</TableCell>
+          <TableCell align="right">{u.booked}</TableCell>
+          <TableCell align="right">{u.attended}</TableCell>
           <TableCell align="right">
             <ConfirmButton
               className={classes.deleteButton}
@@ -187,9 +187,9 @@ function List() {
             <TableHead>
               <TableRow>
                 <TableCell>Name</TableCell>
-                <TableCell align="right">Roles</TableCell>
-                <TableCell align="right">Areas</TableCell>
-                <TableCell align="right">Shifts Booked</TableCell>
+                <TableCell align="right">Created</TableCell>
+                <TableCell align="right">Booked</TableCell>
+                <TableCell align="right">Attended</TableCell>
                 <TableCell align="right"></TableCell>
               </TableRow>
             </TableHead>

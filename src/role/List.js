@@ -88,22 +88,23 @@ function List() {
   const tableRows = roles.slice(sliceStart, sliceEnd).map(r => {
     return (
       <TableRow key={r.id} className={classes.tableRow}>
-          <TableCell component="th" scope="row">
-            <span 
-              className={classes.locationName}
-              onClick={() => handleNameClick(r)}>{r.name}</span>
-          </TableCell>
-          <TableCell align="right">{new Date(r.createdAt).toLocaleDateString()}</TableCell>
-          <TableCell align="right">
-            <Link to={`/users?roleId=${r.id}`} component={RouterLink}>{r.userCount}</Link>
-          </TableCell>
-          <TableCell align="right">
-            <ConfirmButton
-              className={classes.deleteButton}
-              title={`Delete the ${r.name} role?`}
-              content="Make sure there are no users with this role before deleting it."
-              onClick={() => deleteRole(r.id)} />
-          </TableCell>
+        <TableCell style={{ backgroundColor: `#${r.colour}`, padding: '0px' }}></TableCell>
+        <TableCell component="th" scope="row">
+          <span 
+            className={classes.locationName}
+            onClick={() => handleNameClick(r)}>{r.name}</span>
+        </TableCell>
+        <TableCell align="right">{new Date(r.createdAt).toLocaleDateString()}</TableCell>
+        <TableCell align="right">
+          <Link to={`/users?roleId=${r.id}`} component={RouterLink}>{r.userCount}</Link>
+        </TableCell>
+        <TableCell align="right">
+          <ConfirmButton
+            className={classes.deleteButton}
+            title={`Delete the ${r.name} role?`}
+            content="Make sure there are no users with this role before deleting it."
+            onClick={() => deleteRole(r.id)} />
+        </TableCell>
       </TableRow>
     );
   });
@@ -122,6 +123,7 @@ function List() {
           <Table className={classes.table} aria-label="roles table">
             <TableHead>
               <TableRow>
+                <TableCell className={classes.colour}></TableCell>
                 <TableCell>Name</TableCell>
                 <TableCell align="right">Created</TableCell>
                 <TableCell align="right">Users</TableCell>
