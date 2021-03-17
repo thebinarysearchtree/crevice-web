@@ -11,17 +11,9 @@ import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
+import styles from '../styles/dialog';
 
-const useStyles = makeStyles((theme) => ({
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    width: '330px'
-  },
-  formControl: {
-    marginBottom: '10px'
-  }
-}));
+const useStyles = makeStyles(styles);
 
 function Detail(props) {
   const [name, setName] = useState('');
@@ -92,20 +84,20 @@ function Detail(props) {
       onClose={() => setOpen(false)} 
       aria-labelledby="dialog-title">
       <DialogTitle id="dialog-title">{title}</DialogTitle>
-      <DialogContent className={classes.form}>
+      <DialogContent className={classes.root}>
         <TextField
-          className={classes.formControl}
+          className={classes.spacing}
           label="Location name"
           value={name}
           onChange={(e) => setName(e.target.value)}
           autoComplete="off" />
         <TextField
-          className={classes.formControl}
+          className={classes.spacing}
           label="Abbreviation"
           value={abbreviation}
           onChange={(e) => setAbbreviation(e.target.value)}
           autoComplete="off" />
-        <FormControl className={classes.formControl}>
+        <FormControl className={classes.spacing}>
           <InputLabel id="time-zone">Time zone</InputLabel>
           <Select
             labelId="time-zone"
@@ -125,7 +117,7 @@ function Detail(props) {
           </Select>
         </FormControl>
         <TextField
-          className={classes.formControl}
+          className={classes.spacing}
           label="Address (optional)"
           value={address}
           onChange={(e) => setAddress(e.target.value)}

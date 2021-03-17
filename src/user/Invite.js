@@ -1,7 +1,10 @@
 import React, { useEffect } from 'react';
+import { makeStyles } from '@material-ui/core/styles';
 import client from '../client';
 import { useHistory, useParams } from 'react-router-dom';
-import useStyles from '../styles/form';
+import styles from '../styles/form';
+
+const useStyles = makeStyles(styles);
 
 function Invite() {
   const { userId, emailToken } = useParams();

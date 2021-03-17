@@ -9,17 +9,9 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import ColourGrid from '../common/ColourGrid';
+import styles from '../styles/dialog';
 
-const useStyles = makeStyles((theme) => ({
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    width: '330px'
-  },
-  formControl: {
-    marginBottom: '10px'
-  }
-}));
+const useStyles = makeStyles(styles);
 
 const hex = /^[0-9a-fA-F]{6}$/;
 
@@ -89,15 +81,15 @@ function Detail(props) {
       onClose={() => setOpen(false)} 
       aria-labelledby="dialog-title">
       <DialogTitle id="dialog-title">{title}</DialogTitle>
-      <DialogContent className={classes.form}>
+      <DialogContent className={classes.root}>
         <TextField
-          className={classes.formControl}
+          className={classes.spacing}
           label="Role name"
           value={name}
           onChange={(e) => setName(e.target.value)}
           autoComplete="off" />
         <TextField
-          className={classes.formControl}
+          className={classes.spacing}
           label="Colour"
           value={colour}
           onChange={(e) => setColour(e.target.value)}

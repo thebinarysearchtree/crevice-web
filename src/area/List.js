@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { makeStyles } from '@material-ui/core/styles';
 import client from '../client';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
@@ -10,7 +11,7 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Snackbar from '../common/Snackbar';
-import useStyles from '../styles/list';
+import styles from '../styles/list';
 import Detail from './Detail';
 import ConfirmButton from '../common/ConfirmButton';
 import SearchBox from '../common/SearchBox';
@@ -19,8 +20,13 @@ import TablePagination from '@material-ui/core/TablePagination';
 import useFetchMany from '../hooks/useFetchMany';
 import Progress from '../common/Progress';
 import TableSortCell from '../common/TableSortCell';
-import FilterButton from '../common/FilterButton';
 import { useLocation } from 'react-router-dom';
+import InputLabel from '@material-ui/core/InputLabel';
+import MenuItem from '@material-ui/core/MenuItem';
+import FormControl from '@material-ui/core/FormControl';
+import Select from '@material-ui/core/Select';
+
+const useStyles = makeStyles(styles);
 
 function List() {
   const [areas, setAreas] = useState(null);
@@ -37,7 +43,9 @@ function List() {
   const classes = useStyles();
   const params = new URLSearchParams(useLocation().search);
 
-  const locationId = parseInt(params.get('locationId'), 10);
+  const locationIdParam = parseInt(params.get('locationId'), 10);
+
+  const [locationId, setLocationId] = useState(locationIdParam ? locationIdParam : -1);
 
   const rowsPerPage = 10;
 
@@ -77,7 +85,9 @@ function List() {
     }
   }
 
-  const filterByLocationId = (locationId) => {
+  const handleLocationChange = (e) => {
+    const locationId = e.target.value;
+    setLocationId(locationId);
     if (locationId === -1) {
       setFilteredAreas(areas);
     }
@@ -134,7 +144,7 @@ function List() {
 
   const areasHandler = (areas) => {
     setAreas(areas);
-    if (locationId) {
+    if (locationId !== -1) {
       setFilteredAreas(areas.filter(a => a.locationId === locationId));
     }
     else {
@@ -158,15 +168,19 @@ function List() {
       </div>
     );
   }
+
+  const locationMenuItems = locations.map(l => {
+    return <MenuItem key={l.id} value={l.id}>{l.name}</MenuItem>;
+  });
   
   const tableRows = filteredAreas.slice(sliceStart, sliceEnd).map(a => {
+    const name = a.abbreviation === a.name ? a.name : `${a.abbreviation} ${a.name}`;
     return (
       <TableRow key={a.id}>
           <TableCell component="th" scope="row">
             <span 
               className={classes.locationName}
-              title={a.name}
-              onClick={() => handleNameClick(a)}>{a.abbreviation}</span>
+              onClick={() => handleNameClick(a)}>{name}</span>
           </TableCell>
           <TableCell align="right">{a.locationName}</TableCell>
           <TableCell align="right">{new Date(a.createdAt).toLocaleDateString()}</TableCell>
@@ -187,21 +201,26 @@ function List() {
       <div className={classes.content}>
         <div className={classes.heading}>
           <Typography variant="h5">Areas</Typography>
+          <Button 
+            variant="contained"
+            color="primary"
+            onClick={handleNewClick}>New area</Button>
         </div>
         <div className={classes.toolbar}>
           <SearchBox 
             placeholder="Search by name..."
             onChange={handleSearch} />
-          <FilterButton
-            id="location-filter"
-            items={locations}
-            selectedItemId={locationId}
-            filterBy={filterByLocationId}>Location</FilterButton>
+          <FormControl>
+            <InputLabel id="location">Location</InputLabel>
+            <Select
+              labelId="location"
+              value={locationId}
+              onChange={handleLocationChange}>
+                <MenuItem key={-1} value={-1}>All</MenuItem>
+                {locationMenuItems}
+            </Select>
+          </FormControl>
           <div className={classes.grow} />
-          <Button 
-            variant="contained"
-            color="primary"
-            onClick={handleNewClick}>New area</Button>
         </div>
         <TableContainer component={Paper}>
           <Table className={classes.table} aria-label="areas table">
@@ -229,7 +248,7 @@ function List() {
                   name="activeUserCount"
                   orderBy={orderBy}
                   order={order}
-                  onClick={sortByActiveUserCount}>Active users</TableSortCell>
+                  onClick={sortByActiveUserCount}>Users</TableSortCell>
                 <TableCell align="right"></TableCell>
               </TableRow>
             </TableHead>

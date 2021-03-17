@@ -1,6 +1,4 @@
-import { makeStyles } from '@material-ui/core/styles';
-
-const useStyles = makeStyles((theme) => ({
+const styles = (theme) => ({
   formControl: {
     marginBottom: '10px'
   },
@@ -47,6 +45,6 @@ const useStyles = makeStyles((theme) => ({
     color: '#262626',
     lineHeight: '1.5em',
   }
-}));
+});
 
-export default useStyles;
+export default styles;

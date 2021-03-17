@@ -1,5 +1,8 @@
 import React from 'react';
-import useStyles from '../styles/form';
+import { makeStyles } from '@material-ui/core/styles';
+import styles from '../styles/form';
+
+const useStyles = makeStyles(styles);
 
 function Verify() {
   const classes = useStyles();

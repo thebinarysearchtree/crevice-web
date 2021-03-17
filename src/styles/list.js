@@ -1,6 +1,4 @@
-import { makeStyles } from '@material-ui/core/styles';
-
-const useStyles = makeStyles((theme) => ({
+const styles = (theme) => ({
   root: {
     display: 'flex',
     flexDirection: 'row',
@@ -64,12 +62,30 @@ const useStyles = makeStyles((theme) => ({
   },
   toolbar: {
     display: 'flex',
-    marginBottom: theme.spacing(2)
+    marginBottom: theme.spacing(2),
+    alignItems: 'flex-end'
   },
   colour: {
     padding: '0px',
     width: '8px'
+  },
+  avatar: {
+    width: '24px',
+    height: '24px'
+  },
+  avatarCell: {
+    paddingRight: '0px'
+  },
+  nameCell: {
+    paddingLeft: '0px'
+  },
+  activeDate: {
+    marginBottom: '0px',
+    width: '140px'
+  },
+  role: {
+    marginLeft: theme.spacing(1)
   }
-}));
+});
 
-export default useStyles;
+export default styles;

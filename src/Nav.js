@@ -17,7 +17,6 @@ import SupervisorAccountIcon from '@material-ui/icons/SupervisorAccount';
 import RoomIcon from '@material-ui/icons/Room';
 import HomeIcon from '@material-ui/icons/Home';
 import PersonIcon from '@material-ui/icons/Person';
-import LabelIcon from '@material-ui/icons/Label';
 import AccountCircle from '@material-ui/icons/AccountCircle';
 import client from './client';
 import { Link, useHistory, useLocation } from 'react-router-dom';
@@ -154,11 +153,6 @@ function Nav(props) {
         icon: <PersonIcon />,
         name: 'Users',
         url: '/users'
-      },
-      {
-        icon: <LabelIcon />,
-        name: 'Tags',
-        url: '/tags'
       }
     ]);
   }

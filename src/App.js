@@ -15,9 +15,9 @@ import Verify from './user/Verify';
 import Invite from './user/Invite';
 import Nav from './Nav';
 import RoleList from './role/List';
-import RoleDetail from './role/Detail';
 import LocationList from './location/List';
 import AreaList from './area/List';
+import UserList from './user/List';
 import { useAuth, ProvideAuth } from './auth';
 
 function PrivateRoute({ children, ...rest }) {
@@ -90,9 +90,9 @@ function App() {
                 <AreaList />
               </Nav>
             </Route>
-            <Route path="/roles/:roleId">
-              <Nav appBarOnly>
-                <RoleDetail />
+            <Route exact path="/users">
+              <Nav>
+                <UserList />
               </Nav>
             </Route>
           </Switch>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { makeStyles } from '@material-ui/core/styles';
 import client from '../client';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
@@ -10,7 +11,7 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Snackbar from '../common/Snackbar';
-import useStyles from '../styles/list';
+import styles from '../styles/list';
 import Detail from './Detail';
 import ConfirmButton from '../common/ConfirmButton';
 import Progress from '../common/Progress';
@@ -19,6 +20,8 @@ import TablePagination from '@material-ui/core/TablePagination';
 import useFetch from '../hooks/useFetch';
 import Link from '@material-ui/core/Link';
 import { Link as RouterLink } from 'react-router-dom';
+
+const useStyles = makeStyles(styles);
 
 function List() {
   const [locations, setLocations] = useState(null);
