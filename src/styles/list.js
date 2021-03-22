@@ -83,8 +83,8 @@ const styles = (theme) => ({
     marginBottom: '0px',
     width: '140px'
   },
-  role: {
-    marginLeft: theme.spacing(1)
+  filter: {
+    width: '127px'
   }
 });
 

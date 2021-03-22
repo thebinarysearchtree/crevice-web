@@ -9,15 +9,16 @@ import {
 import { ThemeProvider } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import theme from './theme';
-import SignUp from './user/SignUp';
-import Login from './user/Login';
-import Verify from './user/Verify';
-import Invite from './user/Invite';
+import SignUp from './account/SignUp';
+import Login from './account/Login';
+import Verify from './account/Verify';
+import Invite from './account/Invite';
 import Nav from './Nav';
 import RoleList from './role/List';
 import LocationList from './location/List';
 import AreaList from './area/List';
 import UserList from './user/List';
+import InviteUser from './user/Invite';
 import { useAuth, ProvideAuth } from './auth';
 
 function PrivateRoute({ children, ...rest }) {
@@ -93,6 +94,11 @@ function App() {
             <Route exact path="/users">
               <Nav>
                 <UserList />
+              </Nav>
+            </Route>
+            <Route exact path="/users/invite">
+              <Nav appBarOnly>
+                <InviteUser />
               </Nav>
             </Route>
           </Switch>

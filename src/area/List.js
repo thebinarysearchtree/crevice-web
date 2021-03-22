@@ -21,10 +21,10 @@ import useFetchMany from '../hooks/useFetchMany';
 import Progress from '../common/Progress';
 import TableSortCell from '../common/TableSortCell';
 import { useLocation } from 'react-router-dom';
-import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
-import FormControl from '@material-ui/core/FormControl';
-import Select from '@material-ui/core/Select';
+import TableFilterCell from '../common/TableFilterCell';
+import Link from '@material-ui/core/Link';
+import { Link as RouterLink } from 'react-router-dom';
 
 const useStyles = makeStyles(styles);
 
@@ -85,8 +85,7 @@ function List() {
     }
   }
 
-  const handleLocationChange = (e) => {
-    const locationId = e.target.value;
+  const handleLocationChange = (locationId) => {
     setLocationId(locationId);
     if (locationId === -1) {
       setFilteredAreas(areas);
@@ -184,7 +183,9 @@ function List() {
           </TableCell>
           <TableCell align="right">{a.locationName}</TableCell>
           <TableCell align="right">{new Date(a.createdAt).toLocaleDateString()}</TableCell>
-          <TableCell align="right">{a.activeUserCount}</TableCell>
+          <TableCell align="right">
+            <Link to={`/users?areaId=${a.id}`} component={RouterLink}>{a.activeUserCount}</Link>
+          </TableCell>
           <TableCell align="right">
             <ConfirmButton
               className={classes.deleteButton}
@@ -210,16 +211,6 @@ function List() {
           <SearchBox 
             placeholder="Search by name..."
             onChange={handleSearch} />
-          <FormControl>
-            <InputLabel id="location">Location</InputLabel>
-            <Select
-              labelId="location"
-              value={locationId}
-              onChange={handleLocationChange}>
-                <MenuItem key={-1} value={-1}>All</MenuItem>
-                {locationMenuItems}
-            </Select>
-          </FormControl>
           <div className={classes.grow} />
         </div>
         <TableContainer component={Paper}>
@@ -231,12 +222,11 @@ function List() {
                   orderBy={orderBy}
                   order={order}
                   onClick={sortByName}>Name</TableSortCell>
-                <TableSortCell
-                  align="right"
-                  name="locationName"
-                  orderBy={orderBy}
-                  order={order}
-                  onClick={sortByLocationName}>Location</TableSortCell>
+                <TableFilterCell
+                  menuId="location-menu"
+                  items={locations}
+                  selectedItemId={locationId}
+                  filter={handleLocationChange}>Location</TableFilterCell>
                 <TableSortCell
                   align="right"
                   name="createdAt"

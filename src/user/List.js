@@ -26,19 +26,14 @@ import {
   MuiPickersUtilsProvider,
   KeyboardDatePicker
 } from '@material-ui/pickers';
-import InputLabel from '@material-ui/core/InputLabel';
-import MenuItem from '@material-ui/core/MenuItem';
-import FormControl from '@material-ui/core/FormControl';
-import Select from '@material-ui/core/Select';
 import Chip from '@material-ui/core/Chip';
+import TableFilterCell from '../common/TableFilterCell';
 
 const useStyles = makeStyles(styles);
 
 function List() {
   const [users, setUsers] = useState(null);
   const [message, setMessage] = useState('');
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [roles, setRoles] = useState([]);
   const [areas, setAreas] = useState([]);
@@ -64,17 +59,6 @@ function List() {
     lastUserId,
     activeDate
   };
-
-  const handleNewClick = () => {
-    setSelectedUser({
-      id: -1,
-      name: '',
-      colour: '',
-      createdAt: new Date().toISOString(),
-      userCount: 0
-    });
-    setOpen(true);
-  }
 
   const usersHandler = (result) => {
     const { users, count } = result;
@@ -116,14 +100,12 @@ function List() {
     setSearchTimeout(setTimeout(() => search({ ...query, searchTerm }), 200));
   }
 
-  const handleRoleChange = (e) => {
-    const roleId = e.target.value;
+  const handleRoleChange = (roleId) => {
     setRoleId(roleId);
     search({ ...query, roleId });
   }
 
-  const handleAreaChange = (e) => {
-    const areaId = e.target.value;
+  const handleAreaChange = (areaId) => {
     setAreaId(areaId);
     search({ ...query, areaId });
   }
@@ -161,14 +143,6 @@ function List() {
       </div>
     );
   }
-
-  const roleMenuItems = roles.map(r => {
-    return <MenuItem key={r.id} value={r.id}>{r.name}</MenuItem>;
-  });
-
-  const areaMenuItems = areas.map(a => {
-    return <MenuItem key={a.id} value={a.id}>{a.name}</MenuItem>;
-  });
   
   const tableRows = users.map(u => {
     return (
@@ -178,9 +152,9 @@ function List() {
             <Link 
               className={classes.link} 
               to={`/users/${u.id}`}>{u.name}</Link>
-            <Chip className={classes.role} size="small" label="Student" />
           </TableCell>
-          <TableCell align="right">{new Date(u.createdAt).toLocaleDateString()}</TableCell>
+          <TableCell align="right"><Chip size="small" label="Student" /></TableCell>
+          <TableCell align="right">{u.areas.join(', ')}</TableCell>
           <TableCell align="right">{u.booked}</TableCell>
           <TableCell align="right">{u.attended}</TableCell>
           <TableCell align="right">
@@ -202,32 +176,13 @@ function List() {
           <Button 
             variant="contained"
             color="primary"
-            onClick={handleNewClick}>Invite users</Button>
+            component={Link}
+            to="/users/invite">Invite users</Button>
         </div>
         <div className={classes.toolbar}>
           <SearchBox 
             placeholder="Search by name..."
             onChange={handleSearch} />
-          <FormControl>
-            <InputLabel id="role">Role</InputLabel>
-            <Select
-              labelId="role"
-              value={roleId}
-              onChange={handleRoleChange}>
-                <MenuItem key={-1} value={-1}>All</MenuItem>
-                {roleMenuItems}
-            </Select>
-          </FormControl>
-          <FormControl>
-            <InputLabel id="area">Area</InputLabel>
-            <Select
-              labelId="area"
-              value={areaId}
-              onChange={handleAreaChange}>
-                <MenuItem key={-1} value={-1}>All</MenuItem>
-                {areaMenuItems}
-            </Select>
-          </FormControl>
           <div className={classes.grow} />
           <MuiPickersUtilsProvider utils={DateFnsUtils}>
             <KeyboardDatePicker
@@ -249,7 +204,16 @@ function List() {
               <TableRow>
                 <TableCell></TableCell>
                 <TableCell className={classes.nameCell}>Name</TableCell>
-                <TableCell align="right">Created</TableCell>
+                <TableFilterCell
+                  menuId="role-menu"
+                  items={roles}
+                  selectedItemId={roleId}
+                  filter={handleRoleChange}>Roles</TableFilterCell>
+                <TableFilterCell
+                  menuId="area-menu"
+                  items={areas}
+                  selectedItemId={areaId}
+                  filter={handleAreaChange}>Areas</TableFilterCell>
                 <TableCell align="right">Booked</TableCell>
                 <TableCell align="right">Attended</TableCell>
                 <TableCell align="right"></TableCell>
@@ -262,7 +226,7 @@ function List() {
               <TableRow>
                 <TablePagination
                   rowsPerPageOptions={[]}
-                  colSpan={6}
+                  colSpan={7}
                   count={count}
                   rowsPerPage={10}
                   page={page}
