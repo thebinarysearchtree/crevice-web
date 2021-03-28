@@ -112,7 +112,9 @@ function List() {
 
   const handleChangeDate = (activeDate) => {
     setActiveDate(activeDate);
-    search({ ...query, activeDate });
+    if (!isNaN(activeDate.getTime())) {
+      search({ ...query, activeDate });
+    }
   }
 
   const deleteUser = async (userId) => {

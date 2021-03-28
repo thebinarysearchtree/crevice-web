@@ -21,7 +21,6 @@ import useFetchMany from '../hooks/useFetchMany';
 import Progress from '../common/Progress';
 import TableSortCell from '../common/TableSortCell';
 import { useLocation } from 'react-router-dom';
-import MenuItem from '@material-ui/core/MenuItem';
 import TableFilterCell from '../common/TableFilterCell';
 import Link from '@material-ui/core/Link';
 import { Link as RouterLink } from 'react-router-dom';
@@ -81,7 +80,8 @@ function List() {
       setFilteredAreas(areas);
     }
     else {
-      setFilteredAreas(a => a.filter(a => a.abbreviation.startsWith(term)));
+      const pattern = new RegExp(term, 'i');
+      setFilteredAreas(areas.filter(a => pattern.test(`${a.abbreviation} ${a.name}`)));
     }
   }
 
@@ -112,11 +112,6 @@ function List() {
   const sortByName = makeSortHandler(
     'name',
     (a, b) => a.abbreviation.localeCompare(b.abbreviation)
-  );
-
-  const sortByLocationName = makeSortHandler(
-    'locationName',
-    (a, b) => a.locationName.localeCompare(b.locationName)
   );
 
   const sortByCreatedAt = makeSortHandler(
@@ -167,10 +162,6 @@ function List() {
       </div>
     );
   }
-
-  const locationMenuItems = locations.map(l => {
-    return <MenuItem key={l.id} value={l.id}>{l.name}</MenuItem>;
-  });
   
   const tableRows = filteredAreas.slice(sliceStart, sliceEnd).map(a => {
     const name = a.abbreviation === a.name ? a.name : `${a.abbreviation} ${a.name}`;

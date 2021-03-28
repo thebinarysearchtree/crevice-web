@@ -44,17 +44,8 @@ const postData = async (url, data, token) => {
       'content-type': 'application/json'
     },
     method: 'POST'
-  }); 
-  if (response.ok) {
-    return response;
-  }
-  else if (response.status === 401) {
-    user = null;
-    return response;
-  }
-  else {
-    return response;
-  }
+  });
+  return response;
 };
 
 const getData = async (url, token) => {
@@ -68,17 +59,36 @@ const getData = async (url, token) => {
     },
     method: 'GET'
   });
-  if (response.ok) {
-    return response;
-  }
-  else if (response.status === 401) {
-    user = null;
-    return response;
-  }
-  else {
-    return response;
-  }
+  return response;
 };
+
+const uploadFiles = async (files) => {
+  const token = await getToken();
+  const formData = new FormData();
+  files.forEach(file => formData.append('files', file));
+  const response = await fetch('/files/uploadFiles', {
+    body: formData,
+    headers: {
+      'Authorization': `Bearer ${token}`
+    },
+    method: 'POST'
+  });
+  return response;
+}
+
+const uploadPhotos = async (photos) => {
+  const token = await getToken();
+  const formData = new FormData();
+  photos.forEach(photo => formData.append('photos', photo));
+  const response = await fetch('/files/uploadPhotos', {
+    body: formData,
+    headers: {
+      'Authorization': `Bearer ${token}`
+    },
+    method: 'POST'
+  });
+  return response;
+}
 
 const logIn = async (email, password) => {
   const response = await fetch('/users/getToken', {
@@ -94,18 +104,11 @@ const logIn = async (email, password) => {
     user = updatedUser;
     return user;
   }
-  else if (response.status === 401) {
-    user = null;
-    return null;
-  }
-  else {
-    return null;
-  }
+  return null;
 };
 
 const signOut = () => {
   localStorage.removeItem('user');
-  user = null;
 };
 
 export default {
@@ -113,6 +116,8 @@ export default {
   refreshToken,
   postData,
   getData,
+  uploadFiles,
+  uploadPhotos,
   logIn,
   signOut
 };
