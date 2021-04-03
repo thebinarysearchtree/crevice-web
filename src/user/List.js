@@ -18,7 +18,7 @@ import TableFooter from '@material-ui/core/TableFooter';
 import TablePagination from '@material-ui/core/TablePagination';
 import useFetchMany from '../hooks/useFetchMany';
 import Progress from '../common/Progress';
-import { Link, useLocation } from 'react-router-dom';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
 import Avatar from '@material-ui/core/Avatar';
 import 'date-fns';
 import DateFnsUtils from '@date-io/date-fns';
@@ -26,8 +26,10 @@ import {
   MuiPickersUtilsProvider,
   KeyboardDatePicker
 } from '@material-ui/pickers';
-import Chip from '@material-ui/core/Chip';
 import TableFilterCell from '../common/TableFilterCell';
+import RoleChip from '../common/RoleChip';
+import Link from '@material-ui/core/Link';
+import MorePopover from '../common/MorePopover';
 
 const useStyles = makeStyles(styles);
 
@@ -51,6 +53,11 @@ function List() {
   const [lastUserId, setLastUserId] = useState(-1);
   const [page, setPage] = useState(0);
   const [activeDate, setActiveDate] = useState(null);
+
+  const roleMap = new Map();
+  for (const role of roles) {
+    roleMap.set(role.id, role);
+  }
 
   const query = {
     searchTerm,
@@ -147,18 +154,18 @@ function List() {
   }
   
   const tableRows = users.map(u => {
+    const role = roleMap.get(u.roleIds[0]);
     return (
       <TableRow key={u.id}>
-          <TableCell><Avatar className={classes.avatar} alt={u.name} /></TableCell>
+          <TableCell><Avatar className={classes.avatar} alt={u.name} src={u.imageId ? `/photos/${u.imageId}.jpg` : null} /></TableCell>
           <TableCell className={classes.nameCell} component="th" scope="row">
-            <Link 
+            <RouterLink 
               className={classes.link} 
-              to={`/users/${u.id}`}>{u.name}</Link>
+              to={`/users/${u.id}`}>{u.name}</RouterLink>
           </TableCell>
-          <TableCell align="right"><Chip size="small" label="Student" /></TableCell>
-          <TableCell align="right">{u.areas.join(', ')}</TableCell>
-          <TableCell align="right">{u.booked}</TableCell>
-          <TableCell align="right">{u.attended}</TableCell>
+          <TableCell align="left"><RoleChip size="small" label={role.name} colour={role.colour} /></TableCell>
+          <TableCell align="left"><MorePopover items={u.areaNames} /></TableCell>
+          <TableCell align="right">{u.attended} / {u.booked}</TableCell>
           <TableCell align="right">
             <ConfirmButton
               className={classes.deleteButton}
@@ -178,12 +185,12 @@ function List() {
           <Button 
             variant="contained"
             color="primary"
-            component={Link}
+            component={RouterLink}
             to="/users/invite">Invite users</Button>
         </div>
         <div className={classes.toolbar}>
           <SearchBox 
-            placeholder="Search by name..."
+            placeholder="Search..."
             onChange={handleSearch} />
           <div className={classes.grow} />
           <MuiPickersUtilsProvider utils={DateFnsUtils}>
@@ -216,8 +223,7 @@ function List() {
                   items={areas}
                   selectedItemId={areaId}
                   filter={handleAreaChange}>Areas</TableFilterCell>
-                <TableCell align="right">Booked</TableCell>
-                <TableCell align="right">Attended</TableCell>
+                <TableCell align="right">Shifts</TableCell>
                 <TableCell align="right"></TableCell>
               </TableRow>
             </TableHead>
@@ -228,7 +234,7 @@ function List() {
               <TableRow>
                 <TablePagination
                   rowsPerPageOptions={[]}
-                  colSpan={7}
+                  colSpan={6}
                   count={count}
                   rowsPerPage={10}
                   page={page}

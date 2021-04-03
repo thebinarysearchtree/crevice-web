@@ -95,6 +95,11 @@ const useStyles = makeStyles((theme) => ({
     display: 'flex',
     flexDirection: 'column',
     paddingLeft: theme.spacing(4)
+  },
+  deleteButton: {
+    cursor: 'pointer',
+    fontWeight: 600,
+    color: theme.palette.action.active
   }
 }));
 
@@ -108,19 +113,14 @@ function InviteSingleAreas(props) {
   const history = useHistory();
   const classes = useStyles();
 
-  const { userAreas, setUserAreas, user } = props;
+  const { userAreas, setUserAreas, user, inviteUser } = props;
 
   const handleAddArea = () => {
     setOpen(true);
   }
 
-  const inviteUser = () => {
-    const areas = userAreas.map(ua => ({ 
-      roleId: ua.role.id, 
-      areaId: ua.area.id, 
-      startDate: ua.startDate, 
-      endDate: ua.endDate 
-    }));
+  const remove = (index) => {
+    setUserAreas(userAreas => userAreas.filter((ua, i) => i !== index));
   }
 
   function DisplayField(props) {
@@ -149,9 +149,14 @@ function InviteSingleAreas(props) {
       <TableRow key={i}>
           <TableCell component="th" scope="row"><RoleChip label={a.role.name} colour={a.role.colour} /></TableCell>
           <TableCell align="right">{a.area.name}</TableCell>
-          <TableCell align="right">{a.startDate.toLocaleDateString()}</TableCell>
-          <TableCell align="right">{a.endDate ? a.endDate.toLocaleDateString() : ''}</TableCell>
-          <TableCell align="right"></TableCell>
+          <TableCell align="right">{a.startTime.toLocaleDateString()}</TableCell>
+          <TableCell align="right">{a.endTime ? a.endTime.toLocaleDateString() : ''}</TableCell>
+          <TableCell align="right">{a.isAdmin ? 'Yes' : ''}</TableCell>
+          <TableCell align="right">
+            <span 
+              className={classes.deleteButton}
+              onClick={() => remove(i)}>delete</span>
+          </TableCell>
       </TableRow>
     );
   });
@@ -162,16 +167,15 @@ function InviteSingleAreas(props) {
         <div className={classes.heading}>
           <div className={classes.header}>
             <IconButton 
-              className={classes.iconButton} 
-              component={Link} 
-              to="/users">
+              className={classes.iconButton}
+              onClick={() => props.setShowAreas(false)}>
                 <ArrowBackIos fontSize="large" />
             </IconButton>
             <Typography variant="h4">Invite users</Typography>
           </div>
         </div>
         <Paper className={classes.paper}>
-          <Avatar className={classes.avatar} />
+          <Avatar className={classes.avatar} src={user.imageId ? `/photos/${user.imageId}.jpg` : null} />
           <div className={classes.container}>
             <div className={classes.form}>
               <Typography variant="subtitle2">{`${user.firstName} ${user.lastName}`}</Typography>
@@ -198,6 +202,7 @@ function InviteSingleAreas(props) {
                 <TableCell align="right">Area</TableCell>
                 <TableCell align="right">Start date</TableCell>
                 <TableCell align="right">End date</TableCell>
+                <TableCell align="right">Admin</TableCell>
                 <TableCell align="right"></TableCell>
               </TableRow>
             </TableHead>
@@ -216,10 +221,11 @@ function InviteSingleAreas(props) {
           color="primary"
           disabled={userAreas.length === 0}>Invite user</Button>
         <AreaDialog 
-          open={open} 
-          setOpen={setOpen} 
-          setUserAreas={setUserAreas} 
-          roles={roles} 
+          open={open}
+          setOpen={setOpen}
+          userAreas={userAreas}
+          setUserAreas={setUserAreas}
+          roles={roles}
           areas={areas} />
         <Snackbar message={message} setMessage={setMessage} />
       </div>

@@ -24,6 +24,7 @@ import { useLocation } from 'react-router-dom';
 import TableFilterCell from '../common/TableFilterCell';
 import Link from '@material-ui/core/Link';
 import { Link as RouterLink } from 'react-router-dom';
+import Avatar from '@material-ui/core/Avatar';
 
 const useStyles = makeStyles(styles);
 
@@ -165,6 +166,13 @@ function List() {
   
   const tableRows = filteredAreas.slice(sliceStart, sliceEnd).map(a => {
     const name = a.abbreviation === a.name ? a.name : `${a.abbreviation} ${a.name}`;
+    let administrators;
+    if (a.administrators.length === 1) {
+      administrators = a.administrators[0].name;
+    }
+    if (a.administrators.length > 1) {
+      administrators = `${a.administrators[0].name} and ${a.administrators.length - 1} more`;
+    }
     return (
       <TableRow key={a.id}>
           <TableCell component="th" scope="row">
@@ -172,8 +180,8 @@ function List() {
               className={classes.locationName}
               onClick={() => handleNameClick(a)}>{name}</span>
           </TableCell>
-          <TableCell align="right">{a.locationName}</TableCell>
-          <TableCell align="right">{new Date(a.createdAt).toLocaleDateString()}</TableCell>
+          <TableCell align="left">{a.locationName}</TableCell>
+          <TableCell align="left">{administrators}</TableCell>
           <TableCell align="right">
             <Link to={`/users?areaId=${a.id}`} component={RouterLink}>{a.activeUserCount}</Link>
           </TableCell>
@@ -200,7 +208,7 @@ function List() {
         </div>
         <div className={classes.toolbar}>
           <SearchBox 
-            placeholder="Search by name..."
+            placeholder="Search..."
             onChange={handleSearch} />
           <div className={classes.grow} />
         </div>
@@ -218,12 +226,7 @@ function List() {
                   items={locations}
                   selectedItemId={locationId}
                   filter={handleLocationChange}>Location</TableFilterCell>
-                <TableSortCell
-                  align="right"
-                  name="createdAt"
-                  orderBy={orderBy}
-                  order={order}
-                  onClick={sortByCreatedAt}>Created</TableSortCell>
+                <TableCell align="left">Administrators</TableCell>
                 <TableSortCell
                   align="right"
                   name="activeUserCount"

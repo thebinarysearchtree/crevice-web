@@ -65,7 +65,9 @@ const getData = async (url, token) => {
 const uploadFiles = async (files) => {
   const token = await getToken();
   const formData = new FormData();
-  files.forEach(file => formData.append('files', file));
+  for (let i = 0; i < files.length; i++) {
+    formData.append('files', files[i]);
+  }
   const response = await fetch('/files/uploadFiles', {
     body: formData,
     headers: {
@@ -79,7 +81,9 @@ const uploadFiles = async (files) => {
 const uploadPhotos = async (photos) => {
   const token = await getToken();
   const formData = new FormData();
-  photos.forEach(photo => formData.append('photos', photo));
+  for (let i = 0; i < photos.length; i++) {
+    formData.append('photos', photos[i]);
+  }
   const response = await fetch('/files/uploadPhotos', {
     body: formData,
     headers: {

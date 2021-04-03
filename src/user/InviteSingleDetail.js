@@ -97,15 +97,17 @@ function InviteSingleDetail() {
     imageId
   };
 
-  const saveUser = async (e) => {
-    e.preventDefault();
-    const user = {
-      firstName,
-      lastName
-    };
-    const response = await client.postData('/users/insert', user);
+  const inviteUser = async () => {
+    const areas = userAreas.map(ua => ({ 
+      roleId: ua.role.id, 
+      areaId: ua.area.id, 
+      startTime: ua.startTime, 
+      endTime: ua.endTime,
+      isAdmin: ua.isAdmin
+    }));
+    const response = await client.postData('/users/inviteUsers', { users: [{ ...user, userAreas: areas }] });
     if (response.ok) {
-      history.push('/users', { message: 'User created' });
+      history.push('/users', { message: 'User created and invitation sent' });
     }
     else {
       setMessage('Something went wrong');
@@ -115,8 +117,7 @@ function InviteSingleDetail() {
   const handleUpload = async (e) => {
     const files = e.currentTarget.files;
     if (files.length > 0) {
-      const file = files[0];
-      const response = await client.uploadPhotos([file]);
+      const response = await client.uploadPhotos(files);
       const storedFiles = await response.json();
       setImageId(storedFiles[0].fileId);
     }
@@ -141,7 +142,8 @@ function InviteSingleDetail() {
         user={user} 
         setShowAreas={setShowAreas}
         userAreas={userAreas}
-        setUserAreas={setUserAreas} />
+        setUserAreas={setUserAreas}
+        inviteUser={inviteUser} />
     );
   }
 

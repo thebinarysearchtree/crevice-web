@@ -8,7 +8,6 @@ import Menu from '@material-ui/core/Menu';
 const useStyles = makeStyles((theme) => ({
   root: {
     display: 'flex',
-    justifyContent: 'flex-end',
     cursor: 'pointer'
   },
   icon: {
@@ -39,7 +38,7 @@ function TableFilterCell(props) {
   });
 
   return (
-    <TableCell align="right">
+    <TableCell>
       <div 
         className={classes.root} 
         aria-controls={menuId}

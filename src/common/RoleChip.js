@@ -2,7 +2,7 @@ import React from 'react';
 import Chip from '@material-ui/core/Chip';
 
 function RoleChip(props) {
-  const { label, colour } = props;
+  const { label, colour, size } = props;
 
   const r = parseInt(colour.substring(0, 2), 16);
   const g = parseInt(colour.substring(2, 4), 16);
@@ -14,6 +14,7 @@ function RoleChip(props) {
   
   return (
     <Chip 
+      size={size}
       label={label}
       style={{ backgroundColor: `#${colour}`, color: fontColour }} />
   );
