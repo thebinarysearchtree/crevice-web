@@ -18,8 +18,10 @@ import RoleList from './role/List';
 import LocationList from './location/List';
 import AreaList from './area/List';
 import UserList from './user/List';
+import FieldList from './field/List';
 import InviteChoice from './user/InviteChoice';
 import InviteSingleDetail from './user/InviteSingleDetail';
+import Create from './field/Create';
 import { useAuth, ProvideAuth } from './auth';
 
 function PrivateRoute({ children, ...rest }) {
@@ -105,6 +107,16 @@ function App() {
             <Route exact path="/users/invite/single">
               <Nav appBarOnly>
                 <InviteSingleDetail />
+              </Nav>
+            </Route>
+            <Route exact path="/fields">
+              <Nav>
+                <FieldList />
+              </Nav>
+            </Route>
+            <Route exact path="/fields/create">
+              <Nav appBarOnly>
+                <Create />
               </Nav>
             </Route>
           </Switch>

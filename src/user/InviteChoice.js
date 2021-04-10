@@ -2,9 +2,8 @@ import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
-import IconButton from '@material-ui/core/IconButton';
-import ArrowBackIos from '@material-ui/icons/ArrowBackIos';
 import { Link, useHistory } from 'react-router-dom';
+import BackButton from '../common/BackButton';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -55,12 +54,7 @@ function Invite() {
       <div className={classes.content}>
         <div className={classes.heading}>
           <div className={classes.header}>
-            <IconButton 
-              className={classes.iconButton} 
-              component={Link} 
-              to="/users">
-                <ArrowBackIos fontSize="large" />
-            </IconButton>
+            <BackButton to="/users" />
             <Typography variant="h4">Invite users</Typography>
           </div>
         </div>

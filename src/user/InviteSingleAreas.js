@@ -3,11 +3,9 @@ import { makeStyles } from '@material-ui/core/styles';
 import client from '../client';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
-import IconButton from '@material-ui/core/IconButton';
-import ArrowBackIos from '@material-ui/icons/ArrowBackIos';
 import Button from '@material-ui/core/Button';
 import Snackbar from '../common/Snackbar';
-import { Link, useHistory } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import useFetchMany from '../hooks/useFetchMany';
 import Avatar from '@material-ui/core/Avatar';
 import Table from '@material-ui/core/Table';
@@ -18,6 +16,7 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import AreaDialog from './AreaDialog';
 import RoleChip from '../common/RoleChip';
+import BackButton from '../common/BackButton';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -166,11 +165,7 @@ function InviteSingleAreas(props) {
       <div className={classes.content}>
         <div className={classes.heading}>
           <div className={classes.header}>
-            <IconButton 
-              className={classes.iconButton}
-              onClick={() => props.setShowAreas(false)}>
-                <ArrowBackIos fontSize="large" />
-            </IconButton>
+            <BackButton onClick={() => props.setShowAreas(false)} />
             <Typography variant="h4">Invite users</Typography>
           </div>
         </div>

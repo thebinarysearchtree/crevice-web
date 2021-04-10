@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import client from '../client';
 
-function useFetch(url, handler, data) {
+function useFetch(url, handler, data, skip) {
   const history = useHistory();
 
   useEffect(() => {
@@ -21,8 +21,10 @@ function useFetch(url, handler, data) {
         }
       }
     };
-    getState();
-  }, []);
+    if (!skip) {
+      getState();
+    }
+  }, [skip]);
 }
 
 export default useFetch;

@@ -22,23 +22,23 @@ function Detail(props) {
   const error = colour && !hex.test(colour);
   const isDisabled = !name || !hex.test(colour);
 
+  const { setRoles, selectedRole, open, setOpen, setMessage } = props;
+  const classes = useStyles();
+
   useEffect(() => {
-    if (props.selectedRole) {
-      const { name, colour } = props.selectedRole;
+    if (selectedRole) {
+      const { name, colour } = selectedRole;
 
       setName(name);
       setColour(colour);
     }
-  }, [props.selectedRole]);
+  }, [selectedRole]);
 
-  const { setRoles, open, setOpen, setMessage } = props;
-  const classes = useStyles();
-
-  if (!props.selectedRole) {
+  if (!selectedRole) {
     return null;
   }
 
-  const role = { ...props.selectedRole, name, colour };
+  const role = { ...selectedRole, name, colour };
 
   const saveRole = async (e) => {
     e.preventDefault();

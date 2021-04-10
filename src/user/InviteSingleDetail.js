@@ -4,12 +4,16 @@ import client from '../client';
 import Typography from '@material-ui/core/Typography';
 import TextField from '@material-ui/core/TextField';
 import IconButton from '@material-ui/core/IconButton';
-import ArrowBackIos from '@material-ui/icons/ArrowBackIos';
 import Button from '@material-ui/core/Button';
 import Snackbar from '../common/Snackbar';
-import { Link, useHistory } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import Avatar from '@material-ui/core/Avatar';
 import InviteSingleAreas from './InviteSingleAreas';
+import Tooltip from '@material-ui/core/Tooltip';
+import BackButton from '../common/BackButton';
+import useFetch from '../hooks/useFetch';
+import Progress from '../common/Progress';
+import CustomField from '../field/CustomField';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -41,8 +45,7 @@ const useStyles = makeStyles((theme) => ({
     display: 'flex'
   },
   short: {
-    width: '200px',
-    backgroundColor: 'white'
+    width: '200px'
   },
   button: {
     marginTop: theme.spacing(2),
@@ -56,18 +59,20 @@ const useStyles = makeStyles((theme) => ({
     marginBottom: theme.spacing(2)
   },
   email: {
-    width: '416px',
-    backgroundColor: 'white'
+    width: '416px'
   },
   avatar: {
     width: '150px',
     height: '150px'
   },
-  input: {
+  upload: {
     display: 'none'
   },
   mr: {
     marginRight: theme.spacing(2)
+  },
+  input: {
+    backgroundColor: 'white'
   }
 }));
 
@@ -81,6 +86,8 @@ function InviteSingleDetail() {
   const [showAreas, setShowAreas] = useState(false);
   const [userAreas, setUserAreas] = useState([]);
   const [message, setMessage] = useState('');
+  const [fields, setFields] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const history = useHistory();
   const classes = useStyles();
@@ -97,6 +104,13 @@ function InviteSingleDetail() {
     imageId
   };
 
+  const fieldsHandler = (fields) => {
+    setFields(fields);
+    setLoading(false);
+  }
+
+  useFetch('/fields/getAllFields', fieldsHandler);
+
   const inviteUser = async () => {
     const areas = userAreas.map(ua => ({ 
       roleId: ua.role.id, 
@@ -105,7 +119,18 @@ function InviteSingleDetail() {
       endTime: ua.endTime,
       isAdmin: ua.isAdmin
     }));
-    const response = await client.postData('/users/inviteUsers', { users: [{ ...user, userAreas: areas }] });
+    const userFields = fields
+      .flat()
+      .filter(f => f.value)
+      .map(f => {
+        const { id, fieldType, value } = f;
+        const fieldId = id;
+        const itemId = fieldType === 'Select' ? value : null;
+        const textValue = fieldType === 'Select' || fieldType === 'Date' ? null : value;
+        const dateValue = fieldType === 'Date' ? value : null;
+        return { fieldId, itemId, textValue, dateValue };
+      });
+    const response = await client.postData('/users/inviteUsers', { users: [{ ...user, userAreas: areas, userFields }] });
     if (response.ok) {
       history.push('/users', { message: 'User created and invitation sent' });
     }
@@ -136,6 +161,26 @@ function InviteSingleDetail() {
     }
   }
 
+  if (loading) {
+    return <Progress setLoading={setLoading} />;
+  }
+
+  const additionalFields = fields.map((field, i) => {
+    const setField = (setter) => {
+      setFields(fields => {
+        fields[i] = setter(fields[i]);
+        return [...fields];
+      });
+    }
+    return (
+      <CustomField
+        key={i}
+        className={classes.spacing} 
+        fields={field} 
+        setFields={setField} />
+    );
+  });
+
   if (showAreas) {
     return (
       <InviteSingleAreas 
@@ -152,34 +197,32 @@ function InviteSingleDetail() {
       <div className={classes.content}>
         <div className={classes.heading}>
           <div className={classes.header}>
-            <IconButton 
-              className={classes.iconButton} 
-              component={Link} 
-              to="/users/invite">
-                <ArrowBackIos fontSize="large" />
-            </IconButton>
+            <BackButton to="/users/invite" />
             <Typography variant="h4">Invite users</Typography>
           </div>
         </div>
         <input
-          className={classes.input}
+          className={classes.upload}
           accept="image/jpeg, image/png"
           id="upload-photo"
           type="file"
           onChange={handleUpload} />
         <label htmlFor="upload-photo">
-          <IconButton 
-            className={classes.spacing}
-            aria-label="upload photo" 
-            component="span"
-            onDrop={handleDrop}
-            onDragOver={(e) => e.preventDefault()}>
-              <Avatar className={classes.avatar} src={photoSrc} />
-          </IconButton>
+          <Tooltip placement="right" title="Add a profile photo">
+            <IconButton 
+              className={classes.spacing}
+              aria-label="upload photo" 
+              component="span"
+              onDrop={handleDrop}
+              onDragOver={(e) => e.preventDefault()}>
+                <Avatar className={classes.avatar} src={photoSrc} />
+            </IconButton>
+          </Tooltip>
         </label>
         <form className={classes.form} onSubmit={() => setShowAreas(true)} noValidate>
           <div className={`${classes.container} ${classes.spacing}`}>
             <TextField
+              InputProps={{ className: classes.input }}
               className={`${classes.short} ${classes.mr}`}
               variant="outlined"
               size="small"
@@ -187,6 +230,7 @@ function InviteSingleDetail() {
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)} />
             <TextField
+              InputProps={{ className: classes.input }}
               className={classes.short}
               variant="outlined"
               size="small"
@@ -195,6 +239,7 @@ function InviteSingleDetail() {
               onChange={(e) => setLastName(e.target.value)} />
           </div>
           <TextField
+            InputProps={{ className: classes.input }}
             className={`${classes.email} ${classes.spacing}`}
             variant="outlined"
             size="small"
@@ -202,6 +247,7 @@ function InviteSingleDetail() {
             value={email}
             onChange={(e) => setEmail(e.target.value)} />
           <TextField
+            InputProps={{ className: classes.input }}
             className={`${classes.short} ${classes.spacing}`}
             variant="outlined"
             size="small"
@@ -209,12 +255,14 @@ function InviteSingleDetail() {
             value={phone}
             onChange={(e) => setPhone(e.target.value)} />
           <TextField
+            InputProps={{ className: classes.input }}
             className={`${classes.short} ${classes.spacing}`}
             variant="outlined"
             size="small"
             label="Pager (optional)"
             value={pager}
             onChange={(e) => setPager(e.target.value)} />
+          {additionalFields}
           <Button
             className={classes.button}
             variant="contained"

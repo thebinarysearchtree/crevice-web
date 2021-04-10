@@ -18,8 +18,8 @@ import Progress from '../common/Progress';
 import TableFooter from '@material-ui/core/TableFooter';
 import TablePagination from '@material-ui/core/TablePagination';
 import useFetch from '../hooks/useFetch';
-import Link from '@material-ui/core/Link';
 import { Link as RouterLink } from 'react-router-dom';
+import Demo from './Demo';
 
 const useStyles = makeStyles(styles);
 
@@ -28,6 +28,7 @@ function List() {
   const [message, setMessage] = useMessage();
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [selectedField, setSelectedField] = useState(null);
 
   const classes = useStyles();
 
@@ -41,10 +42,10 @@ function List() {
   }
 
   const deleteField = async (fieldId) => {
-    const response = await client.postData('/roles/remove', { roleId });
+    const response = await client.postData('/fields/remove', { fieldId });
     if (response.ok) {
-      setRoles(roles.filter(r => r.id !== roleId));
-      setMessage('Role deleted');
+      setFields(fields.filter(f => f.id !== fieldId));
+      setMessage('Field deleted');
     }
     else {
       setMessage('Something went wrong');
@@ -71,11 +72,11 @@ function List() {
 
   const tableRows = fields.slice(sliceStart, sliceEnd).map(f => {
     return (
-      <TableRow key={r.id} className={classes.tableRow}>
+      <TableRow key={f.id} className={classes.tableRow}>
         <TableCell component="th" scope="row">
-          <span className={classes.locationName}>{f.name}</span>
+          <span className={classes.locationName} onClick={() => setSelectedField(f)}>{f.name}</span>
         </TableCell>
-        <TableCell align="right">{new Date(f.createdAt).toLocaleDateString()}</TableCell>
+        <TableCell align="right">{f.fieldType}</TableCell>
         <TableCell align="right">{f.userCount}</TableCell>
         <TableCell align="right">
           <ConfirmButton
@@ -95,15 +96,17 @@ function List() {
           <Typography variant="h5">Fields</Typography>
           <Button 
             variant="contained"
-            color="primary">New role</Button>
+            color="primary"
+            component={RouterLink}
+            to="/fields/create">New field</Button>
         </div>
         <TableContainer component={Paper}>
-          <Table className={classes.table} aria-label="roles table">
+          <Table className={classes.table} aria-label="fields table">
             <TableHead>
               <TableRow>
                 <TableCell>Name</TableCell>
-                <TableCell align="right">Created</TableCell>
-                <TableCell align="right">Users</TableCell>
+                <TableCell align="right">Type</TableCell>
+                <TableCell align="right">Used by</TableCell>
                 <TableCell align="right"></TableCell>
               </TableRow>
             </TableHead>
@@ -114,8 +117,8 @@ function List() {
               <TableRow>
                 <TablePagination
                   rowsPerPageOptions={[]}
-                  colSpan={5}
-                  count={roles.length}
+                  colSpan={4}
+                  count={fields.length}
                   rowsPerPage={rowsPerPage}
                   page={page}
                   onChangePage={handleChangePage} />
@@ -123,6 +126,7 @@ function List() {
             </TableFooter>
           </Table>
         </TableContainer>
+        <Demo selectedField={selectedField} setSelectedField={setSelectedField} />
         <Snackbar message={message} setMessage={setMessage} />
       </div>
       <div className={classes.rightSection} />
