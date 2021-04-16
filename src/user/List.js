@@ -3,7 +3,6 @@ import { makeStyles } from '@material-ui/core/styles';
 import client from '../client';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
-import Button from '@material-ui/core/Button';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
@@ -20,16 +19,10 @@ import useFetchMany from '../hooks/useFetchMany';
 import Progress from '../common/Progress';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import Avatar from '@material-ui/core/Avatar';
-import 'date-fns';
-import DateFnsUtils from '@date-io/date-fns';
-import {
-  MuiPickersUtilsProvider,
-  KeyboardDatePicker
-} from '@material-ui/pickers';
 import TableFilterCell from '../common/TableFilterCell';
 import RoleChip from '../common/RoleChip';
-import Link from '@material-ui/core/Link';
 import MorePopover from '../common/MorePopover';
+import ActionButton from '../common/ActionButton';
 
 const useStyles = makeStyles(styles);
 
@@ -53,6 +46,7 @@ function List() {
   const [lastUserId, setLastUserId] = useState(-1);
   const [page, setPage] = useState(0);
   const [activeDate, setActiveDate] = useState(null);
+  const [activeState, setActiveState] = useState('All');
 
   const roleMap = new Map();
   for (const role of roles) {
@@ -64,8 +58,24 @@ function List() {
     roleId,
     areaId,
     lastUserId,
-    activeDate
+    activeDate,
+    activeState
   };
+
+  const actions = [
+    {
+      name: 'Invite one user',
+      url: '/users/inviteSingle'
+    },
+    {
+      name: 'Invite many users',
+      url: '/users/inviteMany'
+    },
+    {
+      name: 'Upload photos',
+      url: '/users/uploadPhotos'
+    }
+  ];
 
   const usersHandler = (result) => {
     const { users, count } = result;
@@ -115,13 +125,6 @@ function List() {
   const handleAreaChange = (areaId) => {
     setAreaId(areaId);
     search({ ...query, areaId });
-  }
-
-  const handleChangeDate = (activeDate) => {
-    setActiveDate(activeDate);
-    if (!isNaN(activeDate.getTime())) {
-      search({ ...query, activeDate });
-    }
   }
 
   const deleteUser = async (userId) => {
@@ -182,30 +185,13 @@ function List() {
       <div className={classes.content}>
         <div className={classes.heading}>
           <Typography variant="h5">Users</Typography>
-          <Button 
-            variant="contained"
-            color="primary"
-            component={RouterLink}
-            to="/users/invite">Invite users</Button>
         </div>
         <div className={classes.toolbar}>
           <SearchBox 
             placeholder="Search..."
             onChange={handleSearch} />
           <div className={classes.grow} />
-          <MuiPickersUtilsProvider utils={DateFnsUtils}>
-            <KeyboardDatePicker
-              className={classes.activeDate}
-              disableToolbar
-              variant="inline"
-              format="dd/MM/yyyy"
-              margin="normal"
-              id="date-picker"
-              label="Active on"
-              value={activeDate}
-              onChange={handleChangeDate}
-              KeyboardButtonProps={{ 'aria-label': 'change area active date' }} />
-          </MuiPickersUtilsProvider>
+          <ActionButton actions={actions} />
         </div>
         <TableContainer component={Paper}>
           <Table className={classes.table} aria-label="areas table">

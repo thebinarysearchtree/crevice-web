@@ -95,7 +95,7 @@ function Detail(props) {
           onChange={(e) => setColour(e.target.value)}
           InputProps={{ startAdornment: <InputAdornment position="start">#</InputAdornment>}}
           autoComplete="off"
-          error={error}
+          error={Boolean(error)}
           helperText={error ? 'Invalid colour' : ''} />
         <ColourGrid selectedColour={colour} onClick={(c) => setColour(c)} />
       </DialogContent>

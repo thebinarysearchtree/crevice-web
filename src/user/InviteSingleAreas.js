@@ -14,9 +14,9 @@ import TableCell from '@material-ui/core/TableCell';
 import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
-import AreaDialog from './AreaDialog';
 import RoleChip from '../common/RoleChip';
 import BackButton from '../common/BackButton';
+import AddArea from './AddArea';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -106,8 +106,8 @@ function InviteSingleAreas(props) {
   const [roles, setRoles] = useState([]);
   const [areas, setAreas] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [open, setOpen] = useState(false);
   const [message, setMessage] = useState('');
+  const [showAddArea, setShowAddArea] = useState(false);
 
   const history = useHistory();
   const classes = useStyles();
@@ -143,14 +143,18 @@ function InviteSingleAreas(props) {
     return null;
   }
 
+  if (showAddArea) {
+    return <AddArea setShowAddArea={setShowAddArea} setUserAreas={setUserAreas} userAreas={userAreas} />;
+  }
+
   const tableRows = userAreas.map((a, i) => {
     return (
       <TableRow key={i}>
-          <TableCell component="th" scope="row"><RoleChip label={a.role.name} colour={a.role.colour} /></TableCell>
-          <TableCell align="right">{a.area.name}</TableCell>
+          <TableCell component="th" scope="row"><RoleChip label={a.role.name} colour={a.role.colour} size="small" /></TableCell>
+          <TableCell align="left">{a.area.name}</TableCell>
           <TableCell align="right">{a.startTime.toLocaleDateString()}</TableCell>
           <TableCell align="right">{a.endTime ? a.endTime.toLocaleDateString() : ''}</TableCell>
-          <TableCell align="right">{a.isAdmin ? 'Yes' : ''}</TableCell>
+          <TableCell align="left">{a.isAdmin ? 'Yes' : ''}</TableCell>
           <TableCell align="right">
             <span 
               className={classes.deleteButton}
@@ -187,17 +191,17 @@ function InviteSingleAreas(props) {
           <Button 
             variant="contained"
             color="secondary"
-            onClick={handleAddArea}>Add area</Button>
+            onClick={() => setShowAddArea(true)}>Add areas</Button>
         </div>
         <TableContainer className={classes.table} component={Paper}>
           <Table aria-label="areas table">
             <TableHead>
               <TableRow>
                 <TableCell>Role</TableCell>
-                <TableCell align="right">Area</TableCell>
+                <TableCell align="left">Area</TableCell>
                 <TableCell align="right">Start date</TableCell>
                 <TableCell align="right">End date</TableCell>
-                <TableCell align="right">Admin</TableCell>
+                <TableCell align="left">Admin</TableCell>
                 <TableCell align="right"></TableCell>
               </TableRow>
             </TableHead>
@@ -215,13 +219,6 @@ function InviteSingleAreas(props) {
           variant="contained"
           color="primary"
           disabled={userAreas.length === 0}>Invite user</Button>
-        <AreaDialog 
-          open={open}
-          setOpen={setOpen}
-          userAreas={userAreas}
-          setUserAreas={setUserAreas}
-          roles={roles}
-          areas={areas} />
         <Snackbar message={message} setMessage={setMessage} />
       </div>
     </div>

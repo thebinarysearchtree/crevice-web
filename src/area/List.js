@@ -201,16 +201,16 @@ function List() {
       <div className={classes.content}>
         <div className={classes.heading}>
           <Typography variant="h5">Areas</Typography>
-          <Button 
-            variant="contained"
-            color="primary"
-            onClick={handleNewClick}>New area</Button>
         </div>
         <div className={classes.toolbar}>
           <SearchBox 
             placeholder="Search..."
             onChange={handleSearch} />
           <div className={classes.grow} />
+          <Button 
+            variant="contained"
+            color="primary"
+            onClick={handleNewClick}>New area</Button>
         </div>
         <TableContainer component={Paper}>
           <Table className={classes.table} aria-label="areas table">

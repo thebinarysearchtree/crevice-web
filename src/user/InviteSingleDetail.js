@@ -105,6 +105,13 @@ function InviteSingleDetail() {
   };
 
   const fieldsHandler = (fields) => {
+    fields = fields.map(field => {
+      field = field.map(f => {
+        const value = f.fieldType === 'Date' ? null : '';
+        return {...f, value };
+      });
+      return field;
+    });
     setFields(fields);
     setLoading(false);
   }
@@ -197,7 +204,7 @@ function InviteSingleDetail() {
       <div className={classes.content}>
         <div className={classes.heading}>
           <div className={classes.header}>
-            <BackButton to="/users/invite" />
+            <BackButton to="/users" />
             <Typography variant="h4">Invite users</Typography>
           </div>
         </div>

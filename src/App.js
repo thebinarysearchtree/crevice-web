@@ -19,8 +19,8 @@ import LocationList from './location/List';
 import AreaList from './area/List';
 import UserList from './user/List';
 import FieldList from './field/List';
-import InviteChoice from './user/InviteChoice';
 import InviteSingleDetail from './user/InviteSingleDetail';
+import UploadPhotos from './user/UploadPhotos';
 import Create from './field/Create';
 import { useAuth, ProvideAuth } from './auth';
 
@@ -99,14 +99,14 @@ function App() {
                 <UserList />
               </Nav>
             </Route>
-            <Route exact path="/users/invite">
-              <Nav appBarOnly>
-                <InviteChoice />
-              </Nav>
-            </Route>
-            <Route exact path="/users/invite/single">
+            <Route exact path="/users/inviteSingle">
               <Nav appBarOnly>
                 <InviteSingleDetail />
+              </Nav>
+            </Route>
+            <Route exact path="/users/uploadPhotos">
+              <Nav appBarOnly>
+                <UploadPhotos />
               </Nav>
             </Route>
             <Route exact path="/fields">

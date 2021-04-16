@@ -41,8 +41,9 @@ function List() {
     setPage(newPage);
   }
 
-  const deleteField = async (fieldId) => {
-    const response = await client.postData('/fields/remove', { fieldId });
+  const deleteField = async (field) => {
+    const { id: fieldId, fieldType } = field;
+    const response = await client.postData('/fields/remove', { fieldId, fieldType });
     if (response.ok) {
       setFields(fields.filter(f => f.id !== fieldId));
       setMessage('Field deleted');
@@ -83,7 +84,7 @@ function List() {
             className={classes.deleteButton}
             title={`Delete the ${f.name} field?`}
             content="Make sure there are no users with this field before deleting it."
-            onClick={() => deleteField(f.id)} />
+            onClick={() => deleteField(f)} />
         </TableCell>
       </TableRow>
     );
