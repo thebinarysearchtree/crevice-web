@@ -17,14 +17,15 @@ import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
-import FormHelperText from '@material-ui/core/FormHelperText';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemText from '@material-ui/core/ListItemText';
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableCell from '@material-ui/core/TableCell';
+import TableHead from '@material-ui/core/TableHead';
+import TableRow from '@material-ui/core/TableRow';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -84,14 +85,17 @@ const useStyles = makeStyles((theme) => ({
   },
   input: {
     backgroundColor: 'white'
+  },
+  avatarText: {
+    fontSize: '30px',
+    marginLeft: '-10px'
   }
 }));
 
-function InviteSingleDetail() {
+function UploadPhotos() {
   const [fieldName, setFieldName] = useState('Email');
   const [overwrite, setOverwrite] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
-  const [storedFiles, setStoredFiles] = useState([]);
   const [errors, setErrors] = useState([]);
   const [fieldNames, setFieldNames] = useState([]);
   const [message, setMessage] = useState('');
@@ -116,8 +120,9 @@ function InviteSingleDetail() {
     setUploading(true);
     let response = await client.uploadPhotos(selectedFiles);
     if (response.ok) {
-      const storedFiles = await response.json();
-      setStoredFiles(storedFiles);
+      const files = await response.json();
+      const storedFiles = files.filter(f => !f.error);
+      const uploadErrors = files.filter(f => f.error);
       const query = {
         files: storedFiles,
         fieldName,
@@ -125,9 +130,9 @@ function InviteSingleDetail() {
       };
       response = await client.postData('/users/updateImages', query);
       if (response.ok) {
-        const errors = await response.json();
-        setErrors(errors);
-        if (errors.length > 0) {
+        const updateErrors = await response.json();
+        setErrors([...uploadErrors, ...updateErrors]);
+        if (uploadErrors.length > 0 || updateErrors.length > 0) {
           setShowErrors(true);
         }
         else {
@@ -162,15 +167,20 @@ function InviteSingleDetail() {
     return <Progress setLoading={setLoading} />;
   }
 
-  const errorItems = errors.map(e => {
+  const tableRows = errors.map(e => {
     return (
-      <ListItem key={e}>
-        <ListItemText primary={e} />
-      </ListItem>
+      <TableRow key={e.originalName}>
+        <TableCell align="left">{e.originalName}</TableCell>
+        <TableCell align="left">{e.error}</TableCell>
+      </TableRow>
     );
   });
 
   const fieldItems = fieldNames.map(fieldName => <MenuItem key={fieldName} value={fieldName}>{fieldName}</MenuItem>);
+
+  const avatarText = selectedFiles.length === 0 ? null : (
+    <span className={classes.avatarText}>{`+${selectedFiles.length}`}</span>
+  );
 
   return (
     <div className={classes.root}>
@@ -196,7 +206,7 @@ function InviteSingleDetail() {
               component="span"
               onDrop={handleDrop}
               onDragOver={(e) => e.preventDefault()}>
-                <Avatar className={classes.avatar} />
+                <Avatar className={classes.avatar}>{avatarText}</Avatar>
             </IconButton>
           </Tooltip>
         </label>
@@ -224,15 +234,25 @@ function InviteSingleDetail() {
             color="primary"
             type="submit"
             disabled={isDisabled}>{uploading ? 'Uploading...' : 'Upload'}</Button>
-          <FormHelperText>{selectedFiles.length > 0 ? `${selectedFiles.length} files selected` : ''}</FormHelperText>
         </form>
         <Dialog 
           open={showErrors} 
           onClose={() => setShowErrors(false)} 
-          aria-labelledby="dialog-title">
+          aria-labelledby="dialog-title"
+          scroll="paper">
           <DialogTitle id="dialog-title">Errors</DialogTitle>
           <DialogContent className={classes.root}>
-            <List>{errorItems}</List>
+            <Table aria-label="errors table">
+              <TableHead>
+                <TableRow>
+                  <TableCell align="left">Filename</TableCell>
+                  <TableCell align="left">Error</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {tableRows}
+              </TableBody>
+            </Table>
           </DialogContent>
           <DialogActions>
             <Button 
@@ -246,4 +266,4 @@ function InviteSingleDetail() {
   );
 }
 
-export default InviteSingleDetail;
+export default UploadPhotos;

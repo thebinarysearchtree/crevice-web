@@ -23,12 +23,13 @@ import TableFilterCell from '../common/TableFilterCell';
 import RoleChip from '../common/RoleChip';
 import MorePopover from '../common/MorePopover';
 import ActionButton from '../common/ActionButton';
+import useMessage from '../hooks/useMessage';
 
 const useStyles = makeStyles(styles);
 
 function List() {
   const [users, setUsers] = useState(null);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useMessage();
   const [loading, setLoading] = useState(true);
   const [roles, setRoles] = useState([]);
   const [areas, setAreas] = useState([]);
