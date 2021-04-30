@@ -170,9 +170,8 @@ function List() {
           <TableCell align="left"><RoleChip size="small" label={role.name} colour={role.colour} /></TableCell>
           <TableCell align="left"><MorePopover items={u.areaNames} /></TableCell>
           <TableCell align="right">{u.attended} / {u.booked}</TableCell>
-          <TableCell align="right">
+          <TableCell align="right" className={classes.iconCell}>
             <ConfirmButton
-              className={classes.deleteButton}
               title={`Delete ${u.name}?`}
               content="All information related to this user will be deleted."
               onClick={() => deleteUser(u.id)} />

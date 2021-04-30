@@ -20,7 +20,9 @@ import AreaList from './area/List';
 import UserList from './user/List';
 import FieldList from './field/List';
 import InviteSingleDetail from './user/InviteSingleDetail';
+import InviteMany from './user/InviteMany';
 import UploadPhotos from './user/UploadPhotos';
+import UserDetails from './userProfile/UserDetails';
 import Create from './field/Create';
 import { useAuth, ProvideAuth } from './auth';
 
@@ -104,9 +106,19 @@ function App() {
                 <InviteSingleDetail />
               </Nav>
             </Route>
+            <Route exact path="/users/inviteMany">
+              <Nav appBarOnly>
+                <InviteMany />
+              </Nav>
+            </Route>
             <Route exact path="/users/uploadPhotos">
               <Nav appBarOnly>
                 <UploadPhotos />
+              </Nav>
+            </Route>
+            <Route path="/users/:userId">
+              <Nav appBarOnly>
+                <UserDetails />
               </Nav>
             </Route>
             <Route exact path="/fields">
@@ -115,6 +127,11 @@ function App() {
               </Nav>
             </Route>
             <Route exact path="/fields/create">
+              <Nav appBarOnly>
+                <Create />
+              </Nav>
+            </Route>
+            <Route path="/fields/update/:fieldId">
               <Nav appBarOnly>
                 <Create />
               </Nav>

@@ -106,11 +106,8 @@ function InviteSingleDetail() {
 
   const fieldsHandler = (fields) => {
     fields = fields.map(field => {
-      field = field.map(f => {
-        const value = f.fieldType === 'Date' ? null : '';
-        return {...f, value };
-      });
-      return field;
+      const value = field.fieldType === 'Date' ? null : '';
+      return {...field, value };
     });
     setFields(fields);
     setLoading(false);
@@ -127,7 +124,6 @@ function InviteSingleDetail() {
       isAdmin: ua.isAdmin
     }));
     const userFields = fields
-      .flat()
       .filter(f => f.value)
       .map(f => {
         const { id, fieldType, value } = f;
@@ -149,7 +145,7 @@ function InviteSingleDetail() {
   const handleUpload = async (e) => {
     const files = e.currentTarget.files;
     if (files.length > 0) {
-      const response = await client.uploadPhotos(files);
+      const response = await client.uploadFiles('/files/uploadPhotos', files);
       const storedFiles = await response.json();
       setImageId(storedFiles[0].fileId);
     }
@@ -161,7 +157,7 @@ function InviteSingleDetail() {
       const item = e.dataTransfer.items[0];
       if (item.kind === 'file') {
         const file = item.getAsFile();
-        const response = await client.uploadPhotos([file]);
+        const response = await client.uploadFiles('/files/uploadPhotos', [file]);
         const storedFiles = await response.json();
         setImageId(storedFiles[0].fileId);
       }
@@ -173,9 +169,9 @@ function InviteSingleDetail() {
   }
 
   const additionalFields = fields.map((field, i) => {
-    const setField = (setter) => {
+    const setValue = (value) => {
       setFields(fields => {
-        fields[i] = setter(fields[i]);
+        fields[i] = {...fields[i], value };
         return [...fields];
       });
     }
@@ -183,8 +179,8 @@ function InviteSingleDetail() {
       <CustomField
         key={i}
         className={classes.spacing} 
-        fields={field} 
-        setFields={setField} />
+        field={field} 
+        setValue={setValue} />
     );
   });
 

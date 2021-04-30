@@ -5,6 +5,9 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
+import IconButton from '@material-ui/core/IconButton';
+import DeleteIcon from '@material-ui/icons/Delete';
+import Tooltip from '@material-ui/core/Tooltip';
 
 function ConfirmButton(props) {
   const [open, setOpen] = useState(false);
@@ -18,9 +21,11 @@ function ConfirmButton(props) {
 
   return (
     <React.Fragment>
-      <span 
-        className={className} 
-        onClick={() => setOpen(true)}>delete</span>
+      <Tooltip title="Delete">
+        <IconButton className={className} onClick={() => setOpen(true)}>
+          <DeleteIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
       <Dialog
         open={open}
         onClose={() => setOpen(false)}

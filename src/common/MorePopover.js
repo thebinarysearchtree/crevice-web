@@ -19,6 +19,9 @@ const useStyles = makeStyles((theme) => ({
     padding: '0px',
     margin: '0px'
   },
+  item: {
+    padding: '2px'
+  },
   paper: {
     padding: theme.spacing(2)
   }
@@ -39,7 +42,7 @@ function MorePopover(props) {
   if (items.length === 1) {
     return items[0];
   }
-  const listItems = items.slice(1).map(item => <li key={item}>{item}</li>);
+  const listItems = items.slice(1).map(item => <li key={item} className={classes.item}>{item}</li>);
   return (
     <React.Fragment>
       <span>{items[0]} and </span>

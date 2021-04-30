@@ -62,29 +62,13 @@ const getData = async (url, token) => {
   return response;
 };
 
-const uploadFiles = async (files) => {
+const uploadFiles = async (url, files) => {
   const token = await getToken();
   const formData = new FormData();
   for (let i = 0; i < files.length; i++) {
     formData.append('files', files[i]);
   }
-  const response = await fetch('/files/uploadFiles', {
-    body: formData,
-    headers: {
-      'Authorization': `Bearer ${token}`
-    },
-    method: 'POST'
-  });
-  return response;
-}
-
-const uploadPhotos = async (photos) => {
-  const token = await getToken();
-  const formData = new FormData();
-  for (let i = 0; i < photos.length; i++) {
-    formData.append('photos', photos[i]);
-  }
-  const response = await fetch('/files/uploadPhotos', {
+  const response = await fetch(url, {
     body: formData,
     headers: {
       'Authorization': `Bearer ${token}`
@@ -121,7 +105,6 @@ export default {
   postData,
   getData,
   uploadFiles,
-  uploadPhotos,
   logIn,
   signOut
 };

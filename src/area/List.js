@@ -185,7 +185,7 @@ function List() {
           <TableCell align="right">
             <Link to={`/users?areaId=${a.id}`} component={RouterLink}>{a.activeUserCount}</Link>
           </TableCell>
-          <TableCell align="right">
+          <TableCell align="right" className={classes.iconCell}>
             <ConfirmButton
               className={classes.deleteButton}
               title={`Delete ${a.name}?`}

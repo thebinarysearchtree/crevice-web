@@ -156,7 +156,7 @@ function UploadPhotos() {
   const handleDrop = async (e) => {
     e.preventDefault();
     if (e.dataTransfer.items.length > 0) {
-      const files = e.dataTransfer.items
+      const files = Array.from(e.dataTransfer.items)
         .filter(i => i.kind === 'file')
         .map(i => i.getAsFile());
       setSelectedFiles(files);

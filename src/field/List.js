@@ -19,7 +19,9 @@ import TableFooter from '@material-ui/core/TableFooter';
 import TablePagination from '@material-ui/core/TablePagination';
 import useFetch from '../hooks/useFetch';
 import { Link as RouterLink } from 'react-router-dom';
-import Demo from './Demo';
+import IconButton from '@material-ui/core/IconButton';
+import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
+import Tooltip from '@material-ui/core/Tooltip';
 
 const useStyles = makeStyles(styles);
 
@@ -28,7 +30,7 @@ function List() {
   const [message, setMessage] = useMessage();
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [selectedField, setSelectedField] = useState(null);
+  const [moving, setMoving] = useState(false);
 
   const classes = useStyles();
 
@@ -39,6 +41,25 @@ function List() {
 
   const handleChangePage = (e, newPage) => {
     setPage(newPage);
+  }
+
+  const moveUp = async (index) => {
+    if (index !== 0) {
+      const updatedFields = [...fields];
+      const fieldAbove = updatedFields[index - 1];
+      const selectedField = updatedFields[index];
+      setMoving(true);
+      const response = await client.postData('/fields/moveUp', { fieldId: selectedField.id });
+      if (response.ok) {
+        updatedFields[index] = fieldAbove;
+        updatedFields[index - 1] = selectedField;
+        setFields(updatedFields);
+      }
+      else {
+        setMessage('Something went wrong');
+      }
+      setMoving(false);
+    }
   }
 
   const deleteField = async (field) => {
@@ -71,19 +92,27 @@ function List() {
     );
   }
 
-  const tableRows = fields.slice(sliceStart, sliceEnd).map(f => {
+  const tableRows = fields.slice(sliceStart, sliceEnd).map((f, i) => {
     return (
-      <TableRow key={f.id} className={classes.tableRow}>
+      <TableRow key={f.id}>
         <TableCell component="th" scope="row">
-          <span className={classes.locationName} onClick={() => setSelectedField(f)}>{f.name}</span>
+          <RouterLink 
+            className={classes.link} 
+            to={`/fields/update/${f.id}`}>{f.name}</RouterLink>
         </TableCell>
         <TableCell align="right">{f.fieldType}</TableCell>
         <TableCell align="right">{f.userCount}</TableCell>
-        <TableCell align="right">
+        <TableCell align="right" className={classes.iconCell}>
+          <Tooltip title="Move up">
+            <IconButton
+              onClick={() => moveUp(i + sliceStart)}
+              disabled={moving}>
+                <ArrowUpwardIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
           <ConfirmButton
-            className={classes.deleteButton}
             title={`Delete the ${f.name} field?`}
-            content="Make sure there are no users with this field before deleting it."
+            content="This field will no long be visible on user's profiles or when creating new users."
             onClick={() => deleteField(f)} />
         </TableCell>
       </TableRow>
@@ -118,7 +147,7 @@ function List() {
               <TableRow>
                 <TablePagination
                   rowsPerPageOptions={[]}
-                  colSpan={4}
+                  colSpan={5}
                   count={fields.length}
                   rowsPerPage={rowsPerPage}
                   page={page}
@@ -127,7 +156,6 @@ function List() {
             </TableFooter>
           </Table>
         </TableContainer>
-        <Demo selectedField={selectedField} setSelectedField={setSelectedField} />
         <Snackbar message={message} setMessage={setMessage} />
       </div>
       <div className={classes.rightSection} />

@@ -85,6 +85,10 @@ const styles = (theme) => ({
   },
   filter: {
     width: '127px'
+  },
+  iconCell: {
+    paddingTop: '2px',
+    paddingBottom: '2px'
   }
 });
 

@@ -90,7 +90,7 @@ function List() {
 
   const tableRows = roles.slice(sliceStart, sliceEnd).map(r => {
     return (
-      <TableRow key={r.id} className={classes.tableRow}>
+      <TableRow key={r.id}>
         <TableCell style={{ backgroundColor: `#${r.colour}`, padding: '0px' }}></TableCell>
         <TableCell component="th" scope="row">
           <span 
@@ -101,7 +101,7 @@ function List() {
         <TableCell align="right">
           <Link to={`/users?roleId=${r.id}`} component={RouterLink}>{r.userCount}</Link>
         </TableCell>
-        <TableCell align="right">
+        <TableCell align="right" className={classes.iconCell}>
           <ConfirmButton
             className={classes.deleteButton}
             title={`Delete the ${r.name} role?`}

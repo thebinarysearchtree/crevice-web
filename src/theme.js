@@ -6,6 +6,13 @@ const theme = createMuiTheme({
       disableElevation: true
     }
   },
+  overrides: {
+    MuiTableCell: {
+      root: {
+        whiteSpace: 'nowrap'
+      }
+    }
+  },
   typography: {
     button: {
       textTransform: 'none'

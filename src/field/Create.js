@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import client from '../client';
 import Typography from '@material-ui/core/Typography';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import Snackbar from '../common/Snackbar';
-import { useHistory } from 'react-router-dom';
+import { useHistory, useParams } from 'react-router-dom';
 import Radio from '@material-ui/core/Radio';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -18,8 +18,8 @@ import {
   KeyboardDatePicker
 } from '@material-ui/pickers';
 import AddSelectItems from './AddSelectItems';
-import MultipleFields from './MultipleFields';
 import BackButton from '../common/BackButton';
+import Progress from '../common/Progress';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -92,21 +92,72 @@ function Create() {
   const [selectItems, setSelectItems] = useState([]);
   const [exampleDate, setExampleDate] = useState(null);
   const [showSelect, setShowSelect] = useState(false);
-  const [showGroup, setShowGroup] = useState(false);
   const [message, setMessage] = useState('');
+  const [existingField, setExistingField] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const history = useHistory();
   const classes = useStyles();
 
-  const isDisabled = !name || !fieldType;
+  const { fieldId } = useParams();
+
+  let isDisabled;
+
+  if (fieldId) {
+    if (!existingField) {
+      isDisabled = true;
+    }
+    else {
+      if (existingField.name === name) {
+        if (fieldType !== 'Select') {
+          isDisabled = true;
+        }
+        else {
+          isDisabled = false;
+        }
+      }
+      else {
+        if (!name) {
+          isDisabled = true;
+        }
+        else {
+          isDisabled = false;
+        }
+      }
+    }
+  }
+  else {
+    isDisabled = !name || !fieldType;
+  }
+
+  useEffect(() => {
+    const getField = async () => {
+      const response = await client.postData('/fields/getById', { fieldId });
+      if (response.ok) {
+        const field = await response.json();
+        const { name, fieldType, selectItems } = field;
+        setName(name);
+        setFieldType(fieldType);
+        setSelectItems(selectItems);
+        setExistingField(field);
+      }
+      else {
+        setMessage('Something went wrong');
+      }
+      setLoading(false);
+    }
+    if (fieldId) {
+      getField();
+    }
+    else {
+      setLoading(false);
+    }
+  }, [fieldId]);
 
   const handleNextClick = async (e) => {
     e.preventDefault();
     if (fieldType === 'Select') {
       setShowSelect(true);
-    }
-    else if (fieldType === 'Multiple fields') {
-      setShowGroup(true);
     }
     else {
       insertField();
@@ -114,14 +165,47 @@ function Create() {
   }
 
   const insertField = async () => {
-    const items = selectItems.map((item, i) => ({ name: item, itemNumber: i + 1 }));
-    const response = await client.postData('/fields/insert', { groupId: null, name, fieldType, fieldNumber: 1, selectItems: items });
-    if (response.ok) {
-      history.push('/fields', { message: 'Field created' });
+    if (fieldId) {
+      const selectItemIds = selectItems.map(i => i.id);
+      const itemsToDelete = existingField.selectItems
+        .filter(item => !selectItemIds.includes(item.id));
+      const itemsToAdd = selectItems
+        .map((item, i) => ({...item, itemNumber: i + 1 }))
+        .filter(i => i.id < 0);
+      const itemsToUpdate = selectItems
+        .map((item, i) => ({...item, itemNumber: i + 1 }))
+        .filter(item => {
+          const existingItem = existingField.selectItems.find(i => i.id === item.id);
+          if (existingItem) {
+            if (existingItem.name !== item.name || existingItem.itemNumber !== item.itemNumber) {
+              return true;
+            }
+            return false;
+          }
+          return false;
+        });
+      const response = await client.postData('/fields/update', { fieldId, name, existingName: existingField.name, itemsToDelete, itemsToAdd, itemsToUpdate });
+      if (response.ok) {
+        history.push('/fields', { message: 'Field updated' });
+      }
+      else {
+        setMessage('Something went wrong');
+      }
     }
     else {
-      setMessage('Something went wrong');
+      const items = selectItems.map((item, i) => ({ name: item.name, itemNumber: i + 1 }));
+      const response = await client.postData('/fields/insert', { name, fieldType, selectItems: items });
+      if (response.ok) {
+        history.push('/fields', { message: 'Field created' });
+      }
+      else {
+        setMessage('Something went wrong');
+      }
     }
+  }
+
+  if (loading) {
+    return <Progress loading={loading} />;
   }
 
   if (showSelect) {
@@ -135,10 +219,20 @@ function Create() {
     );
   }
 
-  if (showGroup) {
-    return (
-      <MultipleFields fieldName={name} setShowGroup={setShowGroup} />
-    );
+  const title = fieldId ? 'Update field' : 'Create a field';
+
+  let buttonText;
+
+  if (fieldType !== 'Select') {
+    if (fieldId) {
+      buttonText = 'Update';
+    }
+    else {
+      buttonText = 'Save';
+    }
+  }
+  else {
+    buttonText = 'Next';
   }
 
   return (
@@ -147,7 +241,7 @@ function Create() {
         <div className={classes.heading}>
           <div className={classes.header}>
             <BackButton to="/fields" />
-            <Typography variant="h4">Create a field</Typography>
+            <Typography variant="h4">{title}</Typography>
           </div>
         </div>
         <form className={classes.form} onSubmit={handleNextClick} noValidate>
@@ -158,120 +252,101 @@ function Create() {
             label="Field name"
             value={name}
             onChange={(e) => setName(e.target.value)} />
-          <Typography className={classes.spacing} variant="h6">Field type</Typography>
-          <div className={classes.spacing}>
-            <Radio
-              checked={fieldType === 'Short'}
-              onChange={(e) => setFieldType(e.target.value)}
-              value="Short"
-              name="fieldType"
-              inputProps={{ 'aria-label': 'Short' }} />
-            <TextField
-              className={classes.short}
-              variant="outlined"
-              size="small"
-              label="Short" />
-          </div>
-          <div className={classes.spacing}>
-            <Radio
-              checked={fieldType === 'Standard'}
-              onChange={(e) => setFieldType(e.target.value)}
-              value="Standard"
-              name="fieldType"
-              inputProps={{ 'aria-label': 'Standard' }} />
-            <TextField
-              className={classes.standard}
-              variant="outlined"
-              size="small"
-              label="Standard" />
-          </div>
-          <div className={classes.spacing}>
-            <Radio
-              checked={fieldType === 'Comment'}
-              onChange={(e) => setFieldType(e.target.value)}
-              value="Comment"
-              name="fieldType"
-              inputProps={{ 'aria-label': 'Comment' }} />
-            <TextField
-              className={classes.standard}
-              variant="outlined"
-              size="small"
-              label="Comment"
-              multiline
-              rows={4} />
-          </div>
-          <div className={classes.spacing}>
-            <Radio
-              checked={fieldType === 'Select'}
-              onChange={(e) => setFieldType(e.target.value)}
-              value="Select"
-              name="fieldType"
-              inputProps={{ 'aria-label': 'Select' }} />
-            <FormControl className={classes.standard} variant="outlined" size="small">
-              <InputLabel id="select">Select</InputLabel>
-              <Select value={''} label="Select" labelId="select">
-                <MenuItem value="Option 1">Option 1</MenuItem>
-                <MenuItem value="Option 2">Option 2</MenuItem>
-                <MenuItem value="Option 3">Option 3</MenuItem>
-              </Select>
-            </FormControl>
-          </div>
-          <div className={classes.spacing}>
-            <Radio
-              checked={fieldType === 'Date'}
-              onChange={(e) => setFieldType(e.target.value)}
-              value="Date"
-              name="fieldType"
-              inputProps={{ 'aria-label': 'Date' }} />
-            <MuiPickersUtilsProvider utils={DateFnsUtils}>
-              <KeyboardDatePicker
-                className={classes.standard}
-                disableToolbar
-                variant="inline"
-                format="dd/MM/yyyy"
-                margin="none"
-                id="date"
-                label="Date"
-                inputVariant="outlined"
-                size="small"
-                value={exampleDate}
-                onChange={(d) => setExampleDate(d)}
-                KeyboardButtonProps={{ 'aria-label': 'change date' }} />
-            </MuiPickersUtilsProvider>
-          </div>
-          <div className={classes.spacing}>
-            <Radio
-              checked={fieldType === 'Number'}
-              onChange={(e) => setFieldType(e.target.value)}
-              value="Number"
-              name="fieldType"
-              inputProps={{ 'aria-label': 'Number' }} />
-            <TextField
-              className={classes.standard}
-              variant="outlined"
-              size="small"
-              label="Number"
-              type="Number" />
-          </div>
-          <div className={classes.spacing}>
-            <div className={classes.container}>
+          <div hidden={Boolean(fieldId)}>
+            <Typography className={classes.spacing} variant="h6">Field type</Typography>
+            <div className={classes.spacing}>
               <Radio
-                checked={fieldType === 'Multiple fields'}
+                checked={fieldType === 'Short'}
                 onChange={(e) => setFieldType(e.target.value)}
-                value="Multiple fields"
+                value="Short"
                 name="fieldType"
-                inputProps={{ 'aria-label': 'Multiple fields' }} />
-              <div className={classes.container}>
-                <TextField
-                  className={`${classes.standard} ${classes.mr}`}
-                  variant="outlined"
+                inputProps={{ 'aria-label': 'Short' }} />
+              <TextField
+                className={classes.short}
+                variant="outlined"
+                size="small"
+                label="Short" />
+            </div>
+            <div className={classes.spacing}>
+              <Radio
+                checked={fieldType === 'Standard'}
+                onChange={(e) => setFieldType(e.target.value)}
+                value="Standard"
+                name="fieldType"
+                inputProps={{ 'aria-label': 'Standard' }} />
+              <TextField
+                className={classes.standard}
+                variant="outlined"
+                size="small"
+                label="Standard" />
+            </div>
+            <div className={classes.spacing}>
+              <Radio
+                checked={fieldType === 'Comment'}
+                onChange={(e) => setFieldType(e.target.value)}
+                value="Comment"
+                name="fieldType"
+                inputProps={{ 'aria-label': 'Comment' }} />
+              <TextField
+                className={classes.standard}
+                variant="outlined"
+                size="small"
+                label="Comment"
+                multiline
+                rows={4} />
+            </div>
+            <div className={classes.spacing}>
+              <Radio
+                checked={fieldType === 'Select'}
+                onChange={(e) => setFieldType(e.target.value)}
+                value="Select"
+                name="fieldType"
+                inputProps={{ 'aria-label': 'Select' }} />
+              <FormControl className={classes.standard} variant="outlined" size="small">
+                <InputLabel id="select">Select</InputLabel>
+                <Select value={''} label="Select" labelId="select">
+                  <MenuItem value="Option 1">Option 1</MenuItem>
+                  <MenuItem value="Option 2">Option 2</MenuItem>
+                  <MenuItem value="Option 3">Option 3</MenuItem>
+                </Select>
+              </FormControl>
+            </div>
+            <div className={classes.spacing}>
+              <Radio
+                checked={fieldType === 'Date'}
+                onChange={(e) => setFieldType(e.target.value)}
+                value="Date"
+                name="fieldType"
+                inputProps={{ 'aria-label': 'Date' }} />
+              <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                <KeyboardDatePicker
+                  className={classes.standard}
+                  disableToolbar
+                  variant="inline"
+                  format="dd/MM/yyyy"
+                  margin="none"
+                  id="date"
+                  label="Date"
+                  inputVariant="outlined"
                   size="small"
-                  label="Multiple fields" />
-                <TextField
-                  className={classes.short}
-                  variant="outlined"
-                  size="small" />
-              </div>
+                  value={exampleDate}
+                  onChange={(d) => setExampleDate(d)}
+                  KeyboardButtonProps={{ 'aria-label': 'change date' }} />
+              </MuiPickersUtilsProvider>
+            </div>
+            <div className={classes.spacing}>
+              <Radio
+                checked={fieldType === 'Number'}
+                onChange={(e) => setFieldType(e.target.value)}
+                value="Number"
+                name="fieldType"
+                inputProps={{ 'aria-label': 'Number' }} />
+              <TextField
+                className={classes.standard}
+                variant="outlined"
+                size="small"
+                label="Number"
+                type="Number" />
             </div>
           </div>
           <Button
@@ -279,7 +354,7 @@ function Create() {
             variant="contained"
             color="primary"
             type="submit"
-            disabled={isDisabled}>Next</Button>
+            disabled={isDisabled}>{buttonText}</Button>
         </form>
         <Snackbar message={message} setMessage={setMessage} />
       </div>

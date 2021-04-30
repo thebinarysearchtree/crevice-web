@@ -4,14 +4,16 @@ import Typography from '@material-ui/core/Typography';
 import TextField from '@material-ui/core/TextField';
 import IconButton from '@material-ui/core/IconButton';
 import Button from '@material-ui/core/Button';
-import { useHistory } from 'react-router-dom';
-import ClearIcon from '@material-ui/icons/Clear';
+import DeleteIcon from '@material-ui/icons/Delete';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
 import ListItemText from '@material-ui/core/ListItemText';
 import Paper from '@material-ui/core/Paper';
 import BackButton from '../common/BackButton';
+import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
+import Tooltip from '@material-ui/core/Tooltip';
+import EditIcon from '@material-ui/icons/Edit';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -91,39 +93,103 @@ const useStyles = makeStyles((theme) => ({
   buttons: {
     display: 'flex',
     alignItems: 'flex-end'
+  },
+  actions: {
+    visibility: 'hidden'
+  },
+  item: {
+    '&:hover $actions': {
+      visibility: 'visible'
+    }
+  },
+  itemText: {
+    cursor: 'pointer'
   }
 }));
 
 function AddSelectItems(props) {
   const [name, setName] = useState('');
+  const [editIndex, setEditIndex] = useState(-1);
+  const [nextId, setNextId] = useState(-1);
 
-  const history = useHistory();
   const classes = useStyles();
 
   const { fieldName, selectItems, setSelectItems, setShowSelect, insertField } = props;
 
   const isDisabled = selectItems.length < 2;
 
-  const error = selectItems.includes(name);
+  const error = name !== '' && selectItems.some(i => i.name === name);
 
   const addItem = (e) => {
     e.preventDefault();
     setName('');
-    setSelectItems(selectItems => [...selectItems, name]);
+    setSelectItems(selectItems => [...selectItems, { id: nextId, name }]);
+    setNextId(id => id - 1);
   }
 
   const removeItem = (index) => {
     setSelectItems(selectItems => selectItems.filter((item, i) => i !== index));
   }
 
+  const handleEditItem = (e, index) => {
+    setSelectItems(selectItems => {
+      const updatedItems = [...selectItems];
+      const value = e.target.value;
+      updatedItems[index] = {...updatedItems[index], name: value };
+      return updatedItems;
+    });
+  }
+
+  const moveUp = (index) => {
+    if (index !== 0) {
+      setSelectItems(selectItems => {
+        const updatedItems = [...selectItems];
+        const selectedItem = updatedItems[index];
+        const itemAbove = updatedItems[index - 1];
+        updatedItems[index] = itemAbove;
+        updatedItems[index - 1] = selectedItem;
+        return updatedItems;
+      });
+    }
+  }
+
   const items = selectItems.map((item, i) => {
+    const error = item.name === '';
+    let itemText;
+    if (i !== editIndex) {
+      itemText = (
+        <ListItemText 
+          className={classes.itemText}
+          primary={item.name} 
+          onClick={() => setEditIndex(i)} />
+      );
+    }
+    else {
+      itemText = (
+        <TextField
+          size="small"
+          error={error}
+          helperText={error ? 'The name cannot be blank' : ''}
+          value={item.name}
+          onBlur={() => error ? null : setEditIndex(-1)}
+          onChange={(e) => handleEditItem(e, i)}
+          autoFocus />
+      );
+    }
     return (
-      <ListItem key={item}>
-        <ListItemText primary={item} />
-        <ListItemSecondaryAction>
-          <IconButton onClick={() => removeItem(i)}>
-            <ClearIcon />
-          </IconButton>
+      <ListItem key={item.id} ContainerProps={{ className: classes.item }}>
+        {itemText}
+        <ListItemSecondaryAction className={classes.actions}>
+          <Tooltip title="Move up">
+            <IconButton onClick={() => moveUp(i)}>
+              <ArrowUpwardIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Delete">
+            <IconButton onClick={() => removeItem(i)}>
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
         </ListItemSecondaryAction>
       </ListItem>
     );
