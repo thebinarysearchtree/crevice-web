@@ -84,12 +84,7 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: 'column',
     height: '100vh',
     flexGrow: 1,
-    backgroundColor: theme.palette.background.default,
-    paddingLeft: theme.spacing(2),
-    paddingRight: theme.spacing(2),
-    paddingTop: theme.spacing(3),
-    paddingBottom: theme.spacing(3),
-    marginBottom: theme.spacing(40)
+    backgroundColor: theme.palette.background.default
   },
   grow: {
     flexGrow: 1

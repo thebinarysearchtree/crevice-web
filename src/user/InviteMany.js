@@ -2,19 +2,12 @@ import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import client from '../client';
 import Typography from '@material-ui/core/Typography';
-import IconButton from '@material-ui/core/IconButton';
 import Button from '@material-ui/core/Button';
 import Snackbar from '../common/Snackbar';
 import { useHistory } from 'react-router-dom';
-import Avatar from '@material-ui/core/Avatar';
-import Tooltip from '@material-ui/core/Tooltip';
 import BackButton from '../common/BackButton';
 import useFetch from '../hooks/useFetch';
 import Progress from '../common/Progress';
-import InputLabel from '@material-ui/core/InputLabel';
-import MenuItem from '@material-ui/core/MenuItem';
-import FormControl from '@material-ui/core/FormControl';
-import Select from '@material-ui/core/Select';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
 import Dialog from '@material-ui/core/Dialog';
@@ -26,7 +19,6 @@ import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
-import AttachFileIcon from '@material-ui/icons/AttachFile';
 import AreasTable from './AreasTable';
 import AddArea from './AddArea';
 import Paper from '@material-ui/core/Paper';
@@ -36,8 +28,11 @@ const useStyles = makeStyles((theme) => ({
     display: 'flex',
     flexDirection: 'column',
     width: '100%',
-    paddingLeft: theme.spacing(5),
-    paddingRight: theme.spacing(5),
+    paddingLeft: theme.spacing(7),
+    paddingRight: theme.spacing(7),
+    paddingTop: theme.spacing(3),
+    paddingBottom: theme.spacing(3),
+    marginBottom: theme.spacing(40),
     alignItems: 'center'
   },
   content: {
@@ -136,8 +131,16 @@ function InviteMany() {
       const areas = userAreas.map(ua => ({ 
         roleId: ua.role.id, 
         areaId: ua.area.id, 
-        startTime: ua.startTime, 
-        endTime: ua.endTime,
+        startTime: {
+          year: ua.startTime.getFullYear(),
+          month: ua.startTime.getMonth() + 1,
+          day: ua.startTime.getDate()
+        },
+        endTime: ua.endTime ? {
+          year: ua.endTime.getFullYear(),
+          month: ua.endTime.getMonth() + 1,
+          day: ua.endTime.getDate()
+        } : null,
         isAdmin: ua.isAdmin
       }));
       response = await client.postData('/users/inviteUsers', { fileInfo, userAreas: areas });

@@ -2,7 +2,12 @@ const styles = (theme) => ({
   root: {
     display: 'flex',
     flexDirection: 'row',
-    width: '100%'
+    width: '100%',
+    paddingLeft: theme.spacing(2),
+    paddingRight: theme.spacing(2),
+    paddingTop: theme.spacing(3),
+    paddingBottom: theme.spacing(3),
+    marginBottom: theme.spacing(40)
   },
   content: {
     display: 'flex',

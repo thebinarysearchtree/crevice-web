@@ -20,8 +20,11 @@ const useStyles = makeStyles((theme) => ({
     display: 'flex',
     flexDirection: 'column',
     width: '100%',
-    paddingLeft: theme.spacing(5),
-    paddingRight: theme.spacing(5),
+    paddingLeft: theme.spacing(7),
+    paddingRight: theme.spacing(7),
+    paddingTop: theme.spacing(3),
+    paddingBottom: theme.spacing(3),
+    marginBottom: theme.spacing(40),
     alignItems: 'center'
   },
   content: {
@@ -119,8 +122,16 @@ function InviteSingleDetail() {
     const areas = userAreas.map(ua => ({ 
       roleId: ua.role.id, 
       areaId: ua.area.id, 
-      startTime: ua.startTime, 
-      endTime: ua.endTime,
+      startTime: {
+        year: ua.startTime.getFullYear(),
+        month: ua.startTime.getMonth() + 1,
+        day: ua.startTime.getDate()
+      },
+      endTime: ua.endTime ? {
+        year: ua.endTime.getFullYear(),
+        month: ua.endTime.getMonth() + 1,
+        day: ua.endTime.getDate()
+      } : null,
       isAdmin: ua.isAdmin
     }));
     const userFields = fields
