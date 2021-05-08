@@ -14,6 +14,7 @@ import BackButton from '../common/BackButton';
 import useFetch from '../hooks/useFetch';
 import Progress from '../common/Progress';
 import CustomField from '../field/CustomField';
+import { makePgDate } from '../utils/date';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -119,21 +120,24 @@ function InviteSingleDetail() {
   useFetch('/fields/getAllFields', fieldsHandler);
 
   const inviteUser = async () => {
-    const areas = userAreas.map(ua => ({ 
-      roleId: ua.role.id, 
-      areaId: ua.area.id, 
-      startTime: {
-        year: ua.startTime.getFullYear(),
-        month: ua.startTime.getMonth() + 1,
-        day: ua.startTime.getDate()
-      },
-      endTime: ua.endTime ? {
-        year: ua.endTime.getFullYear(),
-        month: ua.endTime.getMonth() + 1,
-        day: ua.endTime.getDate()
-      } : null,
-      isAdmin: ua.isAdmin
-    }));
+    const areas = userAreas.map(ua => {
+      const startTime = new Date(ua.startTime);
+      startTime.setHours(0, 0, 0, 0);
+      let endTime = null;
+      if (ua.endTime) {
+        endTime = new Date(ua.endTime);
+        endTime.setHours(0, 0, 0, 0);
+        endTime.setDate(endTime.getDate() + 1);
+      }
+      const timeZone = ua.area.timeZone;
+      return { 
+        roleId: ua.role.id, 
+        areaId: ua.area.id,
+        startTime: makePgDate(startTime, timeZone),
+        endTime: endTime ? makePgDate(endTime, timeZone) : null,
+        isAdmin: ua.isAdmin
+      }
+    });
     const userFields = fields
       .filter(f => f.value)
       .map(f => {

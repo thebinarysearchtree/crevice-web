@@ -22,6 +22,7 @@ import TableRow from '@material-ui/core/TableRow';
 import AreasTable from './AreasTable';
 import AddArea from './AddArea';
 import Paper from '@material-ui/core/Paper';
+import { makePgDate } from '../utils/date';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -128,21 +129,24 @@ function InviteMany() {
     if (response.ok) {
       const files = await response.json();
       const fileInfo = files[0];
-      const areas = userAreas.map(ua => ({ 
-        roleId: ua.role.id, 
-        areaId: ua.area.id, 
-        startTime: {
-          year: ua.startTime.getFullYear(),
-          month: ua.startTime.getMonth() + 1,
-          day: ua.startTime.getDate()
-        },
-        endTime: ua.endTime ? {
-          year: ua.endTime.getFullYear(),
-          month: ua.endTime.getMonth() + 1,
-          day: ua.endTime.getDate()
-        } : null,
-        isAdmin: ua.isAdmin
-      }));
+      const areas = userAreas.map(ua => {
+        const startTime = new Date(ua.startTime);
+        startTime.setHours(0, 0, 0, 0);
+        let endTime = null;
+        if (ua.endTime) {
+          endTime = new Date(ua.endTime);
+          endTime.setHours(0, 0, 0, 0);
+          endTime.setDate(endTime.getDate() + 1);
+        }
+        const timeZone = ua.area.timeZone;
+        return { 
+          roleId: ua.role.id, 
+          areaId: ua.area.id,
+          startTime: makePgDate(startTime, timeZone),
+          endTime: endTime ? makePgDate(endTime, timeZone) : null,
+          isAdmin: ua.isAdmin
+        }
+      });
       response = await client.postData('/users/inviteUsers', { fileInfo, userAreas: areas });
       if (response.ok) {
         const errors = await response.json();

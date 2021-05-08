@@ -175,7 +175,7 @@ function AddArea(props) {
   const locationsHandler = (locations) => {
     locations = locations.map(location => {
       location = {...location, checked: false };
-      location.areas = location.areas.map(a => ({...a, checked: false }));
+      location.areas = location.areas.map(a => ({...a, timeZone: location.timeZone, checked: false }));
       return location;
     })
     setLocations(locations);
