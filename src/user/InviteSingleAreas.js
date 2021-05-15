@@ -85,7 +85,7 @@ function InviteSingleAreas(props) {
 
   const classes = useStyles();
 
-  const { userAreas, setUserAreas, user, inviteUser } = props;
+  const { userAreas, setUserAreas, user, inviteUser, roles, locations, handleAddAreas } = props;
 
   function DisplayField(props) {
     const { label, value } = props;
@@ -95,10 +95,6 @@ function InviteSingleAreas(props) {
         <Typography variant="body2" color="textSecondary">{value}</Typography>
       </div>
     ) : null;
-  }
-
-  if (showAddArea) {
-    return <AddArea setShowAddArea={setShowAddArea} setUserAreas={setUserAreas} userAreas={userAreas} />;
   }
 
   return (
@@ -133,6 +129,12 @@ function InviteSingleAreas(props) {
           variant="contained"
           color="primary"
           disabled={userAreas.length === 0}>Invite user</Button>
+        <AddArea
+          open={showAddArea}
+          setOpen={setShowAddArea}
+          handleAddAreas={handleAddAreas}
+          roles={roles}
+          locations={locations} />
         <Snackbar message={message} setMessage={setMessage} />
       </div>
     </div>

@@ -6,6 +6,9 @@ const styles = (theme) => ({
   },
   spacing: {
     marginBottom: '10px'
+  },
+  popover: {
+    marginTop: theme.spacing(1)
   }
 });
 

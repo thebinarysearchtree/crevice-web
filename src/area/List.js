@@ -33,12 +33,14 @@ function List() {
   const [filteredAreas, setFilteredAreas] = useState(null);
   const [message, setMessage] = useState('');
   const [selectedArea, setSelectedArea] = useState(null);
-  const [open, setOpen] = useState(false);
   const [page, setPage] = useState(0);
   const [order, setOrder] = useState('asc');
   const [orderBy, setOrderBy] = useState('');
   const [loading, setLoading] = useState(true);
   const [locations, setLocations] = useState([]);
+  const [anchorEl, setAnchorEl] = useState(null);
+
+  const open = Boolean(anchorEl);
 
   const classes = useStyles();
   const params = new URLSearchParams(useLocation().search);
@@ -52,12 +54,12 @@ function List() {
   const sliceStart = page * rowsPerPage;
   const sliceEnd = sliceStart + rowsPerPage;
 
-  const handleNameClick = (area) => {
+  const handleNameClick = (e, area) => {
     setSelectedArea({ ...area });
-    setOpen(true);
+    setAnchorEl(e.currentTarget.closest('th'));
   }
 
-  const handleNewClick = () => {
+  const handleNewClick = (e) => {
     setSelectedArea({
       id: -1,
       name: '',
@@ -68,7 +70,7 @@ function List() {
       createdAt: new Date().toISOString(),
       activeUserCount: 0
     });
-    setOpen(true);
+    setAnchorEl(e.currentTarget);
   }
 
   const handleChangePage = (e, newPage) => {
@@ -173,17 +175,19 @@ function List() {
     if (a.administrators.length > 1) {
       administrators = `${a.administrators[0].name} and ${a.administrators.length - 1} more`;
     }
+    const rowClassName = selectedArea && selectedArea.id === a.id ? classes.selectedRow : '';
+    const cellClassName = selectedArea && selectedArea.id !== a.id ? classes.disabledRow : '';
     return (
-      <TableRow key={a.id}>
+      <TableRow key={a.id} className={rowClassName}>
           <TableCell component="th" scope="row">
             <span 
-              className={classes.locationName}
-              onClick={() => handleNameClick(a)}>{name}</span>
+              className={`${classes.locationName} ${cellClassName}`}
+              onClick={(e) => handleNameClick(e, a)}>{name}</span>
           </TableCell>
-          <TableCell align="left">{a.locationName}</TableCell>
-          <TableCell align="left">{administrators}</TableCell>
+          <TableCell align="left" className={cellClassName}>{a.locationName}</TableCell>
+          <TableCell align="left" className={cellClassName}>{administrators}</TableCell>
           <TableCell align="right">
-            <Link to={`/users?areaId=${a.id}`} component={RouterLink}>{a.activeUserCount}</Link>
+            <Link className={cellClassName} to={`/users?areaId=${a.id}`} component={RouterLink}>{a.activeUserCount}</Link>
           </TableCell>
           <TableCell align="right" className={classes.iconCell}>
             <ConfirmButton
@@ -254,8 +258,10 @@ function List() {
         </TableContainer>
         <Detail 
           open={open}
-          setOpen={setOpen}
+          anchorEl={anchorEl}
+          setAnchorEl={setAnchorEl}
           selectedArea={selectedArea}
+          setSelectedArea={setSelectedArea}
           setAreas={setAreas}
           setFilteredAreas={setFilteredAreas}
           setMessage={setMessage}

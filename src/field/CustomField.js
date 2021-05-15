@@ -94,7 +94,8 @@ function CustomField(props) {
           size="small"
           value={value}
           onChange={(d) => setValue(d)}
-          KeyboardButtonProps={{ 'aria-label': 'change date' }} />
+          KeyboardButtonProps={{ 'aria-label': 'change date' }}
+          autoOk />
       </MuiPickersUtilsProvider>
     );
   }

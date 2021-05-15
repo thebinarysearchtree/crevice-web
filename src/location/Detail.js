@@ -7,7 +7,7 @@ import MenuItem from '@material-ui/core/MenuItem';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import Button from '@material-ui/core/Button';
-import Dialog from '@material-ui/core/Dialog';
+import Popover from '@material-ui/core/Popover';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
@@ -23,29 +23,34 @@ function Detail(props) {
 
   const isDisabled = !name || !abbreviation || !timeZone;
 
+  const { setLocations, selectedLocation, setSelectedLocation, open, anchorEl, setAnchorEl, setMessage } = props;
+  const classes = useStyles();
+
   useEffect(() => {
-    if (props.selectedLocation) {
-      const { name, abbreviation, timeZone, address } = props.selectedLocation;
+    if (selectedLocation) {
+      const { name, abbreviation, timeZone, address } = selectedLocation;
 
       setName(name);
       setAbbreviation(abbreviation);
       setTimeZone(timeZone);
       setAddress(address);
     }
-  }, [props.selectedLocation]);
+  }, [selectedLocation]);
 
-  const { setLocations, open, setOpen, setMessage } = props;
-  const classes = useStyles();
+  const handleClose = () => {
+    setSelectedLocation(null);
+    setAnchorEl(null);
+  }
 
-  if (!props.selectedLocation) {
+  if (!selectedLocation) {
     return null;
   }
 
-  const location = { ...props.selectedLocation, name, abbreviation, timeZone, address };
+  const location = { ...selectedLocation, name, abbreviation, timeZone, address };
 
   const saveLocation = async (e) => {
     e.preventDefault();
-    setOpen(false);
+    setAnchorEl(null);
     if (location.id !== -1) {
       const response = await client.postData('/locations/update', location);
       if (response.ok) {
@@ -79,11 +84,21 @@ function Detail(props) {
   const title = location.id !== -1 ? 'Edit location' : 'Create a new location';
 
   return (
-    <Dialog 
-      open={open} 
-      onClose={() => setOpen(false)} 
-      aria-labelledby="dialog-title">
-      <DialogTitle id="dialog-title">{title}</DialogTitle>
+    <Popover 
+      className={classes.popover}
+      open={open}
+      anchorEl={anchorEl}
+      anchorOrigin={{
+        vertical: 'bottom',
+        horizontal: location.id === -1 ? 'right' : 'left'
+      }}
+      transformOrigin={{
+        vertical: 'top',
+        horizontal: location.id === -1 ? 'right' : 'left'
+      }}
+      onClose={handleClose}
+      disableRestoreFocus>
+      <DialogTitle>{title}</DialogTitle>
       <DialogContent className={classes.root}>
         <TextField
           className={classes.spacing}
@@ -126,7 +141,7 @@ function Detail(props) {
       </DialogContent>
       <DialogActions>
         <Button 
-          onClick={() => setOpen(false)} 
+          onClick={handleClose} 
           color="primary">Cancel</Button>
         <Button 
           onClick={saveLocation} 
@@ -134,7 +149,7 @@ function Detail(props) {
           color="primary"
           disabled={isDisabled}>Save</Button>
       </DialogActions>
-    </Dialog>
+    </Popover>
   );
 }
 

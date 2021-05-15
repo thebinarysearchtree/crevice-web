@@ -94,6 +94,12 @@ const styles = (theme) => ({
   iconCell: {
     paddingTop: '2px',
     paddingBottom: '2px'
+  },
+  selectedRow: {
+    backgroundColor: 'rgb(0, 0, 0, 0.04)'
+  },
+  disabledRow: {
+    color: theme.palette.text.disabled
   }
 });
 

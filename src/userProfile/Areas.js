@@ -9,6 +9,7 @@ import IconButton from '@material-ui/core/IconButton';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import Button from '@material-ui/core/Button';
+import EditPeriod from './EditPeriod';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -26,6 +27,9 @@ const useStyles = makeStyles((theme) => ({
   section: {
     height: '100%'
   },
+  filled: {
+    cursor: 'pointer'
+  },
   area: {
     display: 'flex',
     marginBottom: theme.spacing(3)
@@ -38,9 +42,6 @@ const useStyles = makeStyles((theme) => ({
     whiteSpace: 'nowrap',
     marginRight: theme.spacing(1),
     textAlign: 'right'
-  },
-  filled: {
-    cursor: 'pointer'
   },
   months: {
     display: 'flex',
@@ -62,6 +63,12 @@ const useStyles = makeStyles((theme) => ({
   chevron: {
     width: '32px',
     height: '32px'
+  },
+  disabledAreaName: {
+    color: theme.palette.text.disabled
+  },
+  disabledPeriod: {
+    opacity: 0.3
   }
 }));
 
@@ -70,6 +77,11 @@ function Areas(props) {
   const [months, setMonths] = useState([]);
   const [areas, setAreas] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedPeriod, setSelectedPeriod] = useState(null);
+  const [message, setMessage] = useState('');
+  const [anchorEl, setAnchorEl] = useState(null);
+
+  const open = Boolean(anchorEl);
 
   const classes = useStyles();
 
@@ -93,6 +105,11 @@ function Areas(props) {
     }
     setMonths(months);
   }, [year]);
+
+  const handlePeriodClick = (e, period) => {
+    setSelectedPeriod(period);
+    setAnchorEl(e.currentTarget);
+  }
 
   const handler = (areas) => {
     setAreas(areas.map(area => {
@@ -118,7 +135,7 @@ function Areas(props) {
   });
 
   const areaBars = areas.map(area => {
-    const { name, abbreviation, periods } = area;
+    const { name, abbreviation, timeZone, periods } = area;
     const periodsInYear = periods
       .filter(p => 
         p.startTime < endOfYear &&
@@ -131,9 +148,7 @@ function Areas(props) {
         if (days > 1) {
           sections.push({
             type: 'empty',
-            roleId: null,
             start,
-            end: period.startTime,
             days
           });
         }
@@ -153,30 +168,26 @@ function Areas(props) {
         end = period.endTime;
       }
       const days = daysBetween(start, end);
-      if (period.endTime) {
-        const endTime = new Date(period.endTime);
-        endTime.setDate(endTime.getDate() - 1);
-        end = endTime.getTime();
-      }
-      else {
-        end = null;
-      }
       sections.push({
+        id: period.id,
         type: 'filled',
+        areaId: area.id,
+        areaName: name,
         roleId: period.roleId,
+        roleName: period.roleName,
         roleColour: period.roleColour,
         start: period.startTime,
-        end,
-        days
+        end: period.endTime,
+        days,
+        isAdmin: period.isAdmin,
+        timeZone
       });
-      start = period.endTime + dayMs;
+      start = period.endTime;
     }
     if (sections.length == 0) {
       sections.push({
         type: 'empty',
-        roleId: null,
         start: startOfYear,
-        end: endOfYear,
         days: daysBetween(startOfYear, endOfYear)
       });
     }
@@ -187,30 +198,29 @@ function Areas(props) {
         const end = endOfYear;
         sections.push({
           type: 'empty',
-          roleId: null,
-          start,
-          end,
           days: daysBetween(start, end)
         });
       }
     }
     const sectionElements = sections.map(section => {
-      const width = `${section.days * 2}px`;
-      const start = new Date(section.start).toLocaleDateString();
-      const end = section.end ? new Date(section.end).toLocaleDateString() : 'infinity';
-      if (section.type === 'empty') {
+      const { type, roleColour, start, days } = section;
+
+      const width = `${days * 2}px`;
+
+      if (type === 'empty') {
         return <div key={start} className={classes.section} style={{ width }} />;
       }
       return (
         <div 
           key={start}
-          className={`${classes.section} ${classes.filled}`} 
-          style={{ width, backgroundColor: `#${section.roleColour}` }} />
+          className={`${classes.section} ${classes.filled} ${selectedPeriod && selectedPeriod.id !== section.id ? classes.disabledPeriod : ''}`} 
+          style={{ width, backgroundColor: `#${roleColour}` }}
+          onClick={(e) => handlePeriodClick(e, section)} />
       );
     });
     return (
       <div key={area.id} className={classes.area}>
-        <div className={classes.areaName}>{abbreviation}</div>
+        <div className={`${classes.areaName} ${selectedPeriod && selectedPeriod.areaId !== area.id ? classes.disabledAreaName : ''}`}>{abbreviation}</div>
         <Paper className={classes.sections}>{sectionElements}</Paper>
       </div>
     );
@@ -243,6 +253,14 @@ function Areas(props) {
         {monthLabels}
       </div>
       {areaBars}
+      <EditPeriod 
+        open={open}
+        anchorEl={anchorEl}
+        setAnchorEl={setAnchorEl}
+        selectedPeriod={selectedPeriod}
+        setSelectedPeriod={setSelectedPeriod}
+        setAreas={setAreas}
+        setMessage={setMessage} />
     </div>
   );
 }

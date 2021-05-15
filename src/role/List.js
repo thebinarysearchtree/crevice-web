@@ -28,9 +28,11 @@ function List() {
   const [roles, setRoles] = useState(null);
   const [message, setMessage] = useMessage();
   const [selectedRole, setSelectedRole] = useState(null);
-  const [open, setOpen] = useState(false);
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [anchorEl, setAnchorEl] = useState(null);
+
+  const open = Boolean(anchorEl);
 
   const classes = useStyles();
 
@@ -39,12 +41,12 @@ function List() {
   const sliceStart = page * rowsPerPage;
   const sliceEnd = sliceStart + rowsPerPage;
 
-  const handleNameClick = (role) => {
+  const handleNameClick = (e, role) => {
     setSelectedRole({ ...role });
-    setOpen(true);
+    setAnchorEl(e.currentTarget.closest('th'));
   }
 
-  const handleNewClick = () => {
+  const handleNewClick = (e) => {
     setSelectedRole({
       id: -1,
       name: '',
@@ -52,7 +54,7 @@ function List() {
       createdAt: new Date().toISOString(),
       userCount: 0
     });
-    setOpen(true);
+    setAnchorEl(e.currentTarget);
   }
 
   const handleChangePage = (e, newPage) => {
@@ -89,17 +91,19 @@ function List() {
   }
 
   const tableRows = roles.slice(sliceStart, sliceEnd).map(r => {
+    const rowClassName = selectedRole && selectedRole.id === r.id ? classes.selectedRow : '';
+    const cellClassName = selectedRole && selectedRole.id !== r.id ? classes.disabledRow : '';
     return (
-      <TableRow key={r.id}>
+      <TableRow key={r.id} className={rowClassName}>
         <TableCell style={{ backgroundColor: `#${r.colour}`, padding: '0px' }}></TableCell>
         <TableCell component="th" scope="row">
           <span 
-            className={classes.locationName}
-            onClick={() => handleNameClick(r)}>{r.name}</span>
+            className={`${classes.locationName} ${cellClassName}`}
+            onClick={(e) => handleNameClick(e, r)}>{r.name}</span>
         </TableCell>
-        <TableCell align="right">{new Date(r.createdAt).toLocaleDateString()}</TableCell>
+        <TableCell className={cellClassName} align="right">{new Date(r.createdAt).toLocaleDateString()}</TableCell>
         <TableCell align="right">
-          <Link to={`/users?roleId=${r.id}`} component={RouterLink}>{r.userCount}</Link>
+          <Link className={cellClassName} to={`/users?roleId=${r.id}`} component={RouterLink}>{r.userCount}</Link>
         </TableCell>
         <TableCell align="right" className={classes.iconCell}>
           <ConfirmButton
@@ -151,8 +155,10 @@ function List() {
         </TableContainer>
         <Detail 
           open={open}
-          setOpen={setOpen}
+          anchorEl={anchorEl}
+          setAnchorEl={setAnchorEl}
           selectedRole={selectedRole}
+          setSelectedRole={setSelectedRole}
           setRoles={setRoles}
           setMessage={setMessage} />
         <Snackbar message={message} setMessage={setMessage} />

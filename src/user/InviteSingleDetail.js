@@ -11,10 +11,10 @@ import Avatar from '@material-ui/core/Avatar';
 import InviteSingleAreas from './InviteSingleAreas';
 import Tooltip from '@material-ui/core/Tooltip';
 import BackButton from '../common/BackButton';
-import useFetch from '../hooks/useFetch';
+import useFetchMany from '../hooks/useFetchMany';
 import Progress from '../common/Progress';
 import CustomField from '../field/CustomField';
-import { makePgDate } from '../utils/date';
+import { makeAreaDate } from '../utils/date';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -92,6 +92,8 @@ function InviteSingleDetail() {
   const [message, setMessage] = useState('');
   const [fields, setFields] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [roles, setRoles] = useState([]);
+  const [locations, setLocations] = useState([]);
 
   const history = useHistory();
   const classes = useStyles();
@@ -114,27 +116,23 @@ function InviteSingleDetail() {
       return {...field, value };
     });
     setFields(fields);
-    setLoading(false);
   }
+  const rolesHandler = (roles) => setRoles(roles);
+  const locationsHandler = (locations) => setLocations(locations);
 
-  useFetch('/fields/getAllFields', fieldsHandler);
+  useFetchMany(setLoading, [
+    { url: '/fields/getAllFields', handler: fieldsHandler },
+    { url: '/roles/getSelectListItems', handler: rolesHandler },
+    { url: '/areas/getWithLocation', handler: locationsHandler }]);
 
   const inviteUser = async () => {
     const areas = userAreas.map(ua => {
-      const startTime = new Date(ua.startTime);
-      startTime.setHours(0, 0, 0, 0);
-      let endTime = null;
-      if (ua.endTime) {
-        endTime = new Date(ua.endTime);
-        endTime.setHours(0, 0, 0, 0);
-        endTime.setDate(endTime.getDate() + 1);
-      }
       const timeZone = ua.area.timeZone;
       return { 
         roleId: ua.role.id, 
         areaId: ua.area.id,
-        startTime: makePgDate(startTime, timeZone),
-        endTime: endTime ? makePgDate(endTime, timeZone) : null,
+        startTime: makeAreaDate(ua.startTime, timeZone),
+        endTime: makeAreaDate(ua.endTime, timeZone, 1),
         isAdmin: ua.isAdmin
       }
     });
@@ -154,6 +152,28 @@ function InviteSingleDetail() {
     }
     else {
       setMessage('Something went wrong');
+    }
+  }
+
+  const handleAddAreas = (suppliedUserAreas) => {
+    let hasError = false;
+    for (const userArea of suppliedUserAreas) {
+      const area = userArea.area;
+      const overlapping = userAreas.some(ua => 
+        ua.area.id === area.id &&
+        (!userArea.endTime || ua.startTime.getTime() <= userArea.endTime.getTime()) &&
+        (!ua.endTime || ua.endTime.getTime() >= userArea.startTime.getTime()));
+      if (overlapping) {
+        hasError = true;
+        break;
+      }
+    }
+    if (hasError) {
+      return true;
+    }
+    else {
+      setUserAreas(areas => [...areas, ...suppliedUserAreas]);
+      return false;
     }
   }
 
@@ -206,7 +226,10 @@ function InviteSingleDetail() {
         setShowAreas={setShowAreas}
         userAreas={userAreas}
         setUserAreas={setUserAreas}
-        inviteUser={inviteUser} />
+        inviteUser={inviteUser}
+        roles={roles}
+        locations={locations}
+        handleAddAreas={handleAddAreas} />
     );
   }
 

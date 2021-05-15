@@ -27,9 +27,11 @@ function List() {
   const [locations, setLocations] = useState(null);
   const [message, setMessage] = useState('');
   const [selectedLocation, setSelectedLocation] = useState(null);
-  const [open, setOpen] = useState(false);
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [anchorEl, setAnchorEl] = useState(null);
+
+  const open = Boolean(anchorEl);
 
   const classes = useStyles();
 
@@ -38,12 +40,12 @@ function List() {
   const sliceStart = page * rowsPerPage;
   const sliceEnd = sliceStart + rowsPerPage;
 
-  const handleNameClick = (location) => {
+  const handleNameClick = (e, location) => {
     setSelectedLocation({ ...location });
-    setOpen(true);
+    setAnchorEl(e.currentTarget.closest('th'));
   }
 
-  const handleNewClick = () => {
+  const handleNewClick = (e) => {
     setSelectedLocation({
       id: -1,
       name: '',
@@ -53,7 +55,7 @@ function List() {
       createdAt: new Date().toISOString(),
       areaCount: 0
     });
-    setOpen(true);
+    setAnchorEl(e.currentTarget);
   }
 
   const handleChangePage = (e, newPage) => {
@@ -90,17 +92,19 @@ function List() {
   }
 
   const tableRows = locations.slice(sliceStart, sliceEnd).map(l => {
+    const rowClassName = selectedLocation && selectedLocation.id === l.id ? classes.selectedRow : '';
+    const cellClassName = selectedLocation && selectedLocation.id !== l.id ? classes.disabledRow : '';
     return (
-      <TableRow key={l.id}>
+      <TableRow key={l.id} className={rowClassName}>
           <TableCell component="th" scope="row">
             <span 
-              className={classes.locationName}
-              onClick={() => handleNameClick(l)}>{l.name}</span>
+              className={`${classes.locationName} ${cellClassName}`}
+              onClick={(e) => handleNameClick(e, l)}>{l.name}</span>
           </TableCell>
-          <TableCell align="left">{l.timeZone.split('/')[1].replace('_', ' ')}</TableCell>
-          <TableCell align="right">{new Date(l.createdAt).toLocaleDateString()}</TableCell>
+          <TableCell align="left" className={cellClassName}>{l.timeZone.split('/')[1].replace('_', ' ')}</TableCell>
+          <TableCell align="right" className={cellClassName}>{new Date(l.createdAt).toLocaleDateString()}</TableCell>
           <TableCell align="right">
-            <Link to={`/areas?locationId=${l.id}`} component={RouterLink}>{l.areaCount}</Link>
+            <Link className={cellClassName} to={`/areas?locationId=${l.id}`} component={RouterLink}>{l.areaCount}</Link>
           </TableCell>
           <TableCell align="right" className={classes.iconCell}>
             <ConfirmButton
@@ -152,8 +156,10 @@ function List() {
         </TableContainer>
         <Detail 
           open={open}
-          setOpen={setOpen}
+          anchorEl={anchorEl}
+          setAnchorEl={setAnchorEl}
           selectedLocation={selectedLocation}
+          setSelectedLocation={setSelectedLocation}
           setLocations={setLocations}
           setMessage={setMessage} />
         <Snackbar message={message} setMessage={setMessage} />

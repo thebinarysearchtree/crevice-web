@@ -6,7 +6,7 @@ import Button from '@material-ui/core/Button';
 import Snackbar from '../common/Snackbar';
 import { useHistory } from 'react-router-dom';
 import BackButton from '../common/BackButton';
-import useFetch from '../hooks/useFetch';
+import useFetchMany from '../hooks/useFetchMany';
 import Progress from '../common/Progress';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
@@ -22,7 +22,7 @@ import TableRow from '@material-ui/core/TableRow';
 import AreasTable from './AreasTable';
 import AddArea from './AddArea';
 import Paper from '@material-ui/core/Paper';
-import { makePgDate } from '../utils/date';
+import { makeAreaDate } from '../utils/date';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -116,11 +116,35 @@ function InviteMany() {
   const [userAreas, setUserAreas] = useState([]);
   const [showAddArea, setShowAddArea] = useState(false);
   const [fields, setFields] = useState([]);
+  const [roles, setRoles] = useState([]);
+  const [locations, setLocations] = useState([]);
 
   const history = useHistory();
   const classes = useStyles();
 
   const isDisabled = uploading || selectedFiles.length === 0 || userAreas.length === 0;
+
+  const handleAddAreas = (suppliedUserAreas) => {
+    let hasError = false;
+    for (const userArea of suppliedUserAreas) {
+      const area = userArea.area;
+      const overlapping = userAreas.some(ua => 
+        ua.area.id === area.id &&
+        (!userArea.endTime || ua.startTime.getTime() <= userArea.endTime.getTime()) &&
+        (!ua.endTime || ua.endTime.getTime() >= userArea.startTime.getTime()));
+      if (overlapping) {
+        hasError = true;
+        break;
+      }
+    }
+    if (hasError) {
+      return true;
+    }
+    else {
+      setUserAreas(areas => [...areas, ...suppliedUserAreas]);
+      return false;
+    }
+  }
 
   const inviteUsers = async (e) => {
     e.preventDefault();
@@ -130,20 +154,12 @@ function InviteMany() {
       const files = await response.json();
       const fileInfo = files[0];
       const areas = userAreas.map(ua => {
-        const startTime = new Date(ua.startTime);
-        startTime.setHours(0, 0, 0, 0);
-        let endTime = null;
-        if (ua.endTime) {
-          endTime = new Date(ua.endTime);
-          endTime.setHours(0, 0, 0, 0);
-          endTime.setDate(endTime.getDate() + 1);
-        }
         const timeZone = ua.area.timeZone;
         return { 
           roleId: ua.role.id, 
           areaId: ua.area.id,
-          startTime: makePgDate(startTime, timeZone),
-          endTime: endTime ? makePgDate(endTime, timeZone) : null,
+          startTime: makeAreaDate(ua.startTime, timeZone),
+          endTime: makeAreaDate(ua.endTime, timeZone, 1),
           isAdmin: ua.isAdmin
         }
       });
@@ -172,19 +188,17 @@ function InviteMany() {
     setSelectedFiles(e.currentTarget.files);
   }
 
-  const fieldsHandler = (fields) => {
-    setFields(fields);
-    setLoading(false);
-  }
+  const fieldsHandler = (fields) => setFields(fields);
+  const rolesHandler = (roles) => setRoles(roles);
+  const locationsHandler = (locations) => setLocations(locations);
 
-  useFetch('/fields/getCsvFields', fieldsHandler);
+  useFetchMany(setLoading, [
+    { url: '/fields/getCsvFields', handler: fieldsHandler },
+    { url: '/roles/getSelectListItems', handler: rolesHandler },
+    { url: '/areas/getWithLocation', handler: locationsHandler }]);
 
   if (loading) {
     return <Progress loading={loading} />;
-  }
-
-  if (showAddArea) {
-    return <AddArea setShowAddArea={setShowAddArea} setUserAreas={setUserAreas} userAreas={userAreas} />;
   }
 
   const selectedFilename = selectedFiles.length == 0 ? null : (
@@ -265,12 +279,18 @@ function InviteMany() {
             type="submit"
             disabled={isDisabled}>{uploading ? 'Uploading...' : 'Invite'}</Button>
         </form>
+        <AddArea
+          open={showAddArea}
+          setOpen={setShowAddArea}
+          handleAddAreas={handleAddAreas}
+          roles={roles}
+          locations={locations} />
         <Dialog 
           open={showErrors} 
           onClose={() => setShowErrors(false)} 
-          aria-labelledby="dialog-title"
+          aria-labelledby="errors-table"
           scroll="paper">
-          <DialogTitle id="dialog-title">Errors</DialogTitle>
+          <DialogTitle id="errors-table">Errors</DialogTitle>
           <DialogContent className={classes.root}>
             <Table aria-label="errors table">
               <TableHead>

@@ -3,15 +3,26 @@ import { makeStyles } from '@material-ui/core/styles';
 import client from '../client';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
-import Dialog from '@material-ui/core/Dialog';
+import Popover from '@material-ui/core/Popover';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import ColourGrid from '../common/ColourGrid';
-import styles from '../styles/dialog';
 
-const useStyles = makeStyles(styles);
+const useStyles = makeStyles((theme) => ({
+  root: {
+    display: 'flex',
+    flexDirection: 'column',
+    width: '330px'
+  },
+  spacing: {
+    marginBottom: '10px'
+  },
+  popover: {
+    marginTop: theme.spacing(1)
+  }
+}));
 
 const hex = /^[0-9a-fA-F]{6}$/;
 
@@ -22,7 +33,7 @@ function Detail(props) {
   const error = colour && !hex.test(colour);
   const isDisabled = !name || !hex.test(colour);
 
-  const { setRoles, selectedRole, open, setOpen, setMessage } = props;
+  const { setRoles, selectedRole, setSelectedRole, open, anchorEl, setAnchorEl, setMessage } = props;
   const classes = useStyles();
 
   useEffect(() => {
@@ -34,6 +45,11 @@ function Detail(props) {
     }
   }, [selectedRole]);
 
+  const handleClose = () => {
+    setSelectedRole(null);
+    setAnchorEl(null);
+  }
+
   if (!selectedRole) {
     return null;
   }
@@ -42,7 +58,7 @@ function Detail(props) {
 
   const saveRole = async (e) => {
     e.preventDefault();
-    setOpen(false);
+    setAnchorEl(null);
     if (role.id !== -1) {
       const response = await client.postData('/roles/update', role);
       if (response.ok) {
@@ -76,11 +92,21 @@ function Detail(props) {
   const title = role.id !== -1 ? 'Edit role' : 'Create a new role';
 
   return (
-    <Dialog 
-      open={open} 
-      onClose={() => setOpen(false)} 
-      aria-labelledby="dialog-title">
-      <DialogTitle id="dialog-title">{title}</DialogTitle>
+    <Popover 
+      className={classes.popover}
+      open={open}
+      anchorEl={anchorEl}
+      anchorOrigin={{
+        vertical: 'bottom',
+        horizontal: role.id === -1 ? 'right' : 'left'
+      }}
+      transformOrigin={{
+        vertical: 'top',
+        horizontal: role.id === -1 ? 'right' : 'left'
+      }}
+      onClose={handleClose}
+      disableRestoreFocus>
+      <DialogTitle>{title}</DialogTitle>
       <DialogContent className={classes.root}>
         <TextField
           className={classes.spacing}
@@ -101,7 +127,7 @@ function Detail(props) {
       </DialogContent>
       <DialogActions>
         <Button 
-          onClick={() => setOpen(false)} 
+          onClick={handleClose} 
           color="primary">Cancel</Button>
         <Button 
           onClick={saveRole} 
@@ -109,7 +135,7 @@ function Detail(props) {
           color="primary"
           disabled={isDisabled}>Save</Button>
       </DialogActions>
-    </Dialog>
+    </Popover>
   );
 }
 

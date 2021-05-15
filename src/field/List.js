@@ -22,15 +22,20 @@ import { Link as RouterLink } from 'react-router-dom';
 import IconButton from '@material-ui/core/IconButton';
 import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
 import Tooltip from '@material-ui/core/Tooltip';
+import EditField from './EditField';
 
 const useStyles = makeStyles(styles);
 
 function List() {
   const [fields, setFields] = useState(null);
   const [message, setMessage] = useMessage();
+  const [selectedField, setSelectedField] = useState(null);
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
   const [moving, setMoving] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
+
+  const open = Boolean(anchorEl);
 
   const classes = useStyles();
 
@@ -38,6 +43,23 @@ function List() {
 
   const sliceStart = page * rowsPerPage;
   const sliceEnd = sliceStart + rowsPerPage;
+
+  const handleNameClick = (e, field) => {
+    setSelectedField({ ...field });
+    setAnchorEl(e.currentTarget.closest('th'));
+  }
+
+  const handleNewClick = (e) => {
+    setSelectedField({
+      id: -1,
+      name: '',
+      fieldType: '',
+      selectItems: [],
+      createdAt: new Date().toISOString(),
+      userCount: 0
+    });
+    setAnchorEl(e.currentTarget);
+  }
 
   const handleChangePage = (e, newPage) => {
     setPage(newPage);
@@ -93,15 +115,17 @@ function List() {
   }
 
   const tableRows = fields.slice(sliceStart, sliceEnd).map((f, i) => {
+    const rowClassName = selectedField && selectedField.id === f.id ? classes.selectedRow : '';
+    const cellClassName = selectedField && selectedField.id !== f.id ? classes.disabledRow : '';
     return (
-      <TableRow key={f.id}>
+      <TableRow key={f.id} className={rowClassName}>
         <TableCell component="th" scope="row">
-          <RouterLink 
-            className={classes.link} 
-            to={`/fields/update/${f.id}`}>{f.name}</RouterLink>
+          <span 
+            className={`${classes.locationName} ${cellClassName}`}
+            onClick={(e) => handleNameClick(e, f)}>{f.name}</span>
         </TableCell>
-        <TableCell align="right">{f.fieldType}</TableCell>
-        <TableCell align="right">{f.userCount}</TableCell>
+        <TableCell align="right" className={cellClassName}>{f.fieldType}</TableCell>
+        <TableCell align="right" className={cellClassName}>{f.userCount}</TableCell>
         <TableCell align="right" className={classes.iconCell}>
           <Tooltip title="Move up">
             <IconButton
@@ -127,8 +151,7 @@ function List() {
           <Button 
             variant="contained"
             color="primary"
-            component={RouterLink}
-            to="/fields/create">New field</Button>
+            onClick={handleNewClick}>New field</Button>
         </div>
         <TableContainer component={Paper}>
           <Table className={classes.table} aria-label="fields table">
@@ -156,6 +179,14 @@ function List() {
             </TableFooter>
           </Table>
         </TableContainer>
+        <EditField 
+          open={open}
+          anchorEl={anchorEl}
+          setAnchorEl={setAnchorEl}
+          selectedField={selectedField}
+          setSelectedField={setSelectedField}
+          setFields={setFields}
+          setMessage={setMessage} />
         <Snackbar message={message} setMessage={setMessage} />
       </div>
       <div className={classes.rightSection} />

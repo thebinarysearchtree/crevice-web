@@ -12,4 +12,26 @@ const makePgDate = (date, timeZone) => {
   return `${datePart} ${timePart} ${timeZone}`;
 }
 
-export { makePgDate };
+const addDays = (date, days) => {
+  const updatedDate = new Date(date);
+  updatedDate.setDate(updatedDate.getDate() + days);
+  return updatedDate;
+}
+
+const makeAreaDate = (date, timeZone, addDays) => {
+  if (!date) {
+    return null;
+  }
+  const updatedDate = new Date(date);
+  updatedDate.setHours(0, 0, 0, 0);
+  if (addDays) {
+    updatedDate.setDate(updatedDate.getDate() + addDays);
+  }
+  return makePgDate(updatedDate, timeZone);
+}
+
+export { 
+  makePgDate,
+  addDays,
+  makeAreaDate 
+};
