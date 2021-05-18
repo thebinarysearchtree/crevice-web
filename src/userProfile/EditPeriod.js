@@ -5,7 +5,6 @@ import Button from '@material-ui/core/Button';
 import Popover from '@material-ui/core/Popover';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
-import DialogTitle from '@material-ui/core/DialogTitle';
 import { addDays, makeAreaDate } from '../utils/date';
 import 'date-fns';
 import DateFnsUtils from '@date-io/date-fns';
@@ -13,15 +12,10 @@ import {
   MuiPickersUtilsProvider,
   KeyboardDatePicker
 } from '@material-ui/pickers';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import Checkbox from '@material-ui/core/Checkbox';
-import InputLabel from '@material-ui/core/InputLabel';
-import MenuItem from '@material-ui/core/MenuItem';
-import FormControl from '@material-ui/core/FormControl';
-import Select from '@material-ui/core/Select';
 import SupervisorAccountIcon from '@material-ui/icons/SupervisorAccount';
 import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
+import FormHelperText from '@material-ui/core/FormHelperText';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -49,12 +43,13 @@ function EditPeriod(props) {
   const [startTime, setStartTime] = useState(null);
   const [endTime, setEndTime] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [overlappingError, setOverlappingError] = useState(false);
 
   const startError = startTime && endTime && startTime.getTime() > endTime.getTime();
 
   const isDisabled = !startTime || isNaN(startTime.getTime()) || (endTime && isNaN(endTime.getTime())) || startError;
 
-  const { setAreas, selectedPeriod, setSelectedPeriod, open, anchorEl, setAnchorEl, setMessage } = props;
+  const { checkOverlapping, setAreas, selectedPeriod, setSelectedPeriod, open, anchorEl, setAnchorEl, setMessage } = props;
   const classes = useStyles();
 
   useEffect(() => {
@@ -79,11 +74,11 @@ function EditPeriod(props) {
     return null;
   }
 
-  const { id, areaId, areaName, roleId, roleName, timeZone } = selectedPeriod;
+  const { id, userId, areaId, roleId, roleName, timeZone } = selectedPeriod;
 
   const removePeriod = async (e) => {
     e.preventDefault();
-    const response = await client.postData('/userArea/remove', { userAreaId: selectedPeriod.id });
+    const response = await client.postData('/userAreas/remove', { userAreaId: selectedPeriod.id });
     if (response.ok) {
       setAreas(areas => {
         return areas.map(area => {
@@ -95,10 +90,12 @@ function EditPeriod(props) {
           return updatedArea;
         });
       });
+      setSelectedPeriod(null);
       setAnchorEl(null);
       setMessage('Period deleted');
     }
     else {
+      setSelectedPeriod(null);
       setAnchorEl(null);
       setMessage('Something went wrong');
     }
@@ -106,8 +103,14 @@ function EditPeriod(props) {
 
   const updatePeriod = async (e) => {
     e.preventDefault();
+    const overlapping = checkOverlapping({ id, areaId, startTime, endTime });
+    if (overlapping) {
+      setOverlappingError(true);
+      return;
+    }
     const userArea = {
       id,
+      userId,
       areaId,
       roleId,
       startTime: makeAreaDate(startTime, timeZone),
@@ -138,10 +141,12 @@ function EditPeriod(props) {
           return updatedArea;
         });
       });
+      setSelectedPeriod(null);
       setAnchorEl(null);
       setMessage('Period updated');
     }
     else {
+      setSelectedPeriod(null);
       setAnchorEl(null);
       setMessage('Something went wrong');
     }
@@ -200,12 +205,14 @@ function EditPeriod(props) {
             KeyboardButtonProps={{ 'aria-label': 'change date' }}
             autoOk />
         </MuiPickersUtilsProvider>
+        <FormHelperText error={overlappingError}>{overlappingError ? 'Areas cannot have overlapping periods' : ''}</FormHelperText>
       </DialogContent>
       <DialogActions>
         <Button 
           onClick={removePeriod} 
           color="secondary">Delete</Button>
         <Button 
+          onBlur={() => setOverlappingError(false)}
           onClick={updatePeriod} 
           variant="contained" 
           color="primary"

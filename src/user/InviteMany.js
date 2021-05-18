@@ -114,36 +114,36 @@ function InviteMany() {
   const [showErrors, setShowErrors] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [userAreas, setUserAreas] = useState([]);
-  const [showAddArea, setShowAddArea] = useState(false);
   const [fields, setFields] = useState([]);
   const [roles, setRoles] = useState([]);
   const [locations, setLocations] = useState([]);
+  const [anchorEl, setAnchorEl] = useState(null);
+
+  const open = Boolean(anchorEl);
 
   const history = useHistory();
   const classes = useStyles();
 
   const isDisabled = uploading || selectedFiles.length === 0 || userAreas.length === 0;
 
-  const handleAddAreas = (suppliedUserAreas) => {
-    let hasError = false;
+  const checkOverlapping = (suppliedUserAreas) => {
+    let overlapping = false;
     for (const userArea of suppliedUserAreas) {
       const area = userArea.area;
-      const overlapping = userAreas.some(ua => 
+      overlapping = userAreas.some(ua => 
         ua.area.id === area.id &&
         (!userArea.endTime || ua.startTime.getTime() <= userArea.endTime.getTime()) &&
         (!ua.endTime || ua.endTime.getTime() >= userArea.startTime.getTime()));
       if (overlapping) {
-        hasError = true;
         break;
       }
     }
-    if (hasError) {
-      return true;
-    }
-    else {
-      setUserAreas(areas => [...areas, ...suppliedUserAreas]);
-      return false;
-    }
+    return overlapping;
+  }
+
+  const handleAddAreas = (suppliedUserAreas) => {
+    setUserAreas(areas => [...areas, ...suppliedUserAreas]);
+    return false;
   }
 
   const inviteUsers = async (e) => {
@@ -265,7 +265,11 @@ function InviteMany() {
           </div>
         </Paper>
         <form className={classes.form} onSubmit={inviteUsers} noValidate>
-          <AreasTable setShowAddArea={setShowAddArea} userAreas={userAreas} setUserAreas={setUserAreas} />
+          <AreasTable 
+            userAreas={userAreas} 
+            setUserAreas={setUserAreas}
+            open={open}
+            setAnchorEl={setAnchorEl} />
           <div>
             <FormControlLabel
               className={classes.spacing}
@@ -280,11 +284,13 @@ function InviteMany() {
             disabled={isDisabled}>{uploading ? 'Uploading...' : 'Invite'}</Button>
         </form>
         <AddArea
-          open={showAddArea}
-          setOpen={setShowAddArea}
+          checkOverlapping={checkOverlapping}
           handleAddAreas={handleAddAreas}
           roles={roles}
-          locations={locations} />
+          locations={locations}
+          open={open}
+          anchorEl={anchorEl}
+          setAnchorEl={setAnchorEl} />
         <Dialog 
           open={showErrors} 
           onClose={() => setShowErrors(false)} 

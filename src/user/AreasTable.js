@@ -9,6 +9,8 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import RoleChip from '../common/RoleChip';
+import IconButton from '@material-ui/core/IconButton';
+import DeleteIcon from '@material-ui/icons/Delete';
 
 const useStyles = makeStyles((theme) => ({
   toolbar: {
@@ -27,13 +29,26 @@ const useStyles = makeStyles((theme) => ({
     cursor: 'pointer',
     fontWeight: 600,
     color: theme.palette.action.active
+  },
+  disabledChip: {
+    opacity: 0.3
+  },
+  disabledCell: {
+    color: theme.palette.text.disabled
+  },
+  iconCell: {
+    paddingTop: '2px',
+    paddingBottom: '2px'
   }
 }));
 
 function AreasTable(props) {
   const classes = useStyles();
 
-  const { userAreas, setUserAreas, setShowAddArea } = props;
+  const { userAreas, setUserAreas, open, setAnchorEl } = props;
+
+  const roleClass = open ? classes.disabledChip : '';
+  const cellClass = open ? classes.disabledCell : '';
 
   const remove = (index) => {
     setUserAreas(userAreas => userAreas.filter((ua, i) => i !== index));
@@ -42,15 +57,15 @@ function AreasTable(props) {
   const tableRows = userAreas.map((a, i) => {
     return (
       <TableRow key={i}>
-          <TableCell component="th" scope="row"><RoleChip label={a.role.name} colour={a.role.colour} size="small" /></TableCell>
-          <TableCell align="left">{a.area.name}</TableCell>
-          <TableCell align="right">{a.startTime.toLocaleDateString()}</TableCell>
-          <TableCell align="right">{a.endTime ? a.endTime.toLocaleDateString() : ''}</TableCell>
-          <TableCell align="left">{a.isAdmin ? 'Yes' : ''}</TableCell>
-          <TableCell align="right">
-            <span 
-              className={classes.deleteButton}
-              onClick={() => remove(i)}>delete</span>
+          <TableCell component="th" scope="row"><RoleChip className={roleClass} label={a.role.name} colour={a.role.colour} size="small" /></TableCell>
+          <TableCell align="left" className={cellClass}>{a.area.name}</TableCell>
+          <TableCell align="right" className={cellClass}>{a.startTime.toLocaleDateString()}</TableCell>
+          <TableCell align="right" className={cellClass}>{a.endTime ? a.endTime.toLocaleDateString() : ''}</TableCell>
+          <TableCell align="left" className={cellClass}>{a.isAdmin ? 'Yes' : ''}</TableCell>
+          <TableCell align="right" className={classes.iconCell}>
+            <IconButton onClick={() => remove(i)}>
+              <DeleteIcon fontSize="small" />
+            </IconButton>
           </TableCell>
       </TableRow>
     );
@@ -63,7 +78,7 @@ function AreasTable(props) {
         <Button 
           variant="contained"
           color="secondary"
-          onClick={() => setShowAddArea(true)}>Add areas</Button>
+          onClick={(e) => setAnchorEl(e.currentTarget)}>Add areas</Button>
       </div>
       <TableContainer className={classes.table} component={Paper}>
         <Table aria-label="areas table">

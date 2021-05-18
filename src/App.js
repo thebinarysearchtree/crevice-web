@@ -23,7 +23,6 @@ import InviteSingleDetail from './user/InviteSingleDetail';
 import InviteMany from './user/InviteMany';
 import UploadPhotos from './user/UploadPhotos';
 import UserDetails from './userProfile/UserDetails';
-import Create from './field/Create';
 import { useAuth, ProvideAuth } from './auth';
 
 function PrivateRoute({ children, ...rest }) {
@@ -124,16 +123,6 @@ function App() {
             <Route exact path="/fields">
               <Nav>
                 <FieldList />
-              </Nav>
-            </Route>
-            <Route exact path="/fields/create">
-              <Nav appBarOnly>
-                <Create />
-              </Nav>
-            </Route>
-            <Route path="/fields/update/:fieldId">
-              <Nav appBarOnly>
-                <Create />
               </Nav>
             </Route>
           </Switch>

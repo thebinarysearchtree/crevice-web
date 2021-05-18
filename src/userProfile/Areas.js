@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import client from '../client';
-import useFetch from '../hooks/useFetch';
+import useFetchMany from '../hooks/useFetchMany';
 import Progress from '../common/Progress';
 import Paper from '@material-ui/core/Paper';
 import Tooltip from '@material-ui/core/Tooltip';
@@ -10,6 +10,9 @@ import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import Button from '@material-ui/core/Button';
 import EditPeriod from './EditPeriod';
+import AddArea from '../user/AddArea';
+import { makeAreaDate, addDays } from '../utils/date';
+import Snackbar from '../common/Snackbar';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -79,9 +82,13 @@ function Areas(props) {
   const [loading, setLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState(null);
   const [message, setMessage] = useState('');
-  const [anchorEl, setAnchorEl] = useState(null);
+  const [periodEl, setPeriodEl] = useState(null);
+  const [buttonEl, setButtonEl] = useState(null);
+  const [roles, setRoles] = useState([]);
+  const [locations, setLocations] = useState([]);
 
-  const open = Boolean(anchorEl);
+  const periodOpen = Boolean(periodEl);
+  const buttonOpen = Boolean(buttonEl);
 
   const classes = useStyles();
 
@@ -108,10 +115,55 @@ function Areas(props) {
 
   const handlePeriodClick = (e, period) => {
     setSelectedPeriod(period);
-    setAnchorEl(e.currentTarget);
+    setPeriodEl(e.currentTarget);
   }
 
-  const handler = (areas) => {
+  const checkOverlappingPeriod = (period) => {
+    const area = areas.find(a => a.id === period.areaId);
+    return area.periods.some(p => 
+      p.id !== period.id &&
+      (!period.endTime || p.startTime <= period.endTime) &&
+      (!p.endTime || p.endTime >= period.startTime));
+  }
+
+  const checkOverlapping = (suppliedUserAreas) => {
+    let overlapping = false;
+    for (const userArea of suppliedUserAreas) {
+      const area = areas.find(a => a.id === userArea.area.id);
+      if (area) {
+        overlapping = area.periods.some(p => 
+          (!userArea.endTime || p.startTime <= userArea.endTime.getTime()) &&
+          (!p.endTime || p.endTime >= userArea.startTime.getTime()));
+        if (overlapping) {
+          break;
+        }
+      }
+    }
+    return overlapping;
+  }
+
+  const handleAddAreas = async (suppliedUserAreas) => {
+    const userAreas = suppliedUserAreas.map(ua => {
+      const timeZone = ua.area.timeZone;
+      return {
+        userId,
+        roleId: ua.role.id, 
+        areaId: ua.area.id,
+        startTime: makeAreaDate(ua.startTime, timeZone),
+        endTime: makeAreaDate(ua.endTime, timeZone, 1),
+        isAdmin: ua.isAdmin
+      }
+    });
+    const response = await client.postData('/userAreas/insertMany', { userAreas, userId });
+    if (response.ok) {
+      const updatedAreas = await response.json();
+      areasHandler(updatedAreas);
+      return false;
+    }
+    return true;
+  }
+
+  const areasHandler = (areas) => {
     setAreas(areas.map(area => {
       area.periods = area.periods.map(period => {
         const startTime = new Date(period.startTime).getTime();
@@ -120,10 +172,14 @@ function Areas(props) {
       });
       return area;
     }));
-    setLoading(false);
   }
+  const rolesHandler = (roles) => setRoles(roles);
+  const locationsHandler = (locations) => setLocations(locations);
 
-  useFetch('/userAreas/find', handler, { userId });
+  useFetchMany(setLoading, [
+    { url: '/userAreas/find', handler: areasHandler, data: { userId } },
+    { url: '/roles/getSelectListItems', handler: rolesHandler },
+    { url: '/areas/getWithLocation', handler: locationsHandler }]);
 
   if (loading) {
     return <Progress loading={loading} />;
@@ -171,6 +227,7 @@ function Areas(props) {
       sections.push({
         id: period.id,
         type: 'filled',
+        userId,
         areaId: area.id,
         areaName: name,
         roleId: period.roleId,
@@ -182,7 +239,7 @@ function Areas(props) {
         isAdmin: period.isAdmin,
         timeZone
       });
-      start = period.endTime;
+      start = addDays(new Date(period.endTime), -1).getTime();
     }
     if (sections.length == 0) {
       sections.push({
@@ -246,21 +303,35 @@ function Areas(props) {
           </IconButton>
         </Tooltip>
         <div className={classes.grow} />
-        <Button variant="contained" color="primary">Add area</Button>
+        <Button 
+          variant="contained" 
+          color="primary"
+          onClick={(e) => setButtonEl(e.currentTarget)}>Add area</Button>
       </div>
       <div className={classes.months}>
         <div className={classes.areaName} />
         {monthLabels}
       </div>
       {areaBars}
+      <AddArea
+        checkOverlapping={checkOverlapping}
+        asyncHandleAddAreas={handleAddAreas}
+        roles={roles}
+        locations={locations}
+        open={buttonOpen}
+        anchorEl={buttonEl}
+        setAnchorEl={setButtonEl}
+        setMessage={setMessage} />
       <EditPeriod 
-        open={open}
-        anchorEl={anchorEl}
-        setAnchorEl={setAnchorEl}
+        open={periodOpen}
+        anchorEl={periodEl}
+        setAnchorEl={setPeriodEl}
         selectedPeriod={selectedPeriod}
         setSelectedPeriod={setSelectedPeriod}
+        checkOverlapping={checkOverlappingPeriod}
         setAreas={setAreas}
         setMessage={setMessage} />
+      <Snackbar message={message} setMessage={setMessage} />
     </div>
   );
 }

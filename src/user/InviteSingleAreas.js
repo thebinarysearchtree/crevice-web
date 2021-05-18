@@ -82,10 +82,13 @@ const useStyles = makeStyles((theme) => ({
 function InviteSingleAreas(props) {
   const [showAddArea, setShowAddArea] = useState(false);
   const [message, setMessage] = useState('');
+  const [anchorEl, setAnchorEl] = useState(null);
+
+  const open = Boolean(anchorEl);
 
   const classes = useStyles();
 
-  const { userAreas, setUserAreas, user, inviteUser, roles, locations, handleAddAreas } = props;
+  const { userAreas, setUserAreas, user, inviteUser, roles, locations, checkOverlapping, handleAddAreas } = props;
 
   function DisplayField(props) {
     const { label, value } = props;
@@ -119,7 +122,11 @@ function InviteSingleAreas(props) {
             </div>
           </div>
         </Paper>
-        <AreasTable setShowAddArea={setShowAddArea} userAreas={userAreas} setUserAreas={setUserAreas} />
+        <AreasTable 
+          userAreas={userAreas} 
+          setUserAreas={setUserAreas}
+          open={open} 
+          setAnchorEl={setAnchorEl}  />
         <Button
           className={classes.backButton}
           onClick={() => props.setShowAreas(false)}
@@ -130,11 +137,13 @@ function InviteSingleAreas(props) {
           color="primary"
           disabled={userAreas.length === 0}>Invite user</Button>
         <AddArea
-          open={showAddArea}
-          setOpen={setShowAddArea}
+          checkOverlapping={checkOverlapping}
           handleAddAreas={handleAddAreas}
           roles={roles}
-          locations={locations} />
+          locations={locations}
+          open={open}
+          anchorEl={anchorEl}
+          setAnchorEl={setAnchorEl} />
         <Snackbar message={message} setMessage={setMessage} />
       </div>
     </div>
