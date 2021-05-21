@@ -22,6 +22,7 @@ import AccountCircle from '@material-ui/icons/AccountCircle';
 import client from './client';
 import { Link, useHistory, useLocation } from 'react-router-dom';
 import SearchBox from './common/SearchBox';
+import ScheduleIcon from '@material-ui/icons/Schedule';
 
 function ListItemLink(props) {
   const { icon, primary, to, selected } = props;
@@ -154,6 +155,11 @@ function Nav(props) {
         icon: <LabelIcon />,
         name: 'Fields',
         url: '/fields'
+      },
+      {
+        icon: <ScheduleIcon />,
+        name: 'Shifts',
+        url: '/shifts'
       }
     ]);
   }

@@ -148,7 +148,9 @@ function UserDetails(props) {
           <Tab label="Areas" />
         </Tabs>
         <Divider />
-        <Areas userId={userId} />
+        <div hidden={activeTab !== 1}>
+          <Areas userId={userId} />
+        </div>
       </div>
     </div>
   );

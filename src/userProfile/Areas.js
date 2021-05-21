@@ -4,14 +4,13 @@ import client from '../client';
 import useFetchMany from '../hooks/useFetchMany';
 import Progress from '../common/Progress';
 import Paper from '@material-ui/core/Paper';
-import Tooltip from '@material-ui/core/Tooltip';
 import IconButton from '@material-ui/core/IconButton';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import Button from '@material-ui/core/Button';
 import EditPeriod from './EditPeriod';
 import AddArea from '../user/AddArea';
-import { makeAreaDate, addDays } from '../utils/date';
+import { makeAreaDate } from '../utils/date';
 import Snackbar from '../common/Snackbar';
 
 const useStyles = makeStyles((theme) => ({
@@ -75,6 +74,8 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
+const formatter = new Intl.DateTimeFormat('default', { month: 'short' });
+
 function Areas(props) {
   const [year, setYear] = useState(new Date().getFullYear());
   const [months, setMonths] = useState([]);
@@ -103,7 +104,6 @@ function Areas(props) {
 
   useEffect(() => {
     const months = [];
-    const formatter = new Intl.DateTimeFormat('default', { month: 'short' });
     for (let i = 0; i < 12; i++) {
       const currentDate = new Date(year, i + 1, 0);
       const name = formatter.format(currentDate);
@@ -201,7 +201,7 @@ function Areas(props) {
     for (const period of periodsInYear) {
       if (period.startTime > start) {
         const days = daysBetween(start, period.startTime);
-        if (days > 1) {
+        if (days > 0) {
           sections.push({
             type: 'empty',
             start,
@@ -239,7 +239,7 @@ function Areas(props) {
         isAdmin: period.isAdmin,
         timeZone
       });
-      start = addDays(new Date(period.endTime), -1).getTime();
+      start = period.endTime;
     }
     if (sections.length == 0) {
       sections.push({
@@ -288,20 +288,16 @@ function Areas(props) {
       <div className={classes.toolbar}>
         <div className={classes.areaName} />
         <div className={classes.year}>{year}</div>
-        <Tooltip title="Previous year">
-          <IconButton 
-            className={classes.chevron}
-            onClick={() => setYear(year => year - 1)}>
-              <ChevronLeftIcon />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Next year">
-          <IconButton 
-            className={classes.chevron}
-            onClick={() => setYear(year => year + 1)}>
-              <ChevronRightIcon />
-          </IconButton>
-        </Tooltip>
+        <IconButton 
+          className={classes.chevron}
+          onClick={() => setYear(year => year - 1)}>
+            <ChevronLeftIcon />
+        </IconButton>
+        <IconButton 
+          className={classes.chevron}
+          onClick={() => setYear(year => year + 1)}>
+            <ChevronRightIcon />
+        </IconButton>
         <div className={classes.grow} />
         <Button 
           variant="contained" 

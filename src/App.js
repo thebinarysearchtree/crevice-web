@@ -19,6 +19,7 @@ import LocationList from './location/List';
 import AreaList from './area/List';
 import UserList from './user/List';
 import FieldList from './field/List';
+import ShiftList from './shift/List';
 import InviteSingleDetail from './user/InviteSingleDetail';
 import InviteMany from './user/InviteMany';
 import UploadPhotos from './user/UploadPhotos';
@@ -123,6 +124,11 @@ function App() {
             <Route exact path="/fields">
               <Nav>
                 <FieldList />
+              </Nav>
+            </Route>
+            <Route exact path="/shifts">
+              <Nav>
+                <ShiftList />
               </Nav>
             </Route>
           </Switch>

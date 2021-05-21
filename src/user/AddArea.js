@@ -47,9 +47,6 @@ const useStyles = makeStyles((theme) => ({
     display: 'flex',
     flexDirection: 'column'
   },
-  spacing: {
-    marginBottom: theme.spacing(2)
-  },
   email: {
     width: '416px'
   },
@@ -149,6 +146,19 @@ function AddArea(props) {
   const locationItems = locations.map((l, i) => <MenuItem key={l.id} value={i}>{l.name}</MenuItem>);
   const areaItems = locations[locationIndex].areas.map(a => <MenuItem key={a.id} value={a.id}>{a.abbreviation}</MenuItem>);
 
+  const locationSelect = locations.length > 1 ? (
+    <FormControl className={classes.spacing}>
+      <InputLabel id="location-label">Location</InputLabel>
+      <Select
+        labelId="location-label"
+        label="Location"
+        value={locationIndex !== -1 ? locationIndex : ''}
+        onChange={(e) => setLocationIndex(e.target.value)}>
+          {locationItems}
+      </Select>
+    </FormControl>
+  ) : null;
+
   let addButtonText;
   if (loading) {
     addButtonText = 'Saving...'
@@ -190,16 +200,7 @@ function AddArea(props) {
                 {roleItems}
             </Select>
         </FormControl>
-        <FormControl className={classes.spacing}>
-          <InputLabel id="location-label">Location</InputLabel>
-          <Select
-            labelId="location-label"
-            label="Location"
-            value={locationIndex !== -1 ? locationIndex : ''}
-            onChange={(e) => setLocationIndex(e.target.value)}>
-              {locationItems}
-          </Select>
-        </FormControl>
+        {locationSelect}
         <FormControl className={classes.spacing}>
           <InputLabel id="area-label">Areas</InputLabel>
           <Select

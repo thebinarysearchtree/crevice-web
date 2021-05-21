@@ -30,7 +30,7 @@ const makeAreaDate = (date, timeZone, addDays) => {
   return makePgDate(updatedDate, timeZone);
 }
 
-export { 
+export {
   makePgDate,
   addDays,
   makeAreaDate 
