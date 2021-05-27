@@ -4,14 +4,13 @@ import client from '../client';
 import useFetchMany from '../hooks/useFetchMany';
 import Progress from '../common/Progress';
 import Paper from '@material-ui/core/Paper';
-import IconButton from '@material-ui/core/IconButton';
-import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
-import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import Button from '@material-ui/core/Button';
 import EditPeriod from './EditPeriod';
 import AddArea from '../user/AddArea';
 import { makeAreaDate } from '../utils/date';
 import Snackbar from '../common/Snackbar';
+import Typography from '@material-ui/core/Typography';
+import CalendarButtons from '../common/CalendarButtons';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -56,28 +55,30 @@ const useStyles = makeStyles((theme) => ({
     width: '838px'
   },
   year: {
-    fontWeight: 600,
     marginRight: theme.spacing(1)
   },
   grow: {
     flexGrow: 1
-  },
-  chevron: {
-    width: '32px',
-    height: '32px'
   },
   disabledAreaName: {
     color: theme.palette.text.disabled
   },
   disabledPeriod: {
     opacity: 0.3
+  },
+  container: {
+    display: 'flex'
+  },
+  calendarButtons: {
+    marginRight: theme.spacing(1)
   }
 }));
 
 const formatter = new Intl.DateTimeFormat('default', { month: 'short' });
+const today = new Date();
 
 function Areas(props) {
-  const [year, setYear] = useState(new Date().getFullYear());
+  const [year, setYear] = useState(today.getFullYear());
   const [months, setMonths] = useState([]);
   const [areas, setAreas] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -287,18 +288,13 @@ function Areas(props) {
     <div className={classes.root}>
       <div className={classes.toolbar}>
         <div className={classes.areaName} />
-        <div className={classes.year}>{year}</div>
-        <IconButton 
-          className={classes.chevron}
-          onClick={() => setYear(year => year - 1)}>
-            <ChevronLeftIcon />
-        </IconButton>
-        <IconButton 
-          className={classes.chevron}
-          onClick={() => setYear(year => year + 1)}>
-            <ChevronRightIcon />
-        </IconButton>
+        <Typography className={classes.year} variant="h5">{year}</Typography>
         <div className={classes.grow} />
+        <CalendarButtons
+          className={classes.calendarButtons}
+          onBack={() => setYear(year => year - 1)}
+          onToday={() => setYear(today.getFullYear())}
+          onForward={() => setYear(year => year + 1)} />
         <Button 
           variant="contained" 
           color="primary"

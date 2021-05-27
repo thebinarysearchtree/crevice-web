@@ -161,7 +161,7 @@ function AddArea(props) {
 
   let addButtonText;
   if (loading) {
-    addButtonText = 'Saving...'
+    addButtonText = 'Saving...';
   }
   else if (selectedAreaIds.length === 0) {
     addButtonText = 'Add';

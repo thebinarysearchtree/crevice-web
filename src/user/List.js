@@ -22,8 +22,8 @@ import Avatar from '@material-ui/core/Avatar';
 import TableFilterCell from '../common/TableFilterCell';
 import RoleChip from '../common/RoleChip';
 import MorePopover from '../common/MorePopover';
-import ActionButton from '../common/ActionButton';
 import useMessage from '../hooks/useMessage';
+import Button from '@material-ui/core/Button';
 
 const useStyles = makeStyles(styles);
 
@@ -62,21 +62,6 @@ function List() {
     activeDate,
     activeState
   };
-
-  const actions = [
-    {
-      name: 'Invite one user',
-      url: '/users/inviteSingle'
-    },
-    {
-      name: 'Invite many users',
-      url: '/users/inviteMany'
-    },
-    {
-      name: 'Upload photos',
-      url: '/users/uploadPhotos'
-    }
-  ];
 
   const usersHandler = (result) => {
     const { users, count } = result;
@@ -191,7 +176,21 @@ function List() {
             placeholder="Search..."
             onChange={handleSearch} />
           <div className={classes.grow} />
-          <ActionButton actions={actions} />
+          <Button
+            className={classes.buttonMargin}
+            variant="contained"
+            component={RouterLink} 
+            to="/users/uploadPhotos">Upload photos</Button>
+          <Button
+            className={classes.buttonMargin}
+            variant="contained"
+            component={RouterLink} 
+            to="/users/inviteMany">Invite many</Button>
+          <Button
+            variant="contained"
+            color="primary"
+            component={RouterLink} 
+            to="/users/inviteSingle">Invite user</Button>
         </div>
         <TableContainer component={Paper}>
           <Table className={classes.table} aria-label="areas table">

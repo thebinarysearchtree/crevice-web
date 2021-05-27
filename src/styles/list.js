@@ -100,6 +100,9 @@ const styles = (theme) => ({
   },
   disabledRow: {
     color: theme.palette.text.disabled
+  },
+  buttonMargin: {
+    marginRight: theme.spacing(1)
   }
 });
 

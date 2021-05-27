@@ -12,9 +12,20 @@ const makePgDate = (date, timeZone) => {
   return `${datePart} ${timePart} ${timeZone}`;
 }
 
+const isWeekend = (date) => {
+  const day = date.getDay();
+  return day === 0 || day === 6;
+}
+
 const addDays = (date, days) => {
   const updatedDate = new Date(date);
   updatedDate.setDate(updatedDate.getDate() + days);
+  return updatedDate;
+}
+
+const addMonths = (date, months) => {
+  const updatedDate = new Date(date);
+  updatedDate.setMonth(updatedDate.getMonth() + months);
   return updatedDate;
 }
 
@@ -32,6 +43,8 @@ const makeAreaDate = (date, timeZone, addDays) => {
 
 export {
   makePgDate,
+  isWeekend,
   addDays,
+  addMonths,
   makeAreaDate 
 };

@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import useFetchMany from '../hooks/useFetchMany';
 import Progress from '../common/Progress';
-import InputLabel from '@material-ui/core/InputLabel';
-import MenuItem from '@material-ui/core/MenuItem';
-import FormControl from '@material-ui/core/FormControl';
-import Select from '@material-ui/core/Select';
 import Typography from '@material-ui/core/Typography';
 import Snackbar from '../common/Snackbar';
+import { addMonths, isWeekend } from '../utils/date';
+import CalendarButtons from '../common/CalendarButtons';
+import Nav from '../Nav';
+import AreasDrawer from './AreasDrawer';
+import AddShift from './AddShift';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -26,12 +27,6 @@ const useStyles = makeStyles((theme) => ({
     flexGrow: 1,
     paddingLeft: theme.spacing(6),
     paddingRight: theme.spacing(6)
-  },
-  heading: {
-    display: 'flex',
-    marginBottom: theme.spacing(2),
-    justifyContent: 'space-between',
-    alignItems: 'center'
   },
   input: {
     width: '230px',
@@ -88,29 +83,49 @@ const useStyles = makeStyles((theme) => ({
   },
   weekend: {
     backgroundColor: theme.palette.grey[200]
+  },
+  toolbar: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: theme.spacing(1)
   }
 }));
 
 const formatter = new Intl.DateTimeFormat('default', { month: 'long' });
 
 const startDate = new Date();
-const today = startDate.getDate();
 startDate.setDate(1);
 startDate.setHours(0, 0, 0, 0);
 
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+
 function List() {
   const [locations, setLocations] = useState([]);
-  const [locationIndex, setLocationIndex] = useState(0);
-  const [areaId, setAreaId] = useState(-1);
+  const [selectedArea, setSelectedArea] = useState(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [days, setDays] = useState([]);
   const [date, setDate] = useState(startDate);
+  const [selectedDay, setSelectedDay] = useState(null);
+  const [anchorEl, setAnchorEl] = useState(null);
+
+  const open = Boolean(anchorEl);
 
   const monthName = formatter.format(date);
   const year = date.getFullYear();
 
   const classes = useStyles();
+
+  const handleAreaClick = (area) => {
+    setSelectedArea(area);
+  }
+
+  const handleDayClick = (e, day) => {
+    setSelectedDay(day);
+    setAnchorEl(e.currentTarget);
+  }
 
   const makeDays = (monthStartDate) => {
     let startDay = monthStartDate.getDay();
@@ -120,17 +135,14 @@ function List() {
     let dayNumber = 1;
     while (daysInMonth > 0) {
       for (let i = 0; i < 7; i++) {
-        const isWeekend = i === 0 || i === 6;
-        if (daysInMonth > 0 && startDay <= 0) {
-          days.push({ type: 'day', dayNumber, isWeekend, shifts: [] });
-        }
-        else {
-          days.push({ type: 'empty', isWeekend });
-        }
-        startDay--;
-        if (startDay < 0) {
+        const day = new Date(year, date.getMonth(), dayNumber - startDay);
+        days.push({ date: day });
+        if (!startDay) {
           dayNumber++;
           daysInMonth--;
+        }
+        else {
+          startDay--;
         }
       }
     }
@@ -139,11 +151,11 @@ function List() {
 
   useEffect(() => {
     makeDays(date);
-  }, []);
+  }, [date]);
 
   const locationsHandler = (locations) => {
     setLocations(locations);
-    setAreaId(locations[0].areas[0].id);
+    setSelectedArea(locations[0].areas[0]);
   }
 
   useFetchMany(setLoading, [
@@ -154,68 +166,63 @@ function List() {
     return <Progress loading={loading} />;
   }
 
-  const locationItems = locations.map((l, i) => <MenuItem key={l.id} value={i}>{l.name}</MenuItem>);
-  const areaItems = locations[locationIndex].areas.map(a => <MenuItem key={a.id} value={a.id}>{a.abbreviation}</MenuItem>);
-
-  const locationSelect = locations.length > 1 ? (
-    <FormControl className={classes.input}>
-      <InputLabel id="location-label">Location</InputLabel>
-      <Select
-        labelId="location-label"
-        label="Location"
-        value={locationIndex !== -1 ? locationIndex : ''}
-        onChange={(e) => setLocationIndex(e.target.value)}>
-          {locationItems}
-      </Select>
-    </FormControl>
-  ) : null;
-
   const dayElements = days.map((day, i) => {
-    const { type, dayNumber, isWeekend } = day;
-    const dayClassName = isWeekend ? classes.weekend : classes.weekDay;
-    const numberClassName = dayNumber === today ? classes.today : '';
-    if (type === 'empty') {
+    const dayNumber = day.date.getDate();
+    const dayClassName = isWeekend(day.date) ? classes.weekend : classes.weekDay;
+    const numberClassName = day.date.getTime() === today.getTime() ? classes.today : '';
+    if (day.date.getMonth() !== date.getMonth()) {
       return <div key={`e${i}`} className={dayClassName}></div>;
     }
     return (
-      <div key={`d${dayNumber}`} className={dayClassName}>
-        <div className={classes.dayNumber}><div className={numberClassName}>{dayNumber}</div></div>
+      <div 
+        key={`d${dayNumber}`} 
+        className={dayClassName}
+        onClick={(e) => handleDayClick(e, day)}>
+          <div className={classes.dayNumber}>
+            <div className={numberClassName}>{dayNumber}</div>
+          </div>
       </div>
     );
   });
   const calendar = <div className={classes.calendar}>{dayElements}</div>;
+  const drawer = (
+    <AreasDrawer 
+      selectedArea={selectedArea} 
+      handleAreaClick={handleAreaClick} 
+      locations={locations} />
+  );
 
   return (
-    <div className={classes.root}>
-      <div className={classes.content}>
-        <div className={classes.heading}>
-          <Typography variant="h5">Shifts</Typography>
+    <Nav drawer={drawer}>
+      <div className={classes.root}>
+        <div className={classes.content}>
+          <div className={classes.toolbar}>
+            <Typography variant="h4">{`${monthName} ${year}`}</Typography>
+            <CalendarButtons
+              onBack={() => setDate(date => addMonths(date, -1))}
+              onToday={() => setDate(startDate)}
+              onForward={() => setDate(date => addMonths(date, 1))} />
+          </div>
+          <div className={classes.dayNames}>
+            <div>Sun</div>
+            <div>Mon</div>
+            <div>Tue</div>
+            <div>Wed</div>
+            <div>Thu</div>
+            <div>Fri</div>
+            <div>Sat</div>
+          </div>
+          {calendar}
+          <AddShift
+            day={selectedDay}
+            anchorEl={anchorEl}
+            setAnchorEl={setAnchorEl}
+            open={open}
+            setMessage={setMessage} />
+          <Snackbar message={message} setMessage={setMessage} />
         </div>
-        {locationSelect}
-        <FormControl className={classes.input}>
-          <InputLabel id="area-label">Area</InputLabel>
-          <Select
-            labelId="area-label"
-            label="Area"
-            value={areaId}
-            onChange={(e) => setAreaId(e.target.value)}>
-              {areaItems}
-          </Select>
-        </FormControl>
-        <Typography variant="h6">{`${monthName} ${year}`}</Typography>
-        <div className={classes.dayNames}>
-          <div>Sun</div>
-          <div>Mon</div>
-          <div>Tue</div>
-          <div>Wed</div>
-          <div>Thu</div>
-          <div>Fri</div>
-          <div>Sat</div>
-        </div>
-        {calendar}
-        <Snackbar message={message} setMessage={setMessage} />
       </div>
-    </div>
+    </Nav>
   );
 }
 

@@ -25,6 +25,7 @@ import InviteMany from './user/InviteMany';
 import UploadPhotos from './user/UploadPhotos';
 import UserDetails from './userProfile/UserDetails';
 import { useAuth, ProvideAuth } from './auth';
+import MainDrawer from './MainDrawer';
 
 function PrivateRoute({ children, ...rest }) {
   const auth = useAuth();
@@ -58,6 +59,8 @@ function ScrollToTop() {
   return null;
 }
 
+const drawer = <MainDrawer />;
+
 function App() {
   return (
     <ThemeProvider theme={theme}>
@@ -82,54 +85,52 @@ function App() {
               <Invite />
             </Route>
             <Route exact path="/roles">
-              <Nav>
+              <Nav drawer={drawer}>
                 <RoleList />
               </Nav>
             </Route>
             <Route exact path="/locations">
-              <Nav>
+              <Nav drawer={drawer}>
                 <LocationList />
               </Nav>
             </Route>
             <Route exact path="/areas">
-              <Nav>
+              <Nav drawer={drawer}>
                 <AreaList />
               </Nav>
             </Route>
             <Route exact path="/users">
-              <Nav>
+              <Nav drawer={drawer}>
                 <UserList />
               </Nav>
             </Route>
             <Route exact path="/users/inviteSingle">
-              <Nav appBarOnly>
+              <Nav>
                 <InviteSingleDetail />
               </Nav>
             </Route>
             <Route exact path="/users/inviteMany">
-              <Nav appBarOnly>
+              <Nav>
                 <InviteMany />
               </Nav>
             </Route>
             <Route exact path="/users/uploadPhotos">
-              <Nav appBarOnly>
+              <Nav>
                 <UploadPhotos />
               </Nav>
             </Route>
             <Route path="/users/:userId">
-              <Nav appBarOnly>
+              <Nav>
                 <UserDetails />
               </Nav>
             </Route>
             <Route exact path="/fields">
-              <Nav>
+              <Nav drawer={drawer}>
                 <FieldList />
               </Nav>
             </Route>
             <Route exact path="/shifts">
-              <Nav>
-                <ShiftList />
-              </Nav>
+              <ShiftList />
             </Route>
           </Switch>
         </Router>
