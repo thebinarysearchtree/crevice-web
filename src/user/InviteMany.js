@@ -22,7 +22,7 @@ import TableRow from '@material-ui/core/TableRow';
 import AreasTable from './AreasTable';
 import AddArea from './AddArea';
 import Paper from '@material-ui/core/Paper';
-import { makeAreaDate } from '../utils/date';
+import { makeAreaDate, overlaps } from '../utils/date';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -127,18 +127,10 @@ function InviteMany() {
   const isDisabled = uploading || selectedFiles.length === 0 || userAreas.length === 0;
 
   const checkOverlapping = (suppliedUserAreas) => {
-    let overlapping = false;
-    for (const userArea of suppliedUserAreas) {
-      const area = userArea.area;
-      overlapping = userAreas.some(ua => 
-        ua.area.id === area.id &&
-        (!userArea.endTime || ua.startTime.getTime() <= userArea.endTime.getTime()) &&
-        (!ua.endTime || ua.endTime.getTime() >= userArea.startTime.getTime()));
-      if (overlapping) {
-        break;
-      }
-    }
-    return overlapping;
+    return suppliedUserAreas.some(supplied => {
+      const existing = userAreas.filter(ua => ua.area.id === supplied.area.id);
+      return overlaps(supplied, existing);
+    });
   }
 
   const handleAddAreas = (suppliedUserAreas) => {

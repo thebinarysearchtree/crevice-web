@@ -14,7 +14,7 @@ import BackButton from '../common/BackButton';
 import useFetchMany from '../hooks/useFetchMany';
 import Progress from '../common/Progress';
 import CustomField from '../field/CustomField';
-import { makeAreaDate } from '../utils/date';
+import { makeAreaDate, overlaps } from '../utils/date';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -156,18 +156,10 @@ function InviteSingleDetail() {
   }
 
   const checkOverlapping = (suppliedUserAreas) => {
-    let overlapping = false;
-    for (const userArea of suppliedUserAreas) {
-      const area = userArea.area;
-      overlapping = userAreas.some(ua => 
-        ua.area.id === area.id &&
-        (!userArea.endTime || ua.startTime.getTime() <= userArea.endTime.getTime()) &&
-        (!ua.endTime || ua.endTime.getTime() >= userArea.startTime.getTime()));
-      if (overlapping) {
-        break;
-      }
-    }
-    return overlapping;
+    return suppliedUserAreas.some(supplied => {
+      const existing = userAreas.filter(ua => ua.area.id === supplied.area.id);
+      return overlaps(supplied, existing);
+    });
   }
 
   const handleAddAreas = (suppliedUserAreas) => {

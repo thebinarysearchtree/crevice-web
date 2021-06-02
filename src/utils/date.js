@@ -12,6 +12,19 @@ const makePgDate = (date, timeZone) => {
   return `${datePart} ${timePart} ${timeZone}`;
 }
 
+const overlaps = (range, ranges) => {
+  const { startTime, endTime } = range;
+  return ranges.some(r => 
+    (!endTime || r.startTime.getTime() <= endTime.getTime()) &&
+    (!r.endTime || r.endTime.getTime() >= startTime.getTime()));
+}
+
+const getTimeString = (date) => {
+  const hour = date.getHours().toString().padStart(2, '0');
+  const minute = date.getMinutes().toString().padStart(2, '0');
+  return `${hour}:${minute}`;
+}
+
 const isWeekend = (date) => {
   const day = date.getDay();
   return day === 0 || day === 6;
@@ -43,6 +56,8 @@ const makeAreaDate = (date, timeZone, addDays) => {
 
 export {
   makePgDate,
+  overlaps,
+  getTimeString,
   isWeekend,
   addDays,
   addMonths,

@@ -19,6 +19,8 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import { TextField } from '@material-ui/core';
+import client from '../client';
+import { makePgDate } from '../utils/date';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -81,13 +83,12 @@ function AddShift(props) {
   const [loading, setLoading] = useState(false);
 
   const capacityError = capacity && (capacity < 0 || !Number.isInteger(Number(capacity)));
-  const timeError = startTime && startTime === endTime;
 
   const classes = useStyles();
 
-  const { day, open, anchorEl, setAnchorEl, setMessage } = props;
+  const { area, day, handleAddShift, open, anchorEl, setAnchorEl, setMessage } = props;
 
-  const isDisabled = loading || !startTime || !endTime || !capacity || capacityError || timeError;
+  const isDisabled = loading || !startTime || !endTime || !capacity || capacityError;
 
   useEffect(() => {
     if (open) {
@@ -97,10 +98,42 @@ function AddShift(props) {
     }
   }, [open]);
 
-  const addShift = async (e) => {
+  const makeFullDate = (date, timeString) => {
+    const fullDate = new Date(date);
+    const [hours, minutes] = timeString.split(':').map(t => parseInt(t, 10));
+    fullDate.setHours(hours, minutes, 0, 0);
+    return fullDate;
+  }
+
+  const saveShift = async (e) => {
     e.preventDefault();
     setAnchorEl(null);
-    setMessage('Shift added');
+    const start = makeFullDate(day.date, startTime);
+    const end = makeFullDate(day.date, endTime);
+    const pgStartTime = makePgDate(start, area.timeZone);
+    const pgEndTime = makePgDate(end, area.timeZone);
+    const shift = {
+      areaId: area.id,
+      startTime: pgStartTime,
+      endTime: pgEndTime,
+      capacity
+    };
+    const response = await client.postData('/shifts/insert', shift);
+    if (response.ok) {
+      const { shiftId } = await response.json();
+      const shift = {
+        id: shiftId,
+        areaId: area.id,
+        startTime: start,
+        endTime: end,
+        capacity
+      };
+      handleAddShift(shift);
+      setMessage('Shift added');
+    }
+    else {
+      setMessage('Something went wrong');
+    }
   }
 
   if (!day) {
@@ -113,12 +146,12 @@ function AddShift(props) {
 
   const leftPopover = date.getDay() > 3;
 
-  let addButtonText;
+  let buttonText;
   if (loading) {
-    addButtonText = 'Saving...';
+    buttonText = 'Saving...';
   }
   else {
-    addButtonText = 'Add shift';
+    buttonText = 'Add shift';
   }
 
   return (
@@ -149,8 +182,6 @@ function AddShift(props) {
           type="time" 
           label="End time"
           InputLabelProps={{ shrink: true }}
-          error={timeError}
-          helperText={timeError ? 'The start and end time cannot be the same' : ''}
           value={endTime}
           onChange={(e) => setEndTime(e.target.value)} />
         <TextField
@@ -169,7 +200,7 @@ function AddShift(props) {
           variant="contained"
           color="primary"
           disabled={isDisabled}
-          onClick={addShift}>{addButtonText}</Button>
+          onClick={saveShift}>{buttonText}</Button>
       </DialogActions>
     </Popover>
   );

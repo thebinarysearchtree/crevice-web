@@ -12,6 +12,7 @@ import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import Divider from '@material-ui/core/Divider';
 import Areas from './Areas';
+import Shifts from './Shifts';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -25,7 +26,7 @@ const useStyles = makeStyles((theme) => ({
     paddingRight: theme.spacing(6),
     paddingTop: theme.spacing(3),
     paddingBottom: theme.spacing(3),
-    height: '100vh',
+    minHeight: '100vh',
     backgroundColor: 'white'
   },
   content: {
@@ -148,6 +149,9 @@ function UserDetails(props) {
           <Tab label="Areas" />
         </Tabs>
         <Divider />
+        <div hidden={activeTab !== 0}>
+          <Shifts userId={userId} />
+        </div>
         <div hidden={activeTab !== 1}>
           <Areas userId={userId} />
         </div>
