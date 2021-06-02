@@ -114,8 +114,8 @@ function List() {
   }
 
   const deleteUser = async (userId) => {
-    const result = await client.postData('/users/remove', { userId });
-    if (result) {
+    const response = await client.postData('/users/remove', { userId });
+    if (response.ok) {
       setUsers(users => users.filter(u => u.id !== userId));
       setMessage('User deleted');
     }
