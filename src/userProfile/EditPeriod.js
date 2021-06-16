@@ -20,8 +20,8 @@ import FormHelperText from '@material-ui/core/FormHelperText';
 const useStyles = makeStyles((theme) => ({
   root: {
     display: 'flex',
-    flexDirection: 'column',
-    width: '330px'
+    alignItems: 'baseline',
+    width: '375px'
   },
   spacing: {
     marginBottom: '10px'
@@ -36,6 +36,10 @@ const useStyles = makeStyles((theme) => ({
   },
   adminIcon: {
     alignSelf: 'center'
+  },
+  to: {
+    marginLeft: '12px',
+    marginRight: '12px'
   }
 }));
 
@@ -191,6 +195,7 @@ function EditPeriod(props) {
             KeyboardButtonProps={{ 'aria-label': 'change date' }}
             autoOk />
         </MuiPickersUtilsProvider>
+        <Typography className={classes.to} variant="body1">to</Typography>
         <MuiPickersUtilsProvider utils={DateFnsUtils}>
           <KeyboardDatePicker
             className={classes.spacing}
@@ -199,7 +204,7 @@ function EditPeriod(props) {
             format="dd/MM/yyyy"
             margin="none"
             id="end-time"
-            label="End date (optional)"
+            label="End date"
             value={endTime}
             onChange={(d) => setEndTime(d)}
             KeyboardButtonProps={{ 'aria-label': 'change date' }}

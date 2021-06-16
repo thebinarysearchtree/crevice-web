@@ -148,7 +148,7 @@ function InviteSingleDetail() {
       });
     const response = await client.postData('/users/inviteUsers', { users: [{ ...user, userAreas: areas, userFields }] });
     if (response.ok) {
-      history.push('/users', { message: 'User created and invitation sent' });
+      history.push('/users', { message: 'Invitation sent' });
     }
     else {
       setMessage('Something went wrong');

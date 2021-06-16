@@ -128,6 +128,7 @@ function List() {
   const [date, setDate] = useState(startDate);
   const [selectedDay, setSelectedDay] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
+  const [roles, setRoles] = useState([]);
 
   const open = Boolean(anchorEl);
 
@@ -199,9 +200,11 @@ function List() {
     setLocations(locations);
     setSelectedArea(locations[0].areas[0]);
   }
+  const rolesHandler = (roles) => setRoles(roles);
 
   useFetchMany(setLoading, [
-    { url: '/areas/getWithLocation', handler: locationsHandler }
+    { url: '/areas/getWithLocation', handler: locationsHandler },
+    { url: '/roles/getSelectListItems', handler: rolesHandler }
   ]);
 
   if (loading) {
@@ -217,7 +220,6 @@ function List() {
     }
     const shifts = day.shifts.map(shift => {
       const { id, startTime, endTime, capacity, booked } = shift;
-      console.log(`${booked} ${capacity}`);
       const start = getTimeString(startTime);
       const end = getTimeString(endTime);
       const time = `${start} - ${end}`;
@@ -282,6 +284,7 @@ function List() {
             area={selectedArea}
             day={selectedDay}
             handleAddShift={handleAddShift}
+            roles={roles}
             anchorEl={anchorEl}
             setAnchorEl={setAnchorEl}
             open={open}

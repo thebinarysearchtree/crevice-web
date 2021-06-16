@@ -13,7 +13,6 @@ import Paper from '@material-ui/core/Paper';
 import BackButton from '../common/BackButton';
 import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
 import Tooltip from '@material-ui/core/Tooltip';
-import EditIcon from '@material-ui/icons/Edit';
 
 const useStyles = makeStyles((theme) => ({
   root: {
