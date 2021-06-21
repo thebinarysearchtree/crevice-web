@@ -42,6 +42,12 @@ const addMonths = (date, months) => {
   return updatedDate;
 }
 
+const addYears = (date, years) => {
+  const updatedDate = new Date(date);
+  updatedDate.setFullYear(updatedDate.getFullYear() + years);
+  return updatedDate;
+}
+
 const makeAreaDate = (date, timeZone, addDays) => {
   if (!date) {
     return null;
@@ -61,5 +67,6 @@ export {
   isWeekend,
   addDays,
   addMonths,
+  addYears,
   makeAreaDate 
 };

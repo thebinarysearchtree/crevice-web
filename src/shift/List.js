@@ -259,6 +259,17 @@ function List() {
       locations={locations} />
   );
 
+  const addShift = selectedDay ? (
+    <AddShift
+      area={selectedArea}
+      day={selectedDay}
+      handleAddShift={handleAddShift}
+      roles={roles}
+      anchorEl={anchorEl}
+      setAnchorEl={setAnchorEl}
+      open={open}
+      setMessage={setMessage} />) : null;
+
   return (
     <Nav drawer={drawer}>
       <div className={classes.root}>
@@ -280,15 +291,7 @@ function List() {
             <div>Sat</div>
           </div>
           {calendar}
-          <AddShift
-            area={selectedArea}
-            day={selectedDay}
-            handleAddShift={handleAddShift}
-            roles={roles}
-            anchorEl={anchorEl}
-            setAnchorEl={setAnchorEl}
-            open={open}
-            setMessage={setMessage} />
+          {addShift}
           <Snackbar message={message} setMessage={setMessage} />
         </div>
       </div>
