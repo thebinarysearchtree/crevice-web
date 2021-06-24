@@ -2,8 +2,8 @@ import { createMuiTheme } from '@material-ui/core/styles';
 
 const theme = createMuiTheme({
   props: {
-    MuiButton: {
-      disableElevation: true
+    MuiMenu: {
+      getContentAnchorEl: () => null
     }
   },
   overrides: {

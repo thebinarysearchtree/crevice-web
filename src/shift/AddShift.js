@@ -22,7 +22,6 @@ import RoleChip from '../common/RoleChip';
 import RepeatSelector from './RepeatSelector';
 import NotesChip from './NotesChip';
 import SettingsButton from './SettingsButton';
-import { v4 as uuid } from 'uuid';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -133,7 +132,7 @@ const useStyles = makeStyles((theme) => ({
     flexGrow: 1
   },
   addedCapacity: {
-    width: '40px',
+    minWidth: '40px',
     cursor: 'pointer'
   },
   editCapacity: {
@@ -168,7 +167,6 @@ function AddShift(props) {
   const [settings, setSettings] = useState(defaultSettings);
   const [loading, setLoading] = useState(false);
   const [shiftRoles, setShiftRoles] = useState([]);
-  const [shiftRolesError, setShiftRolesError] = useState(false);
   const [breakMinutes, setBreakMinutes] = useState(0);
   const [notes, setNotes] = useState('');
   const [editBreakMinutes, setEditBreakMinutes] = useState(false);
@@ -180,17 +178,9 @@ function AddShift(props) {
   const breakMinutesError = breakMinutes < 0 || !Number.isInteger(Number(breakMinutes));
   const editError = editIndex !== -1 && (shiftRoles[editIndex].capacity === '' || shiftRoles[editIndex].capacity < 0 || !Number.isInteger(Number(shiftRoles[editIndex].capacity)));
 
-  let errorText = '';
-  if (capacityError) {
-    errorText = 'Must be a non-negative integer';
-  }
-  else if (shiftRolesError) {
-    errorText = 'This role has already been added';
-  }
-
   const classes = useStyles();
 
-  const { area, day, handleAddShift, roles, open, anchorEl, setAnchorEl, setMessage } = props;
+  const { area, day, makeDays, roles, open, anchorEl, setAnchorEl, setMessage } = props;
   
   const { date } = day;
 
@@ -254,24 +244,19 @@ function AddShift(props) {
     }
   }
 
-  const addShiftRole = () => {
+  const addShiftRole = (e) => {
+    e.preventDefault();
     const role = roles[roleIndex];
-    const duplicateRoles = shiftRoles.some(sr => sr.roleId === role.id);
-    if (duplicateRoles) {
-      setShiftRolesError(true);
-    }
-    else {
-      setShiftRoles(shiftRoles => {
-        const shiftRole = {
-          roleId: role.id,
-          role,
-          capacity,
-          ...settings
-        };
-        return [...shiftRoles, shiftRole];
-      });
-      clearRoleFields();
-    }
+    setShiftRoles(shiftRoles => {
+      const shiftRole = {
+        roleId: role.id,
+        role,
+        capacity,
+        ...settings
+      };
+      return [...shiftRoles, shiftRole];
+    });
+    clearRoleFields();
   }
 
   const saveShift = async (e) => {
@@ -286,8 +271,7 @@ function AddShift(props) {
     }
     const pgStartTime = makePgDate(start, area.timeZone);
     const pgEndTime = makePgDate(end, area.timeZone);
-    const seriesId = repeatWeeks ? uuid() : null;
-    const repeatTimes = [];
+    const times = [{ startTime: pgStartTime, endTime: pgEndTime }];
     if (repeatWeeks) {
       let repeatDate = day.date;
       while (repeatDate.getTime() < repeatUntil.getTime()) {
@@ -296,17 +280,14 @@ function AddShift(props) {
         const end = makeFullDate(overnight ? addDays(repeatDate, 1) : repeatDate, endTime);
         const pgStartTime = makePgDate(start, area.timeZone);
         const pgEndTime = makePgDate(end, area.timeZone);
-        repeatTimes.push({ startTime: pgStartTime, endTime: pgEndTime });
+        times.push({ startTime: pgStartTime, endTime: pgEndTime });
       }
     }
     const shift = {
       areaId: area.id,
-      startTime: pgStartTime,
-      endTime: pgEndTime,
+      times,
       breakMinutes,
-      notes,
-      seriesId,
-      repeatTimes
+      notes
     };
     const adjustedShiftRoles = shiftRoles.map(sr => {
       const cancelBeforeMinutes = parseInt(sr.cancelBeforeHours * 60, 10);
@@ -315,16 +296,8 @@ function AddShift(props) {
     });
     const response = await client.postData('/shifts/insert', { shift, shiftRoles: adjustedShiftRoles });
     if (response.ok) {
-      const { shiftId } = await response.json();
-      const shift = {
-        id: shiftId,
-        areaId: area.id,
-        startTime: start,
-        endTime: end,
-        capacity
-      };
-      handleAddShift(shift);
-      setMessage('Shift added');
+      makeDays();
+      setMessage(times.length === 1 ? 'Shift added' : `${times.length} shifts added`);
     }
     else {
       setMessage('Something went wrong');
@@ -343,7 +316,7 @@ function AddShift(props) {
     buttonText = 'Add shift';
   }
 
-  const roleItems = roles.map((r, i) => <MenuItem key={r.id} value={i}>{r.name}</MenuItem>);
+  const roleItems = roles.map((r, i) => <MenuItem key={r.id} value={i} disabled={shiftRoles.some(sr => sr.roleId === r.id)}>{r.name}</MenuItem>);
 
   const addedRoles = shiftRoles.map((shiftRole, i) => {
     const { roleId, role, capacity, ...settings } = shiftRole;
@@ -371,8 +344,8 @@ function AddShift(props) {
         onClick={() => setEditIndex(i)}>{capacity}</div>
     );
     return (
-      <div className={classes.addedRoleContainer}>
-        <div key={role.id} className={classes.addedRole}>
+      <div key={role.id} className={classes.addedRoleContainer}>
+        <div className={classes.addedRole}>
           <div className={classes.addedChip}><RoleChip label={role.name} colour={role.colour} /></div>
           {capacityElement}
           <div>
@@ -451,13 +424,12 @@ function AddShift(props) {
           <NotesChip notes={notes} setNotes={setNotes} />
         </div>
         <FormHelperText className={classes.breakMinutesError} error={true}>{breakMinutesError ? 'Must be a non-negative integer' : breakMinutesErrorText}</FormHelperText>
-        <div className={classes.roleContainer}>
+        <form className={classes.roleContainer} noValidate>
           <FormControl className={classes.role}>
-            <InputLabel error={shiftRolesError} id="role-label">Role</InputLabel>
+            <InputLabel id="role-label">Role</InputLabel>
             <Select
               labelId="role-label"
               label="Role"
-              error={shiftRolesError}
               value={roleIndex === -1 ? '' : roleIndex}
               onChange={(e) => setRoleIndex(e.target.value)}>
                 {roleItems}
@@ -473,13 +445,13 @@ function AddShift(props) {
             onChange={(e) => setCapacity(e.target.value)} />
           <Button 
             className={classes.addButton}
+            type="submit"
             variant="contained" 
             onClick={addShiftRole}
-            disabled={addRoleIsDisabled}
-            onBlur={() => setShiftRolesError(false)}>Add</Button>
-          <SettingsButton settings={settings} setSettings={setSettings} />
-        </div>
-        <FormHelperText className={classes.errorMessage} error={true}>{errorText}</FormHelperText>
+            disabled={addRoleIsDisabled}>Add</Button>
+          <SettingsButton settings={settings} setSettings={setSettings} disabled={addRoleIsDisabled} />
+        </form>
+        <FormHelperText className={classes.errorMessage} error={true}>{capacityError ? 'Must be a non-negative integer' : ''}</FormHelperText>
         {list}
         <RepeatSelector
           date={date}

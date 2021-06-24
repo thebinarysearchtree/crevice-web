@@ -15,9 +15,8 @@ const drawerWidth = 240;
 
 const useStyles = makeStyles((theme) => ({
   root: {
-    backgroundColor: 'white',
+    backgroundColor: theme.palette.grey[600],
     boxShadow: 'none',
-    borderBottom: `1px solid ${theme.palette.divider}`,
     zIndex: theme.zIndex.drawer + 1
   },
   grow: {
@@ -31,10 +30,13 @@ const useStyles = makeStyles((theme) => ({
   },
   appName: {
     fontWeight: 600,
-    color: '#282828'
+    color: 'white'
   },
   link: {
     textDecoration: 'none'
+  },
+  icon: {
+    color: 'white'
   }
 }));
 
@@ -93,7 +95,7 @@ function AppBar() {
               aria-controls={menuId}
               aria-haspopup="true"
               onClick={handleProfileMenuOpen}>
-                <AccountCircle />
+                <AccountCircle className={classes.icon} />
             </IconButton>
           </div>
         </Toolbar>

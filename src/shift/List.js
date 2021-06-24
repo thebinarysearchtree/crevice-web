@@ -6,11 +6,13 @@ import Typography from '@material-ui/core/Typography';
 import Snackbar from '../common/Snackbar';
 import { addMonths, isWeekend, getTimeString, makePgDate, addDays } from '../utils/date';
 import CalendarButtons from '../common/CalendarButtons';
-import Nav from '../Nav';
-import AreasDrawer from './AreasDrawer';
 import AddShift from './AddShift';
-import Paper from '@material-ui/core/Paper';
 import client from '../client';
+import Button from '@material-ui/core/Button';
+import Menu from '@material-ui/core/Menu';
+import MenuItem from '@material-ui/core/MenuItem';
+import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
+import AreaButton from './AreaButton';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -107,6 +109,19 @@ const useStyles = makeStyles((theme) => ({
   },
   partial: {
     backgroundColor: '#bbdefb'
+  },
+  grow: {
+    flexGrow: 1
+  },
+  areaButton: {
+    width: '150px',
+    marginRight: theme.spacing(1)
+  },
+  areaButtonLabel: {
+    overflow: 'hidden',
+    whiteSpace: 'nowrap',
+    textOverflow: 'ellipsis',
+    width: '100px'
   }
 }));
 
@@ -154,7 +169,8 @@ function List() {
     setDays(updatedDays);
   }
 
-  const makeDays = async (monthStartTime) => {
+  const makeDays = async () => {
+    const monthStartTime = date;
     const monthEndTime = new Date(monthStartTime);
     monthEndTime.setMonth(monthEndTime.getMonth() + 1);
     monthEndTime.setDate(0);
@@ -192,7 +208,7 @@ function List() {
 
   useEffect(() => {
     if (selectedArea) {
-      makeDays(date);
+      makeDays();
     }
   }, [date, selectedArea]);
 
@@ -252,18 +268,12 @@ function List() {
     );
   });
   const calendar = <div className={classes.calendar}>{dayElements}</div>;
-  const drawer = (
-    <AreasDrawer 
-      selectedArea={selectedArea} 
-      handleAreaClick={handleAreaClick} 
-      locations={locations} />
-  );
-
+  
   const addShift = selectedDay ? (
     <AddShift
       area={selectedArea}
       day={selectedDay}
-      handleAddShift={handleAddShift}
+      makeDays={makeDays}
       roles={roles}
       anchorEl={anchorEl}
       setAnchorEl={setAnchorEl}
@@ -271,31 +281,31 @@ function List() {
       setMessage={setMessage} />) : null;
 
   return (
-    <Nav drawer={drawer}>
-      <div className={classes.root}>
-        <div className={classes.content}>
-          <div className={classes.toolbar}>
-            <Typography variant="h4">{`${monthName} ${year}`}</Typography>
-            <CalendarButtons
-              onBack={() => setDate(date => addMonths(date, -1))}
-              onToday={() => setDate(startDate)}
-              onForward={() => setDate(date => addMonths(date, 1))} />
-          </div>
-          <div className={classes.dayNames}>
-            <div>Sun</div>
-            <div>Mon</div>
-            <div>Tue</div>
-            <div>Wed</div>
-            <div>Thu</div>
-            <div>Fri</div>
-            <div>Sat</div>
-          </div>
-          {calendar}
-          {addShift}
-          <Snackbar message={message} setMessage={setMessage} />
+    <div className={classes.root}>
+      <div className={classes.content}>
+        <div className={classes.toolbar}>
+          <Typography variant="h4">{`${monthName} ${year}`}</Typography>
+          <div className={classes.grow} />
+          <AreaButton selectedArea={selectedArea} setSelectedArea={setSelectedArea} locations={locations} />
+          <CalendarButtons
+            onBack={() => setDate(date => addMonths(date, -1))}
+            onToday={() => setDate(startDate)}
+            onForward={() => setDate(date => addMonths(date, 1))} />
         </div>
+        <div className={classes.dayNames}>
+          <div>Sun</div>
+          <div>Mon</div>
+          <div>Tue</div>
+          <div>Wed</div>
+          <div>Thu</div>
+          <div>Fri</div>
+          <div>Sat</div>
+        </div>
+        {calendar}
+        {addShift}
+        <Snackbar message={message} setMessage={setMessage} />
       </div>
-    </Nav>
+    </div>
   );
 }
 

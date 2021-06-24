@@ -57,25 +57,19 @@ function EditPeriod(props) {
   const classes = useStyles();
 
   useEffect(() => {
-    if (selectedPeriod) {
-      const { start, end, isAdmin } = selectedPeriod;
+    const { start, end, isAdmin } = selectedPeriod;
 
-      const startTime = new Date(start);
-      const endTime = end ? addDays(new Date(end), -1) : null;
+    const startTime = new Date(start);
+    const endTime = end ? addDays(new Date(end), -1) : null;
 
-      setStartTime(startTime);
-      setEndTime(endTime);
-      setIsAdmin(isAdmin);
-    }
+    setStartTime(startTime);
+    setEndTime(endTime);
+    setIsAdmin(isAdmin);
   }, [selectedPeriod]);
 
   const handleClose = () => {
     setSelectedPeriod(null);
     setAnchorEl(null);
-  }
-
-  if (!selectedPeriod) {
-    return null;
   }
 
   const { id, userId, areaId, roleId, roleName, timeZone } = selectedPeriod;
@@ -162,6 +156,20 @@ function EditPeriod(props) {
     </Tooltip>
   ) : null;
 
+  const primaryButton = !startTime && !endTime ? (
+    <Button 
+      onClick={removePeriod} 
+      variant="contained" 
+      color="secondary">Delete</Button>
+  ) : (
+    <Button 
+      onBlur={() => setOverlappingError(false)}
+      onClick={updatePeriod} 
+      variant="contained" 
+      color="primary"
+      disabled={isDisabled}>Update</Button>
+  );
+
   return (
     <Popover 
       className={classes.popover}
@@ -213,15 +221,8 @@ function EditPeriod(props) {
         <FormHelperText error={overlappingError}>{overlappingError ? 'Areas cannot have overlapping periods' : ''}</FormHelperText>
       </DialogContent>
       <DialogActions>
-        <Button 
-          onClick={removePeriod} 
-          color="secondary">Delete</Button>
-        <Button 
-          onBlur={() => setOverlappingError(false)}
-          onClick={updatePeriod} 
-          variant="contained" 
-          color="primary"
-          disabled={isDisabled}>Update</Button>
+        <Button color="primary" onClick={handleClose}>Cancel</Button>
+        {primaryButton}
       </DialogActions>
     </Popover>
   );

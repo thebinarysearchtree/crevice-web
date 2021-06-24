@@ -284,6 +284,18 @@ function Areas(props) {
     );
   });
 
+  const editPeriod = selectedPeriod ? (
+    <EditPeriod 
+      open={periodOpen}
+      anchorEl={periodEl}
+      setAnchorEl={setPeriodEl}
+      selectedPeriod={selectedPeriod}
+      setSelectedPeriod={setSelectedPeriod}
+      checkOverlapping={checkOverlappingPeriod}
+      setAreas={setAreas}
+      setMessage={setMessage} />
+  ) : null;
+
   return (
     <div className={classes.root}>
       <div className={classes.toolbar}>
@@ -314,15 +326,7 @@ function Areas(props) {
         anchorEl={buttonEl}
         setAnchorEl={setButtonEl}
         setMessage={setMessage} />
-      <EditPeriod 
-        open={periodOpen}
-        anchorEl={periodEl}
-        setAnchorEl={setPeriodEl}
-        selectedPeriod={selectedPeriod}
-        setSelectedPeriod={setSelectedPeriod}
-        checkOverlapping={checkOverlappingPeriod}
-        setAreas={setAreas}
-        setMessage={setMessage} />
+      {editPeriod}
       <Snackbar message={message} setMessage={setMessage} />
     </div>
   );

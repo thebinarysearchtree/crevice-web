@@ -130,7 +130,9 @@ function App() {
               </Nav>
             </Route>
             <Route exact path="/shifts">
-              <ShiftList />
+              <Nav drawer={drawer}>
+                <ShiftList />
+              </Nav>
             </Route>
           </Switch>
         </Router>

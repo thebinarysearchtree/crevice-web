@@ -86,7 +86,6 @@ function List() {
         <div className={classes.content}>
           <Progress loading={loading} />
         </div>
-        <div className={classes.rightSection} />
       </div>
     );
   }
@@ -164,7 +163,6 @@ function List() {
           setMessage={setMessage} />
         <Snackbar message={message} setMessage={setMessage} />
       </div>
-      <div className={classes.rightSection} />
     </div>
   );
 }

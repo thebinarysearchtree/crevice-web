@@ -16,13 +16,6 @@ const styles = (theme) => ({
     paddingLeft: theme.spacing(6),
     paddingRight: theme.spacing(6)
   },
-  rightSection: {
-    width: '240px',
-    display: 'flex',
-    flexDirection: 'column',
-    flexShrink: 0,
-    marginLeft: theme.spacing(2)
-  },
   heading: {
     display: 'flex',
     marginBottom: theme.spacing(2),

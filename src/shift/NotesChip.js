@@ -9,10 +9,20 @@ import Button from '@material-ui/core/Button';
 
 const useStyles = makeStyles((theme) => ({
   chip: {
-    cursor: 'pointer'
+    cursor: 'pointer',
+    maxWidth: '190px'
   },
   popover: {
     marginTop: theme.spacing(1)
+  },
+  activeChip: {
+    backgroundColor: '#d3d3',
+    '&:hover, &:focus': {
+      backgroundColor: '#90caf9'
+    }
+  },
+  notes: {
+    width: '240px'
   }
 }));
 
@@ -39,8 +49,8 @@ function NotesChip(props) {
   return (
     <React.Fragment>
       <Chip 
-        className={classes.chip} 
-        label={notes ? 'Edit notes' : 'No notes'}
+        className={notes ? `${classes.chip} ${classes.activeChip}` : classes.chip}
+        label={notes ? 'Notes' : 'No notes'}
         onClick={(e) => setAnchorEl(e.currentTarget)} />
       <Popover
         className={classes.popover}
@@ -58,6 +68,7 @@ function NotesChip(props) {
         disableRestoreFocus>
         <DialogContent>
           <TextField
+            className={classes.notes}
             label="Notes"
             value={notesDraft}
             onChange={(e) => setNotesDraft(e.target.value)}

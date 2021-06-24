@@ -99,7 +99,7 @@ function MainDrawer() {
       }
     ]);
   }
-  const menuItems = menuItemGroups.map(group => {
+  const menuItems = menuItemGroups.map((group, i) => {
     const items = group.map(item => {
       return (
         <ListItemLink
@@ -112,13 +112,12 @@ function MainDrawer() {
     });
     const groupKey = group.map(i => i.name).join();
     return (
-      <List key={groupKey}>{items}</List>
+      <React.Fragment key={groupKey}>
+        <List>{items}</List>
+        <Divider />
+      </React.Fragment>
     );
-  }).reduce((a, c) => {
-    a.push(c);
-    a.push(<Divider key={a.length + 1} />);
-    return a;
-  }, [<Divider key={1} />]);
+  });
   
   return (
     <Drawer

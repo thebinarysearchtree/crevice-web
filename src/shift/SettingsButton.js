@@ -27,7 +27,7 @@ function SettingsButton(props) {
 
   const classes = useStyles();
 
-  const { settings, setSettings, iconOnly } = props;
+  const { settings, setSettings, disabled, iconOnly } = props;
 
   const button = iconOnly ? (
     <Tooltip title="Settings">
@@ -39,7 +39,8 @@ function SettingsButton(props) {
     <Button 
       className={`${classes.button} ${open ? classes.activeButton : ''}`} 
       variant="contained"
-      onClick={(e) => setAnchorEl(e.currentTarget)}><SettingsIcon color="action" /></Button>
+      onClick={(e) => setAnchorEl(e.currentTarget)}
+      disabled={disabled}><SettingsIcon color="action" /></Button>
   );
 
   return (
