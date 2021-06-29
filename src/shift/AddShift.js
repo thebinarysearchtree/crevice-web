@@ -180,9 +180,9 @@ function AddShift(props) {
 
   const classes = useStyles();
 
-  const { area, day, makeDays, roles, open, anchorEl, setAnchorEl, setMessage } = props;
+  const { area, selectedDay, setSelectedDay, makeDays, roles, open, anchorEl, setAnchorEl, setMessage } = props;
   
-  const { date } = day;
+  const { date } = selectedDay;
 
   const isDisabled = loading || !startTime || !endTime || shiftRoles.length === 0 || breakMinutes === '' || breakMinutesError || (Boolean(repeatWeeks) && (!repeatUntil || Number.isNaN(repeatUntil.getTime()))) || editError;
   const addRoleIsDisabled = capacity === '' || capacityError || roleIndex === -1;
@@ -202,7 +202,7 @@ function AddShift(props) {
       setNotes('');
       setShiftRoles([]);
       setRepeatWeeks(0);
-      setRepeatUntil(day.date);
+      setRepeatUntil(date);
       clearRoleFields();
     }
   }, [open]);
@@ -219,6 +219,11 @@ function AddShift(props) {
       }
       return sr;
     }));
+  }
+
+  const handleClose = () => {
+    setSelectedDay(null);
+    setAnchorEl(null);
   }
 
   const makeFullDate = (date, timeString) => {
@@ -261,9 +266,8 @@ function AddShift(props) {
 
   const saveShift = async (e) => {
     e.preventDefault();
-    setAnchorEl(null);
-    const start = makeFullDate(day.date, startTime);
-    const end = makeFullDate(day.date, endTime);
+    const start = makeFullDate(date, startTime);
+    const end = makeFullDate(date, endTime);
     let overnight = false;
     if (end.getTime() <= start.getTime()) {
       end = addDays(end, 1);
@@ -273,7 +277,7 @@ function AddShift(props) {
     const pgEndTime = makePgDate(end, area.timeZone);
     const times = [{ startTime: pgStartTime, endTime: pgEndTime }];
     if (repeatWeeks) {
-      let repeatDate = day.date;
+      let repeatDate = date;
       while (repeatDate.getTime() < repeatUntil.getTime()) {
         repeatDate = addDays(repeatDate, repeatWeeks * 7);
         const start = makeFullDate(repeatDate, startTime);
@@ -302,6 +306,7 @@ function AddShift(props) {
     else {
       setMessage('Something went wrong');
     }
+    handleClose();
   }
 
   const title = formatter.format(date);
@@ -398,7 +403,7 @@ function AddShift(props) {
         vertical: 'center',
         horizontal: leftPopover ? 'right' : 'left'
       }}
-      onClose={() => setAnchorEl(null)}
+      onClose={handleClose}
       disableRestoreFocus>
       <DialogTitle>{title}</DialogTitle>
       <DialogContent className={classes.root}>
@@ -461,7 +466,7 @@ function AddShift(props) {
           setUntil={setRepeatUntil} />
       </DialogContent>
       <DialogActions>
-        <Button color="primary" onClick={() => setAnchorEl(null)}>Cancel</Button>
+        <Button color="primary" onClick={handleClose}>Cancel</Button>
         <Button
           variant="contained"
           color="primary"

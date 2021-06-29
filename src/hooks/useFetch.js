@@ -1,16 +1,20 @@
 import { useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import client from '../client';
+import { makeReviver } from '../utils/data';
 
-function useFetch(url, handler, data, skip) {
+const defaultReviver = makeReviver();
+
+function useFetch(url, handler, data, reviver) {
   const history = useHistory();
 
   useEffect(() => {
     const getState = async () => {
       const response = await client.postData(url, data);
       if (response.ok) {
-        const state = await response.json();
-        handler(state);
+        const text = await response.text();
+        const result = JSON.parse(text, reviver ? reviver : defaultReviver);
+        handler(result);
       }
       else {
         if (response.status === 401) {
@@ -21,10 +25,8 @@ function useFetch(url, handler, data, skip) {
         }
       }
     };
-    if (!skip) {
-      getState();
-    }
-  }, [skip]);
+    getState();
+  }, []);
 }
 
 export default useFetch;

@@ -72,7 +72,7 @@ function EditPeriod(props) {
     setAnchorEl(null);
   }
 
-  const { id, userId, areaId, roleId, roleName, timeZone } = selectedPeriod;
+  const { id, userId, areaId, roleId, roleName, roleColour, timeZone } = selectedPeriod;
 
   const removePeriod = async (e) => {
     e.preventDefault();
@@ -128,9 +128,7 @@ function EditPeriod(props) {
               return period;
             }
             return {
-              id,
-              areaId,
-              roleId,
+              ...selectedPeriod,
               startTime: startTime.getTime(),
               endTime: endTime ? addDays(endTime, 1).getTime() : null,
               isAdmin

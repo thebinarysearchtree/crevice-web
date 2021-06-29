@@ -34,10 +34,13 @@ function AreaButton(props) {
   }
 
   const menuItems = [];
+  const locationCount = locations.length;
   for (const location of locations) {
     const { id, abbreviation, areas } = location;
-    const menuItem = <ListSubheader key={`l${id}`}>{abbreviation}</ListSubheader>;
-    menuItems.push(menuItem);
+    if (locationCount > 1) {
+      const menuItem = <ListSubheader key={`l${id}`}>{abbreviation}</ListSubheader>;
+      menuItems.push(menuItem);
+    }
     for (const area of areas) {
       const { id, abbreviation } = area;
       const menuItem = (

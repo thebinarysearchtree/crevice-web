@@ -24,8 +24,11 @@ import RoleChip from '../common/RoleChip';
 import MorePopover from '../common/MorePopover';
 import useMessage from '../hooks/useMessage';
 import Button from '@material-ui/core/Button';
+import { makeReviver } from '../utils/data';
 
 const useStyles = makeStyles(styles);
+
+const reviver = makeReviver();
 
 function List() {
   const [users, setUsers] = useState(null);
@@ -63,17 +66,17 @@ function List() {
     activeState
   };
 
-  const usersHandler = (result) => {
-    const { users, count } = result;
+  const usersHandler = (users) => {
     setUsers(users);
-    if (users.length > 0) {
-      setLastUserId(users[users.length - 1].id);
-    }
-    else {
+    if (users.length === 0) {
+      setCount(0);
       setLastUserId(-1);
     }
-    if (count !== -1) {
-      setCount(count);
+    else {
+      if (lastUserId === -1) {
+        setCount(users[0].totalCount);
+      }
+      setLastUserId(users[users.length - 1].id);
     }
   }
 
@@ -83,8 +86,9 @@ function List() {
     }
     const response = await client.postData('/users/find', query);
     if (response.ok) {
-      const result = await response.json();
-      usersHandler(result);
+      const text = await response.text();
+      const users = JSON.parse(text, reviver);
+      usersHandler(users);
     }
     else {
       setMessage('Something went wrong');
@@ -154,7 +158,9 @@ function List() {
           </TableCell>
           <TableCell align="left"><RoleChip size="small" label={role.name} colour={role.colour} /></TableCell>
           <TableCell align="left"><MorePopover items={u.areaNames} /></TableCell>
-          <TableCell align="right">{u.attended} / {u.booked}</TableCell>
+          <TableCell align="right">{u.booked}</TableCell>
+          <TableCell align="right">{u.attended}</TableCell>
+          <TableCell align="right">{u.attendedTime}</TableCell>
           <TableCell align="right" className={classes.iconCell}>
             <ConfirmButton
               title={`Delete ${u.name}?`}
@@ -208,7 +214,9 @@ function List() {
                   items={areas}
                   selectedItemId={areaId}
                   filter={handleAreaChange}>Areas</TableFilterCell>
-                <TableCell align="right">Shifts</TableCell>
+                <TableCell align="right">Booked</TableCell>
+                <TableCell align="right">Attended</TableCell>
+                <TableCell align="right">Attended Time</TableCell>
                 <TableCell align="right"></TableCell>
               </TableRow>
             </TableHead>

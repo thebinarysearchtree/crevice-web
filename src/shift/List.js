@@ -8,11 +8,8 @@ import { addMonths, isWeekend, getTimeString, makePgDate, addDays } from '../uti
 import CalendarButtons from '../common/CalendarButtons';
 import AddShift from './AddShift';
 import client from '../client';
-import Button from '@material-ui/core/Button';
-import Menu from '@material-ui/core/Menu';
-import MenuItem from '@material-ui/core/MenuItem';
-import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 import AreaButton from './AreaButton';
+import { makeReviver } from '../utils/data';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -88,6 +85,9 @@ const useStyles = makeStyles((theme) => ({
   weekend: {
     backgroundColor: theme.palette.grey[200]
   },
+  selectedDay: {
+    backgroundColor: theme.palette.grey[100]
+  },
   toolbar: {
     display: 'flex',
     alignItems: 'center',
@@ -112,20 +112,17 @@ const useStyles = makeStyles((theme) => ({
   },
   grow: {
     flexGrow: 1
-  },
-  areaButton: {
-    width: '150px',
-    marginRight: theme.spacing(1)
-  },
-  areaButtonLabel: {
-    overflow: 'hidden',
-    whiteSpace: 'nowrap',
-    textOverflow: 'ellipsis',
-    width: '100px'
   }
 }));
 
 const formatter = new Intl.DateTimeFormat('default', { month: 'long' });
+const parser = (key, value) => {
+  if ((key === 'start_time' || key === 'end_time') && value !== null) {
+    return new Date(value);
+  }
+  return value;
+}
+const reviver = makeReviver(parser);
 
 const startDate = new Date();
 startDate.setDate(1);
@@ -152,21 +149,9 @@ function List() {
 
   const classes = useStyles();
 
-  const handleAreaClick = (area) => {
-    setSelectedArea(area);
-  }
-
   const handleDayClick = (e, day) => {
     setSelectedDay(day);
     setAnchorEl(e.currentTarget);
-  }
-
-  const handleAddShift = (shift) => {
-    const dayNumber = shift.startTime.getDate();
-    const updatedDays = [...days];
-    const day = {...days[date.getDay() + dayNumber - 1] };
-    day.shifts = [...day.shifts, shift].sort((s1, s2) => s1.startTime.getTime() - s2.startTime.getTime());
-    setDays(updatedDays);
   }
 
   const makeDays = async () => {
@@ -194,13 +179,12 @@ function List() {
     }
     const response = await promise;
     if (response.ok) {
-      const shifts = await response.json();
+      const text = await response.text();
+      const shifts = JSON.parse(text, reviver);
       for (const shift of shifts) {
-        const { startTime, endTime } = shift;
-        const start = new Date(startTime);
-        const end = new Date(endTime);
-        const day = days[date.getDay() + start.getDate() - 1];
-        day.shifts.push({...shift, startTime: start, endTime: end });
+        const { startTime } = shift;
+        const day = days[date.getDay() + startTime.getDate() - 1];
+        day.shifts.push(shift);
       }
     }
     setDays(days);
@@ -229,7 +213,16 @@ function List() {
 
   const dayElements = days.map((day, i) => {
     const dayNumber = day.date.getDate();
-    const dayClassName = isWeekend(day.date) ? classes.weekend : classes.weekDay;
+    let dayClassName;
+    if (selectedDay && selectedDay.date.getTime() === day.date.getTime()) {
+      dayClassName = classes.selectedDay;
+    }
+    else if (isWeekend(day.date)) {
+      dayClassName = classes.weekend;
+    }
+    else {
+      dayClassName = classes.weekDay;
+    }
     const numberClassName = day.date.getTime() === today.getTime() ? classes.today : '';
     if (day.isDifferentMonth) {
       return <div key={`e${i}`} className={dayClassName}></div>;
@@ -272,7 +265,8 @@ function List() {
   const addShift = selectedDay ? (
     <AddShift
       area={selectedArea}
-      day={selectedDay}
+      selectedDay={selectedDay}
+      setSelectedDay={setSelectedDay}
       makeDays={makeDays}
       roles={roles}
       anchorEl={anchorEl}
