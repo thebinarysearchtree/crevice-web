@@ -111,8 +111,9 @@ function UploadPhotos() {
 
   const isDisabled = uploading || selectedFiles.length === 0;
 
-  const fieldsHandler = (fieldNames) => {
-    setFieldNames(['Email', 'Phone', ...fieldNames]);
+  const fieldsHandler = (fields) => {
+    const names = fields.map(f => f.name);
+    setFieldNames(['Email', 'Phone', ...names]);
     setLoading(false);
   }
 

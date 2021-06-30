@@ -20,6 +20,7 @@ import {
 import AddSelectItems from './AddSelectItems';
 import BackButton from '../common/BackButton';
 import Progress from '../common/Progress';
+import { parse } from '../utils/data';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -137,7 +138,8 @@ function Create() {
     const getField = async () => {
       const response = await client.postData('/fields/getById', { fieldId });
       if (response.ok) {
-        const field = await response.json();
+        const fields = await parse(response);
+        const field = fields[0];
         const { name, fieldType, selectItems } = field;
         setName(name);
         setFieldType(fieldType);

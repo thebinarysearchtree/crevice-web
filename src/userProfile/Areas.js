@@ -11,6 +11,7 @@ import { makeAreaDate } from '../utils/date';
 import Snackbar from '../common/Snackbar';
 import Typography from '@material-ui/core/Typography';
 import CalendarButtons from '../common/CalendarButtons';
+import { parse } from '../utils/data';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -157,7 +158,7 @@ function Areas(props) {
     });
     const response = await client.postData('/userAreas/insertMany', { userAreas, userId });
     if (response.ok) {
-      const updatedAreas = await response.json();
+      const updatedAreas = await parse(response);
       areasHandler(updatedAreas);
       return false;
     }

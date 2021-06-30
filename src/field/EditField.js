@@ -19,6 +19,7 @@ import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
 import ListItemText from '@material-ui/core/ListItemText';
 import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
 import Tooltip from '@material-ui/core/Tooltip';
+import { parse } from '../utils/data';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -162,7 +163,8 @@ function Detail(props) {
         });
       const response = await client.postData('/fields/update', { fieldId: field.id, name: fieldName, existingName: selectedField.name, itemsToDelete, itemsToAdd, itemsToUpdate });
       if (response.ok) {
-        const updatedField = await response.json();
+        const updatedFields = await parse(response);
+        const updatedField = updatedFields[0];
         setFields(fields => fields.map(f => {
           if (f.id === field.id) {
             return {...f, ...updatedField };
@@ -179,7 +181,8 @@ function Detail(props) {
       const items = selectItems.map((item, i) => ({ name: item.name, itemNumber: i + 1 }));
       const response = await client.postData('/fields/insert', { name: fieldName, fieldType, selectItems: items });
       if (response.ok) {
-        const savedField = await response.json();
+        const savedFields = await parse(response);
+        const savedField = savedFields[0];
         setFields(fields => [...fields, {...savedField, userCount: 0 }]);
         setMessage('Field created');
       }

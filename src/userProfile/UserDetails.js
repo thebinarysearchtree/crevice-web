@@ -69,7 +69,8 @@ function UserDetails(props) {
 
   const { userId } = useParams();
 
-  const handler = (user) => {
+  const handler = (users) => {
+    const user = users[0];
     setUser(user);
     setLoading(false);
   }

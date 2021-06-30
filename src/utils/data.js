@@ -19,6 +19,14 @@ const makeReviver = (parser) => {
   }
 }
 
+const defaultReviver = makeReviver();
+
+const parse = async (response, reviver = defaultReviver) => {
+  const text = await response.text();
+  return JSON.parse(text, reviver);
+}
+
 export {
-  makeReviver
+  makeReviver,
+  parse
 };
