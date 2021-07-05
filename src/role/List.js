@@ -92,6 +92,11 @@ function List() {
   const tableRows = roles.slice(sliceStart, sliceEnd).map(r => {
     const rowClassName = selectedRole && selectedRole.id === r.id ? classes.selectedRow : '';
     const cellClassName = selectedRole && selectedRole.id !== r.id ? classes.disabledRow : '';
+    const userCount = r.userCount === 0 ? (
+      <span className={cellClassName}>{r.userCount}</span>
+    ) : (
+      <Link className={cellClassName} to={`/users?roleId=${r.id}`} component={RouterLink}>{r.userCount}</Link>
+    );
     return (
       <TableRow key={r.id} className={rowClassName}>
         <TableCell style={{ backgroundColor: `#${r.colour}`, padding: '0px' }}></TableCell>
@@ -102,7 +107,7 @@ function List() {
         </TableCell>
         <TableCell className={cellClassName} align="right">{new Date(r.createdAt).toLocaleDateString()}</TableCell>
         <TableCell align="right">
-          <Link className={cellClassName} to={`/users?roleId=${r.id}`} component={RouterLink}>{r.userCount}</Link>
+          {userCount}
         </TableCell>
         <TableCell align="right" className={classes.iconCell}>
           <ConfirmButton

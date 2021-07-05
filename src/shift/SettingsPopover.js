@@ -26,8 +26,6 @@ function SettingsPopover(props) {
   const [cancelBeforeHours, setCancelBeforeHours] = useState(1);
   const [bookBeforeHours, setBookBeforeHours] = useState(1);
   const [canBookAndCancel, setCanBookAndCancel] = useState(true);
-  const [canAssign, setCanAssign] = useState(false);
-  const [canBeAssigned, setCanBeAssigned] = useState(false);
 
   const classes = useStyles();
 
@@ -37,13 +35,11 @@ function SettingsPopover(props) {
 
   useEffect(() => {
     if (open) {
-      const { cancelBeforeHours, bookBeforeHours, canBookAndCancel, canAssign, canBeAssigned } = settings;
+      const { cancelBeforeHours, bookBeforeHours, canBookAndCancel } = settings;
 
       setCancelBeforeHours(cancelBeforeHours);
       setBookBeforeHours(bookBeforeHours);
       setCanBookAndCancel(canBookAndCancel);
-      setCanAssign(canAssign);
-      setCanBeAssigned(canBeAssigned);
     }
   }, [open]);
 
@@ -51,9 +47,7 @@ function SettingsPopover(props) {
     const settings = {
       cancelBeforeHours,
       bookBeforeHours,
-      canBookAndCancel,
-      canAssign,
-      canBeAssigned
+      canBookAndCancel
     };
     setSettings(settings);
     setAnchorEl(null);
@@ -101,14 +95,6 @@ function SettingsPopover(props) {
           disabled={!canBookAndCancel}
           value={bookBeforeHours}
           onChange={(e) => setBookBeforeHours(e.target.value)} />
-        <FormControlLabel
-          className={classes.spacing}
-          control={<Checkbox checked={canAssign} onChange={(e) => setCanAssign(e.target.checked)} />}
-          label="Can assign themselves to others?" />
-        <FormControlLabel
-          className={classes.spacing}
-          control={<Checkbox checked={canBeAssigned} onChange={(e) => setCanBeAssigned(e.target.checked)} />}
-          label="Can be assigned to others?" />
       </DialogContent>
       <DialogActions>
         <Button color="primary" onClick={() => setAnchorEl(null)}>Cancel</Button>

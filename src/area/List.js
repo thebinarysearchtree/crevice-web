@@ -176,6 +176,11 @@ function List() {
     }
     const rowClassName = selectedArea && selectedArea.id === a.id ? classes.selectedRow : '';
     const cellClassName = selectedArea && selectedArea.id !== a.id ? classes.disabledRow : '';
+    const activeUserCount = a.userCount === 0 ? (
+      <span className={cellClassName}>{a.activeUserCount}</span>
+    ) : (
+      <Link className={cellClassName} to={`/users?areaId=${a.id}`} component={RouterLink}>{a.activeUserCount}</Link>
+    );
     return (
       <TableRow key={a.id} className={rowClassName}>
           <TableCell component="th" scope="row">
@@ -186,7 +191,7 @@ function List() {
           <TableCell align="left" className={cellClassName}>{a.locationName}</TableCell>
           <TableCell align="left" className={cellClassName}>{administrators}</TableCell>
           <TableCell align="right">
-            <Link className={cellClassName} to={`/users?areaId=${a.id}`} component={RouterLink}>{a.activeUserCount}</Link>
+            {activeUserCount}
           </TableCell>
           <TableCell align="right" className={classes.iconCell}>
             <ConfirmButton

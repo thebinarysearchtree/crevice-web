@@ -3,10 +3,13 @@ import { makeStyles } from '@material-ui/core/styles';
 import useFetchMany from '../hooks/useFetchMany';
 import Progress from '../common/Progress';
 import Typography from '@material-ui/core/Typography';
-import { addMonths, isWeekend, getTimeString, makePgDate, addDays } from '../utils/date';
+import { addMonths, isWeekend, getTimeString, makePgDate, addDays, overlaps } from '../utils/date';
 import CalendarButtons from '../common/CalendarButtons';
 import Paper from '@material-ui/core/Paper';
 import client from '../client';
+import { useParams } from 'react-router-dom';
+import { makeReviver, dateParser } from '../utils/data';
+import AvailableShifts from './AvailableShifts';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -95,18 +98,13 @@ const useStyles = makeStyles((theme) => ({
     borderRadius: '5px',
     cursor: 'pointer'
   },
-  empty: {
-    backgroundColor: '#ffcdd2'
-  },
-  full: {
-    backgroundColor: '#c8e6c9'
-  },
-  partial: {
-    backgroundColor: '#bbdefb'
+  available: {
+    backgroundColor: '#e3f2fd'
   }
 }));
 
 const formatter = new Intl.DateTimeFormat('default', { month: 'long' });
+const reviver = makeReviver(dateParser);
 
 const startDate = new Date();
 startDate.setDate(1);
@@ -129,6 +127,8 @@ function Shifts() {
 
   const classes = useStyles();
 
+  const { userId } = useParams();
+
   const handleDayClick = (e, day) => {
     setSelectedDay(day);
     setAnchorEl(e.currentTarget);
@@ -138,6 +138,12 @@ function Shifts() {
     const monthEndTime = new Date(monthStartTime);
     monthEndTime.setMonth(monthEndTime.getMonth() + 1);
     monthEndTime.setDate(0);
+    const query = {
+      userId,
+      startTime: addDays(monthStartTime, -1),
+      endTime: addDays(monthEndTime, 1)
+    };
+    const promise = client.postData('/shifts/getAvailableShifts', query);
     const calendarStart = addDays(monthStartTime, -monthStartTime.getDay());
     const calendarEnd = addDays(monthEndTime, 6 - monthEndTime.getDay());
     const days = [];
@@ -145,9 +151,34 @@ function Shifts() {
     while (currentDate.getTime() <= calendarEnd.getTime()) {
       days.push({ 
         date: currentDate, 
-        isDifferentMonth: currentDate.getMonth() !== monthStartTime.getMonth()
+        isDifferentMonth: currentDate.getMonth() !== monthStartTime.getMonth(),
+        bookedShifts: [],
+        availableShifts: []
       });
       currentDate = addDays(currentDate, 1);
+    }
+    const response = await promise;
+    if (response.ok) {
+      const text = await response.text();
+      const shifts = JSON.parse(text, reviver);
+      const booked = shifts.filter(s => s.booked);
+      const available = shifts
+        .filter(s => !s.booked)
+        .filter(s => !overlaps(s, booked));
+      const filteredShifts = booked.concat(available);
+      for (const shift of filteredShifts) {
+        const { startTime } = shift;
+        if (startTime.getMonth() !== date.getMonth()) {
+          continue;
+        }
+        const day = days[date.getDay() + startTime.getDate() - 1];
+        if (shift.booked) {
+          day.bookedShifts.push(shift);
+        }
+        else {
+          day.availableShifts.push(shift);
+        }
+      }
     }
     setDays(days);
   }
@@ -162,7 +193,8 @@ function Shifts() {
 
   const dayElements = days.map((day, i) => {
     const dayNumber = day.date.getDate();
-    const dayClassName = isWeekend(day.date) ? classes.weekend : classes.weekDay;
+    const available = day.availableShifts.length > 0;
+    const dayClassName = available > 0 ? classes.available : (isWeekend(day.date) ? classes.weekend : classes.weekDay);
     const numberClassName = day.date.getTime() === today.getTime() ? classes.today : '';
     if (day.isDifferentMonth) {
       return <div key={`e${i}`} className={dayClassName}></div>;
@@ -171,7 +203,7 @@ function Shifts() {
       <div 
         key={`d${dayNumber}`} 
         className={dayClassName}
-        onClick={(e) => handleDayClick(e, day)}>
+        onClick={available ? (e) => handleDayClick(e, day) : null}>
           <div className={classes.dayNumber}>
             <div className={numberClassName}>{dayNumber}</div>
           </div>
@@ -179,6 +211,15 @@ function Shifts() {
     );
   });
   const calendar = <div className={classes.calendar}>{dayElements}</div>;
+  const availableShifts = selectedDay ? (
+    <AvailableShifts
+      userId={userId}
+      date={selectedDay.date}
+      shifts={selectedDay.availableShifts}
+      anchorEl={anchorEl}
+      setAnchorEl={setAnchorEl}
+      open={open} />
+  ) : null;
 
   return (
     <div className={classes.root}>
@@ -201,6 +242,7 @@ function Shifts() {
         </div>
         {calendar}
       </div>
+      {availableShifts}
     </div>
   );
 }

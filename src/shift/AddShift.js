@@ -154,9 +154,7 @@ const formatter = new Intl.DateTimeFormat('default', { weekday: 'long', day: 'nu
 const defaultSettings = {
   cancelBeforeHours: 1,
   bookBeforeHours: 1,
-  canBookAndCancel: true,
-  canAssign: false,
-  canBeAssigned: false
+  canBookAndCancel: true
 };
 
 function AddShift(props) {

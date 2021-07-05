@@ -93,6 +93,11 @@ function List() {
   const tableRows = locations.slice(sliceStart, sliceEnd).map(l => {
     const rowClassName = selectedLocation && selectedLocation.id === l.id ? classes.selectedRow : '';
     const cellClassName = selectedLocation && selectedLocation.id !== l.id ? classes.disabledRow : '';
+    const areaCount = l.areaCount === 0 ? (
+      <span className={cellClassName}>{l.areaCount}</span>
+    ) : (
+      <Link className={cellClassName} to={`/areas?locationId=${l.id}`} component={RouterLink}>{l.areaCount}</Link>
+    );
     return (
       <TableRow key={l.id} className={rowClassName}>
           <TableCell component="th" scope="row">
@@ -103,7 +108,7 @@ function List() {
           <TableCell align="left" className={cellClassName}>{l.timeZone.split('/')[1].replace('_', ' ')}</TableCell>
           <TableCell align="right" className={cellClassName}>{new Date(l.createdAt).toLocaleDateString()}</TableCell>
           <TableCell align="right">
-            <Link className={cellClassName} to={`/areas?locationId=${l.id}`} component={RouterLink}>{l.areaCount}</Link>
+            {areaCount}
           </TableCell>
           <TableCell align="right" className={classes.iconCell}>
             <ConfirmButton

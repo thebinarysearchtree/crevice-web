@@ -9,7 +9,8 @@ import CalendarButtons from '../common/CalendarButtons';
 import AddShift from './AddShift';
 import client from '../client';
 import AreaButton from './AreaButton';
-import { makeReviver } from '../utils/data';
+import { makeReviver, dateParser } from '../utils/data';
+import Details from './Details';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -116,13 +117,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const formatter = new Intl.DateTimeFormat('default', { month: 'long' });
-const parser = (key, value) => {
-  if ((key === 'start_time' || key === 'end_time') && value !== null) {
-    return new Date(value);
-  }
-  return value;
-}
-const reviver = makeReviver(parser);
+const reviver = makeReviver(dateParser);
 
 const startDate = new Date();
 startDate.setDate(1);
@@ -141,8 +136,11 @@ function List() {
   const [selectedDay, setSelectedDay] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [roles, setRoles] = useState([]);
+  const [selectedShift, setSelectedShift] = useState(null);
+  const [detailsAnchorEl, setDetailsAnchorEl] = useState(null);
 
   const open = Boolean(anchorEl);
+  const detailsOpen = Boolean(detailsAnchorEl);
 
   const monthName = formatter.format(date);
   const year = date.getFullYear();
@@ -152,6 +150,12 @@ function List() {
   const handleDayClick = (e, day) => {
     setSelectedDay(day);
     setAnchorEl(e.currentTarget);
+  }
+
+  const handleShiftClick = (e, shift) => {
+    e.stopPropagation();
+    setSelectedShift(shift);
+    setDetailsAnchorEl(e.currentTarget);
   }
 
   const makeDays = async () => {
@@ -243,8 +247,11 @@ function List() {
         className = classes.partial;
       }
       return (
-        <div key={id} className={`${classes.shift} ${className}`}>
-          <Typography variant="body2">{time}</Typography>
+        <div 
+          key={id} 
+          className={`${classes.shift} ${className}`}
+          onClick={(e) => handleShiftClick(e, shift)}>
+            <Typography variant="body2">{time}</Typography>
         </div>
       );
     });
@@ -273,6 +280,14 @@ function List() {
       setAnchorEl={setAnchorEl}
       open={open}
       setMessage={setMessage} />) : null;
+  const details = selectedShift ? (
+    <Details
+      selectedShift={selectedShift}
+      setSelectedShift={setSelectedShift}
+      anchorEl={detailsAnchorEl}
+      setAnchorEl={setDetailsAnchorEl}
+      open={detailsOpen} />
+  ) : null;
 
   return (
     <div className={classes.root}>
@@ -297,6 +312,7 @@ function List() {
         </div>
         {calendar}
         {addShift}
+        {details}
         <Snackbar message={message} setMessage={setMessage} />
       </div>
     </div>
