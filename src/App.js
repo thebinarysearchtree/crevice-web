@@ -1,10 +1,9 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
   BrowserRouter as Router,
   Switch,
   Route,
-  Redirect,
-  useLocation
+  Redirect
 } from 'react-router-dom';
 import { ThemeProvider } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -49,16 +48,6 @@ function PrivateRoute({ children, ...rest }) {
   );
 }
 
-function ScrollToTop() {
-  const { pathname } = useLocation();
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
-
-  return null;
-}
-
 const drawer = <MainDrawer />;
 
 function App() {
@@ -67,7 +56,6 @@ function App() {
       <CssBaseline />
       <ProvideAuth>
         <Router>
-          <ScrollToTop />
           <Switch>
             <Route exact path="/">
               <SignUp />

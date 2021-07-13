@@ -105,8 +105,8 @@ function List() {
               className={`${classes.locationName} ${cellClassName}`}
               onClick={(e) => handleNameClick(e, l)}>{l.name}</span>
           </TableCell>
+          <TableCell align="left" className={cellClassName}>{l.abbreviation}</TableCell>
           <TableCell align="left" className={cellClassName}>{l.timeZone.split('/')[1].replace('_', ' ')}</TableCell>
-          <TableCell align="right" className={cellClassName}>{new Date(l.createdAt).toLocaleDateString()}</TableCell>
           <TableCell align="right">
             {areaCount}
           </TableCell>
@@ -136,8 +136,8 @@ function List() {
             <TableHead>
               <TableRow>
                 <TableCell>Name</TableCell>
+                <TableCell align="left">Abbreviation</TableCell>
                 <TableCell align="left">Time zone</TableCell>
-                <TableCell align="right">Created</TableCell>
                 <TableCell align="right">Areas</TableCell>
                 <TableCell align="right"></TableCell>
               </TableRow>

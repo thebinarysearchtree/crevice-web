@@ -9,6 +9,7 @@ import Button from '@material-ui/core/Button';
 import Avatar from '@material-ui/core/Avatar';
 import Chip from '@material-ui/core/Chip';
 import Typography from '@material-ui/core/Typography';
+import client from '../client';
 
 const useStyles = makeStyles((theme) => ({
   content: {
@@ -23,11 +24,18 @@ const useStyles = makeStyles((theme) => ({
   time: {
     backgroundColor: '#ffcdd2',
     cursor: 'pointer',
-    border: '2px solid white',
-    marginRight: theme.spacing(1)
+    border: '2px solid white'
   },
   selected: {
     border: '2px solid #b71c1c'
+  },
+  avatar: {
+    width: theme.spacing(4),
+    height: theme.spacing(4)
+  },
+  areaName: {
+    marginLeft: theme.spacing(1),
+    marginRight: theme.spacing(1)
   }
 }));
 
@@ -38,7 +46,7 @@ function AvailableShifts(props) {
 
   const classes = useStyles();
 
-  const { userId, date, shifts, anchorEl, setAnchorEl, open } = props;
+  const { setMessage, makeDays, userId, date, shifts, anchorEl, setAnchorEl, open } = props;
 
   const isDisabled = selectedShifts.length === 0;
 
@@ -52,8 +60,19 @@ function AvailableShifts(props) {
     });
   }
 
-  const handleBookClick = () => {
+  const handleBookClick = async () => {
     const shiftRoleIds = selectedShifts.map(s => s.shiftRoleId);
+    const response = await client.postData('/bookings/insert', { userId, shiftRoleIds });
+    if (response.ok) {
+      const { bookedCount } = await response.json();
+      setMessage('Shift booked');
+      makeDays();
+      setAnchorEl(null);
+    }
+    else {
+      setAnchorEl(null);
+      setMessage('Something went wrong');
+    }
   }
 
   const shiftElements = shifts.map(shift => {
@@ -66,7 +85,7 @@ function AvailableShifts(props) {
     const users = shiftRoles.flatMap(sr => sr.bookedUsers).slice(0, 4).map(user => {
       const { id, name, imageId } = user;
       const photoSrc = imageId ? `/photos/${imageId}.jpg` : null;
-      return <Avatar key={id} src={photoSrc} alt={name} />;
+      return <Avatar key={id} className={classes.avatar} src={photoSrc} alt={name} />;
     });
     const isDisabled = overlaps(shift, selectedShifts.filter(s => s !== shift));
 
@@ -78,7 +97,7 @@ function AvailableShifts(props) {
           label={time}
           disabled={isDisabled}
           clickable={!isDisabled} />
-        <div><Typography variant="body2">{areaName}</Typography></div>
+        <div className={classes.areaName}><Typography variant="body2">{areaName}</Typography></div>
         {users}
       </div>
     );
@@ -111,7 +130,7 @@ function AvailableShifts(props) {
           variant="contained"
           color="primary"
           disabled={isDisabled}
-          onClick={() => setAnchorEl(null)}>Book</Button>
+          onClick={handleBookClick}>Book</Button>
       </DialogActions>
     </Popover>
   );

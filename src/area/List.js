@@ -166,7 +166,6 @@ function List() {
   }
   
   const tableRows = filteredAreas.slice(sliceStart, sliceEnd).map(a => {
-    const name = a.abbreviation === a.name ? a.name : `${a.abbreviation} ${a.name}`;
     let administrators;
     if (a.administrators.length === 1) {
       administrators = a.administrators[0].name;
@@ -186,8 +185,9 @@ function List() {
           <TableCell component="th" scope="row">
             <span 
               className={`${classes.locationName} ${cellClassName}`}
-              onClick={(e) => handleNameClick(e, a)}>{name}</span>
+              onClick={(e) => handleNameClick(e, a)}>{a.name}</span>
           </TableCell>
+          <TableCell align="left" className={cellClassName}>{a.abbreviation}</TableCell>
           <TableCell align="left" className={cellClassName}>{a.locationName}</TableCell>
           <TableCell align="left" className={cellClassName}>{administrators}</TableCell>
           <TableCell align="right">
@@ -229,6 +229,7 @@ function List() {
                   orderBy={orderBy}
                   order={order}
                   onClick={sortByName}>Name</TableSortCell>
+                <TableCell align="left">Abbreviation</TableCell>
                 <TableFilterCell
                   menuId="location-menu"
                   items={locations}

@@ -17,7 +17,7 @@ import TableFooter from '@material-ui/core/TableFooter';
 import TablePagination from '@material-ui/core/TablePagination';
 import useFetchMany from '../hooks/useFetchMany';
 import Progress from '../common/Progress';
-import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { Link as RouterLink, useLocation, useHistory } from 'react-router-dom';
 import Avatar from '@material-ui/core/Avatar';
 import TableFilterCell from '../common/TableFilterCell';
 import RoleChip from '../common/RoleChip';
@@ -36,19 +36,21 @@ function List() {
   const [loading, setLoading] = useState(true);
   const [roles, setRoles] = useState([]);
   const [areas, setAreas] = useState([]);
-  const [count, setCount] = useState(0);
-  const [searchTimeout, setSearchTimeout] = useState(0);
 
   const classes = useStyles();
-  const params = new URLSearchParams(useLocation().search);
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
   const roleIdParam = parseInt(params.get('roleId'));
   const areaIdParam = parseInt(params.get('areaId'));
+  const pageParam = parseInt(params.get('page'));
+  const countParam = parseInt(params.get('count'));
+  const searchParam = params.get('search');
 
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(searchParam ? searchParam : '');
   const [roleId, setRoleId] = useState(roleIdParam ? roleIdParam : -1);
   const [areaId, setAreaId] = useState(areaIdParam ? areaIdParam : -1);
-  const [lastUserId, setLastUserId] = useState(-1);
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(pageParam ? pageParam : 0);
+  const [count, setCount] = useState(countParam ? countParam : 0);
   const [activeDate, setActiveDate] = useState(null);
   const [activeState, setActiveState] = useState('All');
 
@@ -61,29 +63,31 @@ function List() {
     searchTerm,
     roleId,
     areaId,
-    lastUserId,
+    page,
     activeDate,
     activeState
   };
+
+  const history = useHistory();
 
   const usersHandler = (users) => {
     setUsers(users);
     if (users.length === 0) {
       setCount(0);
-      setLastUserId(-1);
     }
-    else {
-      if (lastUserId === -1) {
-        setCount(users[0].totalCount);
-      }
-      setLastUserId(users[users.length - 1].id);
+    else if (users[0].totalCount) {
+      setCount(users[0].totalCount);
     }
   }
 
-  const search = async (query, pageChange) => {
-    if (!pageChange) {
-      query.lastUserId = -1;
-    }
+  const handleSearch = (e) => {
+    e.preventDefault();
+    setPage(0);
+    updateUrl(areaId, roleId, 0, count);
+    search({ ...query, page: 0 });
+  }
+
+  const search = async (query) => {
     const response = await client.postData('/users/find', query);
     if (response.ok) {
       const text = await response.text();
@@ -95,26 +99,29 @@ function List() {
     }
   }
 
-  const handleChangePage = (e, page) => {
-    setPage(page);
-    search(query, true);
+  const updateUrl = (areaId, roleId, page, count) => {
+    const url = `${location.pathname}?areaId=${areaId}&roleId=${roleId}&page=${page}&count=${count}&search=${searchTerm}`;
+    history.replace(url, null);
   }
 
-  const handleSearch = (e) => {
-    clearTimeout(searchTimeout);
-    const searchTerm = e.target.value;
-    setSearchTerm(searchTerm);
-    setSearchTimeout(setTimeout(() => search({ ...query, searchTerm }), 200));
+  const handleChangePage = (e, page) => {
+    setPage(page);
+    search({ ...query, page });
+    updateUrl(areaId, roleId, page, count);
   }
 
   const handleRoleChange = (roleId) => {
     setRoleId(roleId);
-    search({ ...query, roleId });
+    setPage(0);
+    search({ ...query, roleId, page: 0 });
+    updateUrl(areaId, roleId, 0, count);
   }
 
   const handleAreaChange = (areaId) => {
     setAreaId(areaId);
-    search({ ...query, areaId });
+    setPage(0);
+    search({ ...query, areaId, page: 0 });
+    updateUrl(areaId, roleId, 0, count);
   }
 
   const deleteUser = async (userId) => {
@@ -179,8 +186,11 @@ function List() {
         </div>
         <div className={classes.toolbar}>
           <SearchBox 
+            variant="form"
             placeholder="Search..."
-            onChange={handleSearch} />
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onSubmit={handleSearch} />
           <div className={classes.grow} />
           <Button
             className={classes.buttonMargin}
@@ -227,7 +237,7 @@ function List() {
               <TableRow>
                 <TablePagination
                   rowsPerPageOptions={[]}
-                  colSpan={6}
+                  colSpan={8}
                   count={count}
                   rowsPerPage={10}
                   page={page}

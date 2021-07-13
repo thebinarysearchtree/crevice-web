@@ -122,7 +122,7 @@ function UploadPhotos() {
   const updateImages = async (e) => {
     e.preventDefault();
     setUploading(true);
-    let response = await client.uploadPhotos(selectedFiles);
+    let response = await client.uploadFiles('/files/uploadPhotos', selectedFiles);
     if (response.ok) {
       const files = await response.json();
       const storedFiles = files.filter(f => !f.error);

@@ -39,10 +39,10 @@ const useStyles = makeStyles((theme) => ({
 function SearchBox(props) {
   const classes = useStyles();
 
-  const { placeholder, onChange } = props;
+  const { value, placeholder, onChange, onSubmit, variant } = props;
 
-  return (
-    <div className={classes.search}>
+  const content = (
+    <React.Fragment>
       <div className={classes.searchIcon}>
         <SearchIcon color="action" />
       </div>
@@ -53,7 +53,21 @@ function SearchBox(props) {
           input: classes.inputInput,
         }}
         inputProps={{ 'aria-label': 'search' }}
+        value={value}
         onChange={onChange} />
+    </React.Fragment>
+  );
+
+  if (variant === 'form') {
+    return (
+      <form className={classes.search} onSubmit={onSubmit}>
+        {content}
+      </form>
+    );
+  }
+  return (
+    <div className={classes.search}>
+      {content}
     </div>
   );
 }

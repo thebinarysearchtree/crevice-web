@@ -10,6 +10,7 @@ import client from '../client';
 import { useParams } from 'react-router-dom';
 import { makeReviver, dateParser } from '../utils/data';
 import AvailableShifts from './AvailableShifts';
+import Snackbar from '../common/Snackbar';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -119,6 +120,7 @@ function Shifts() {
   const [date, setDate] = useState(startDate);
   const [selectedDay, setSelectedDay] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
+  const [message, setMessage] = useState('');
 
   const open = Boolean(anchorEl);
 
@@ -134,7 +136,8 @@ function Shifts() {
     setAnchorEl(e.currentTarget);
   }
 
-  const makeDays = async (monthStartTime) => {
+  const makeDays = async () => {
+    const monthStartTime = date;
     const monthEndTime = new Date(monthStartTime);
     monthEndTime.setMonth(monthEndTime.getMonth() + 1);
     monthEndTime.setDate(0);
@@ -184,7 +187,7 @@ function Shifts() {
   }
 
   useEffect(() => {
-    makeDays(date);
+    makeDays();
   }, [date]);
 
   if (loading) {
@@ -213,6 +216,8 @@ function Shifts() {
   const calendar = <div className={classes.calendar}>{dayElements}</div>;
   const availableShifts = selectedDay ? (
     <AvailableShifts
+      setMessage={setMessage}
+      makeDays={makeDays}
       userId={userId}
       date={selectedDay.date}
       shifts={selectedDay.availableShifts}
@@ -243,6 +248,7 @@ function Shifts() {
         {calendar}
       </div>
       {availableShifts}
+      <Snackbar message={message} setMessage={setMessage} />
     </div>
   );
 }
