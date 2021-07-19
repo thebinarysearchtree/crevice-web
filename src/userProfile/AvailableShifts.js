@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Popover from '@material-ui/core/Popover';
 import DialogActions from '@material-ui/core/DialogActions';
@@ -10,16 +10,19 @@ import Avatar from '@material-ui/core/Avatar';
 import Chip from '@material-ui/core/Chip';
 import Typography from '@material-ui/core/Typography';
 import client from '../client';
+import Link from '@material-ui/core/Link';
+import BookedList from './BookedList';
 
 const useStyles = makeStyles((theme) => ({
   content: {
     display: 'flex',
     flexDirection: 'column',
-    width: '375px'
+    minWidth: '375px'
   },
   shift: {
     display: 'flex',
-    alignItems: 'center'
+    alignItems: 'center',
+    marginBottom: theme.spacing(2)
   },
   time: {
     backgroundColor: '#ffcdd2',
@@ -30,12 +33,16 @@ const useStyles = makeStyles((theme) => ({
     border: '2px solid #b71c1c'
   },
   avatar: {
-    width: theme.spacing(4),
-    height: theme.spacing(4)
+    width: theme.spacing(3),
+    height: theme.spacing(3),
+    marginRight: '4px'
   },
   areaName: {
     marginLeft: theme.spacing(1),
     marginRight: theme.spacing(1)
+  },
+  link: {
+    cursor: 'pointer'
   }
 }));
 
@@ -43,12 +50,21 @@ const formatter = new Intl.DateTimeFormat('default', { weekday: 'long', day: 'nu
 
 function AvailableShifts(props) {
   const [selectedShifts, setSelectedShifts] = useState([]);
+  const [bookedAnchorEl, setBookedAnchorEl] = useState(null);
+  const [bookedUsers, setBookedUsers] = useState([]);
+
+  const bookedUsersOpen = Boolean(bookedAnchorEl);
 
   const classes = useStyles();
 
-  const { setMessage, makeDays, userId, date, shifts, anchorEl, setAnchorEl, open } = props;
+  const { setSelectedDay, setMessage, makeDays, userId, date, shifts, anchorEl, setAnchorEl, open } = props;
 
   const isDisabled = selectedShifts.length === 0;
+
+  const handleClose = () => {
+    setAnchorEl(null);
+    setSelectedDay(null);
+  }
 
   const handleTimeClick = (e, shift) => {
     e.stopPropagation();
@@ -60,6 +76,11 @@ function AvailableShifts(props) {
     });
   }
 
+  const handleClickBookedUsers = (e, bookedUsers) => {
+    setBookedAnchorEl(e.currentTarget);
+    setBookedUsers(bookedUsers);
+  }
+
   const handleBookClick = async () => {
     const shiftRoleIds = selectedShifts.map(s => s.shiftRoleId);
     const response = await client.postData('/bookings/insert', { userId, shiftRoleIds });
@@ -67,10 +88,10 @@ function AvailableShifts(props) {
       const { bookedCount } = await response.json();
       setMessage('Shift booked');
       makeDays();
-      setAnchorEl(null);
+      handleClose();
     }
     else {
-      setAnchorEl(null);
+      handleClose();
       setMessage('Something went wrong');
     }
   }
@@ -82,11 +103,22 @@ function AvailableShifts(props) {
     const time = `${start} - ${end}`;
     const selected = selectedShifts.includes(shift);
     const className = selected ? `${classes.time} ${classes.selected}` : classes.time;
-    const users = shiftRoles.flatMap(sr => sr.bookedUsers).slice(0, 4).map(user => {
-      const { id, name, imageId } = user;
-      const photoSrc = imageId ? `/photos/${imageId}.jpg` : null;
-      return <Avatar key={id} className={classes.avatar} src={photoSrc} alt={name} />;
-    });
+    const bookedUsers = shiftRoles.flatMap(sr => sr.bookedUsers.map(b => ({ ...b, roleName: sr.name })));
+    let users;
+    if (bookedUsers.length > 5) {
+      users = (
+        <Link 
+          className={classes.link}
+          onClick={(e) => handleClickBookedUsers(e, bookedUsers)}>{bookedUsers.length} booked</Link>
+      );
+    }
+    else {
+      users = bookedUsers.map(user => {
+        const { id, name, imageId } = user;
+        const photoSrc = imageId ? `/photos/${imageId}.jpg` : null;
+        return <Avatar key={id} className={classes.avatar} src={photoSrc} alt={name} />;
+      });
+    }
     const isDisabled = overlaps(shift, selectedShifts.filter(s => s !== shift));
 
     return (
@@ -103,6 +135,16 @@ function AvailableShifts(props) {
     );
   });
 
+  const bookedUsersPopover = bookedUsersOpen ? (
+    <BookedList
+      anchorEl={bookedAnchorEl}
+      setAnchorEl={setBookedAnchorEl}
+      open={bookedUsersOpen}
+      bookedUsers={bookedUsers} />
+  ) : null;
+
+  const buttonText = selectedShifts.length > 1 ? `Book ${selectedShifts.length} shifts` : 'Book';
+
   const leftPopover = date.getDay() > 3;
 
   return (
@@ -117,20 +159,21 @@ function AvailableShifts(props) {
         vertical: 'center',
         horizontal: leftPopover ? 'right' : 'left'
       }}
-      onClose={() => setAnchorEl(null)}
+      onClose={handleClose}
       onClick={() => setSelectedShifts([])}
       disableRestoreFocus>
       <DialogTitle>{formatter.format(date)}</DialogTitle>
       <DialogContent className={classes.content}>
         {shiftElements}
+        {bookedUsersPopover}
       </DialogContent>
       <DialogActions>
-        <Button color="primary" onClick={() => setAnchorEl(null)}>Cancel</Button>
+        <Button color="primary" onClick={handleClose}>Cancel</Button>
         <Button
           variant="contained"
           color="primary"
           disabled={isDisabled}
-          onClick={handleBookClick}>Book</Button>
+          onClick={handleBookClick}>{buttonText}</Button>
       </DialogActions>
     </Popover>
   );

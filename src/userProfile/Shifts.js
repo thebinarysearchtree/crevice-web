@@ -11,6 +11,7 @@ import { useParams } from 'react-router-dom';
 import { makeReviver, dateParser } from '../utils/data';
 import AvailableShifts from './AvailableShifts';
 import Snackbar from '../common/Snackbar';
+import ShiftDetails from './ShiftDetails';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -49,20 +50,12 @@ const useStyles = makeStyles((theme) => ({
     gridTemplateColumns: 'repeat(7, 1fr)',
     width: '100%',
     borderRight: '1px solid #ddd',
-    borderBottom: '1px solid #ddd',
-    '& > div': {
-      display: 'flex',
-      flexDirection: 'column',
-      height: '130px',
-      padding: '5px',
-      borderTop: '1px solid #ddd',
-      borderLeft: '1px solid #ddd'
-    }
+    borderBottom: '1px solid #ddd'
   },
   day: {
     display: 'flex',
     flexDirection: 'column',
-    height: '130px',
+    height: '139px',
     padding: '5px',
     borderTop: '1px solid #ddd',
     borderLeft: '1px solid #ddd'
@@ -95,12 +88,32 @@ const useStyles = makeStyles((theme) => ({
   shift: {
     width: '100px',
     padding: '4px',
-    marginBottom: '4px',
+    marginBottom: theme.spacing(1),
     borderRadius: '5px',
     cursor: 'pointer'
   },
   available: {
     backgroundColor: '#e3f2fd'
+  },
+  selectedDay: {
+    backgroundColor: theme.palette.grey[100]
+  },
+  past: {
+    backgroundColor: '#ffcdd2',
+    '&$selected': {
+      border: '2px solid #b71c1c'
+    }
+  },
+  future: {
+    backgroundColor: '#90caf9',
+    '&$selected': {
+      border: '2px solid #0d47a1'
+    }
+  },
+  selected: {
+    marginTop: '-2px',
+    marginBottom: '6px',
+    paddingLeft: '2px'
   }
 }));
 
@@ -121,19 +134,28 @@ function Shifts() {
   const [selectedDay, setSelectedDay] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [message, setMessage] = useState('');
+  const [selectedShift, setSelectedShift] = useState(null);
+  const [detailsAnchorEl, setDetailsAnchorEl] = useState(null);
 
   const open = Boolean(anchorEl);
+  const detailsOpen = Boolean(detailsAnchorEl);
 
   const monthName = formatter.format(date);
   const year = date.getFullYear();
 
   const classes = useStyles();
 
-  const { userId } = useParams();
+  const userId = parseInt(useParams().userId, 10);
 
   const handleDayClick = (e, day) => {
     setSelectedDay(day);
     setAnchorEl(e.currentTarget);
+  }
+
+  const handleShiftClick = (e, shift) => {
+    e.stopPropagation();
+    setSelectedShift(shift);
+    setDetailsAnchorEl(e.currentTarget);
   }
 
   const makeDays = async () => {
@@ -197,25 +219,54 @@ function Shifts() {
   const dayElements = days.map((day, i) => {
     const dayNumber = day.date.getDate();
     const available = day.availableShifts.length > 0;
-    const dayClassName = available > 0 ? classes.available : (isWeekend(day.date) ? classes.weekend : classes.weekDay);
+    let dayClassName;
+    if (day === selectedDay) {
+      dayClassName = classes.selectedDay;
+    }
+    else if (available > 0) {
+      dayClassName = classes.available;
+    }
+    else if (isWeekend(day.date)) {
+      dayClassName = classes.weekend;
+    }
+    else {
+      dayClassName = classes.weekDay;
+    }
     const numberClassName = day.date.getTime() === today.getTime() ? classes.today : '';
     if (day.isDifferentMonth) {
-      return <div key={`e${i}`} className={dayClassName}></div>;
+      return <div key={`e${i}`} className={`${classes.day} ${dayClassName}`}></div>;
     }
+    const isPast = day.date.getTime() < today.getTime();
+    const bookedShifts = day.bookedShifts.map(shift => {
+      const { id, startTime, endTime } = shift;
+      const time = `${getTimeString(startTime)} - ${getTimeString(endTime)}`;
+      let className = isPast ? `${classes.shift} ${classes.past}` : `${classes.shift} ${classes.future}`;
+      if (shift === selectedShift) {
+        className += ` ${classes.selected}`;
+      }
+      return (
+        <div 
+          key={id} 
+          className={className}
+          onClick={(e) => handleShiftClick(e, shift)}>{time}</div>
+      );
+    });
     return (
       <div 
         key={`d${dayNumber}`} 
-        className={dayClassName}
+        className={`${classes.day} ${dayClassName}`}
         onClick={available ? (e) => handleDayClick(e, day) : null}>
           <div className={classes.dayNumber}>
             <div className={numberClassName}>{dayNumber}</div>
           </div>
+          {bookedShifts}
       </div>
     );
   });
   const calendar = <div className={classes.calendar}>{dayElements}</div>;
   const availableShifts = selectedDay ? (
     <AvailableShifts
+      setSelectedDay={setSelectedDay}
       setMessage={setMessage}
       makeDays={makeDays}
       userId={userId}
@@ -224,6 +275,17 @@ function Shifts() {
       anchorEl={anchorEl}
       setAnchorEl={setAnchorEl}
       open={open} />
+  ) : null;
+  const details = selectedShift ? (
+    <ShiftDetails
+      setMessage={setMessage}
+      makeDays={makeDays}
+      userId={userId}
+      selectedShift={selectedShift}
+      setSelectedShift={setSelectedShift}
+      anchorEl={detailsAnchorEl}
+      setAnchorEl={setDetailsAnchorEl}
+      open={detailsOpen} />
   ) : null;
 
   return (
@@ -248,6 +310,7 @@ function Shifts() {
         {calendar}
       </div>
       {availableShifts}
+      {details}
       <Snackbar message={message} setMessage={setMessage} />
     </div>
   );

@@ -252,7 +252,7 @@ function List() {
               <TableRow>
                 <TablePagination
                   rowsPerPageOptions={[]}
-                  colSpan={5}
+                  colSpan={6}
                   count={filteredAreas.length}
                   rowsPerPage={rowsPerPage}
                   page={page}

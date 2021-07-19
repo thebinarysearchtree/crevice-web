@@ -49,20 +49,12 @@ const useStyles = makeStyles((theme) => ({
     gridTemplateColumns: 'repeat(7, 1fr)',
     width: '100%',
     borderRight: '1px solid #ddd',
-    borderBottom: '1px solid #ddd',
-    '& > div': {
-      display: 'flex',
-      flexDirection: 'column',
-      height: '130px',
-      padding: '5px',
-      borderTop: '1px solid #ddd',
-      borderLeft: '1px solid #ddd'
-    }
+    borderBottom: '1px solid #ddd'
   },
   day: {
     display: 'flex',
     flexDirection: 'column',
-    height: '130px',
+    height: '139px',
     padding: '5px',
     borderTop: '1px solid #ddd',
     borderLeft: '1px solid #ddd'
@@ -98,18 +90,32 @@ const useStyles = makeStyles((theme) => ({
   shift: {
     width: '100px',
     padding: '4px',
-    marginBottom: '4px',
+    marginBottom: theme.spacing(1),
     borderRadius: '5px',
     cursor: 'pointer'
   },
   empty: {
-    backgroundColor: '#ffcdd2'
+    backgroundColor: '#ffcdd2',
+    '&$selected': {
+      border: '2px solid #b71c1c'
+    }
   },
   full: {
-    backgroundColor: '#c8e6c9'
+    backgroundColor: '#c8e6c9',
+    '&$selected': {
+      border: '2px solid #1b5e20'
+    }
   },
   partial: {
-    backgroundColor: '#bbdefb'
+    backgroundColor: '#bbdefb',
+    '&$selected': {
+      border: '2px solid #0d47a1'
+    }
+  },
+  selected: {
+    marginTop: '-2px',
+    marginBottom: '6px',
+    paddingLeft: '2px'
   },
   grow: {
     flexGrow: 1
@@ -229,13 +235,14 @@ function List() {
     }
     const numberClassName = day.date.getTime() === today.getTime() ? classes.today : '';
     if (day.isDifferentMonth) {
-      return <div key={`e${i}`} className={dayClassName}></div>;
+      return <div key={`e${i}`} className={`${classes.day} ${dayClassName}`}></div>;
     }
     const shifts = day.shifts.map(shift => {
       const { id, startTime, endTime, capacity, booked } = shift;
       const start = getTimeString(startTime);
       const end = getTimeString(endTime);
       const time = `${start} - ${end}`;
+      const selected = shift === selectedShift;
       let className;
       if (booked === 0) {
         className = classes.empty;
@@ -245,6 +252,9 @@ function List() {
       }
       else {
         className = classes.partial;
+      }
+      if (selected) {
+        className += ` ${classes.selected}`;
       }
       return (
         <div 
@@ -258,7 +268,7 @@ function List() {
     return (
       <div 
         key={`d${dayNumber}`} 
-        className={dayClassName}
+        className={`${classes.day} ${dayClassName}`}
         onClick={(e) => handleDayClick(e, day)}>
           <div className={classes.dayNumber}>
             <div className={numberClassName}>{dayNumber}</div>

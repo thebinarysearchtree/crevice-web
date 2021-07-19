@@ -12,6 +12,9 @@ const useStyles = makeStyles((theme) => ({
   },
   icon: {
     marginLeft: '2px'
+  },
+  active: {
+    backgroundColor: theme.palette.grey[300]
   }
 }));
 
@@ -23,6 +26,8 @@ function TableFilterCell(props) {
   const { items, menuId, filter, selectedItemId } = props;
 
   const label = selectedItemId === -1 ? props.children : items.find(i => i.id === selectedItemId).name;
+
+  const className = selectedItemId === -1 ? null : classes.active;
 
   const handleClick = (itemId) => {
     setAnchorEl(null);
@@ -38,7 +43,7 @@ function TableFilterCell(props) {
   });
 
   return (
-    <TableCell>
+    <TableCell className={className}>
       <div 
         className={classes.root} 
         aria-controls={menuId}
