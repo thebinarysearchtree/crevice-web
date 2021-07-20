@@ -22,7 +22,13 @@ import useFetch from '../hooks/useFetch';
 import Link from '@material-ui/core/Link';
 import { Link as RouterLink } from 'react-router-dom';
 
-const useStyles = makeStyles(styles);
+const useStyles = makeStyles((theme) => ({
+  ...styles(theme),
+  colour: {
+    padding: '0px',
+    width: '8px'
+  }
+}));
 
 function List() {
   const [roles, setRoles] = useState(null);
@@ -111,7 +117,6 @@ function List() {
         </TableCell>
         <TableCell align="right" className={classes.iconCell}>
           <ConfirmButton
-            className={classes.deleteButton}
             title={`Delete the ${r.name} role?`}
             content="Make sure there are no users with this role before deleting it."
             onClick={() => deleteRole(r.id)} />

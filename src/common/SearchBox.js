@@ -2,8 +2,14 @@ import React from 'react';
 import InputBase from '@material-ui/core/InputBase';
 import SearchIcon from '@material-ui/icons/Search';
 import { makeStyles } from '@material-ui/core/styles';
+import IconButton from '@material-ui/core/IconButton';
+import ClearIcon from '@material-ui/icons/Clear';
+import InputAdornment from '@material-ui/core/InputAdornment';
 
 const useStyles = makeStyles((theme) => ({
+  root: {
+    width: '258px'
+  },
   search: {
     position: 'relative',
     borderRadius: theme.shape.borderRadius,
@@ -33,13 +39,25 @@ const useStyles = makeStyles((theme) => ({
     [theme.breakpoints.up('md')]: {
       width: '20ch',
     },
-  }
+  },
+  clear: {
+    marginRight: '4px'
+  },
 }));
 
 function SearchBox(props) {
   const classes = useStyles();
 
-  const { value, placeholder, onChange, onSubmit, variant } = props;
+  const { value, placeholder, onChange, onClear, onSubmit, variant } = props;
+
+  const clearButton = value ? (
+    <InputAdornment position="end">
+      <IconButton 
+        className={classes.clear} 
+        onClick={onClear} 
+        size="small"><ClearIcon /></IconButton>
+    </InputAdornment>
+  ) : null;
 
   const content = (
     <React.Fragment>
@@ -47,6 +65,7 @@ function SearchBox(props) {
         <SearchIcon color="action" />
       </div>
       <InputBase
+        className={classes.root}
         placeholder={placeholder}
         classes={{
           root: classes.inputRoot,
@@ -54,7 +73,8 @@ function SearchBox(props) {
         }}
         inputProps={{ 'aria-label': 'search' }}
         value={value}
-        onChange={onChange} />
+        onChange={onChange}
+        endAdornment={clearButton} />
     </React.Fragment>
   );
 

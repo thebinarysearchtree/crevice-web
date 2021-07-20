@@ -17,21 +17,19 @@ const useStyles = makeStyles(styles);
 
 function Detail(props) {
   const [name, setName] = useState('');
-  const [abbreviation, setAbbreviation] = useState('');
   const [timeZone, setTimeZone] = useState('');
   const [address, setAddress] = useState('');
 
-  const isDisabled = !name || !abbreviation || !timeZone;
+  const isDisabled = !name || !timeZone;
 
   const { setLocations, selectedLocation, setSelectedLocation, open, anchorEl, setAnchorEl, setMessage } = props;
   const classes = useStyles();
 
   useEffect(() => {
     if (selectedLocation) {
-      const { name, abbreviation, timeZone, address } = selectedLocation;
+      const { name, timeZone, address } = selectedLocation;
 
       setName(name);
-      setAbbreviation(abbreviation);
       setTimeZone(timeZone);
       setAddress(address);
     }
@@ -46,7 +44,7 @@ function Detail(props) {
     return null;
   }
 
-  const location = { ...selectedLocation, name, abbreviation, timeZone, address };
+  const location = { ...selectedLocation, name, timeZone, address };
 
   const saveLocation = async (e) => {
     e.preventDefault();
@@ -105,12 +103,6 @@ function Detail(props) {
           label="Location name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          autoComplete="off" />
-        <TextField
-          className={classes.spacing}
-          label="Abbreviation"
-          value={abbreviation}
-          onChange={(e) => setAbbreviation(e.target.value)}
           autoComplete="off" />
         <FormControl className={classes.spacing}>
           <InputLabel id="time-zone">Time zone</InputLabel>

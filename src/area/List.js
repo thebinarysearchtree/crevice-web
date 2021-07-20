@@ -25,8 +25,16 @@ import TableFilterCell from '../common/TableFilterCell';
 import Link from '@material-ui/core/Link';
 import { Link as RouterLink } from 'react-router-dom';
 import Avatar from '@material-ui/core/Avatar';
+import Tooltip from '@material-ui/core/Tooltip';
 
-const useStyles = makeStyles(styles);
+const useStyles = makeStyles((theme) => ({ 
+  ...styles(theme),
+  avatar: {
+    width: theme.spacing(4),
+    height: theme.spacing(4),
+    marginRight: theme.spacing(1)
+  }
+}));
 
 function List() {
   const [areas, setAreas] = useState(null);
@@ -63,7 +71,6 @@ function List() {
     setSelectedArea({
       id: -1,
       name: '',
-      abbreviation: '',
       locationId: -1,
       locationName: '',
       notes: '',
@@ -84,7 +91,7 @@ function List() {
     }
     else {
       const pattern = new RegExp(term, 'i');
-      setFilteredAreas(areas.filter(a => pattern.test(`${a.abbreviation} ${a.name}`)));
+      setFilteredAreas(areas.filter(a => pattern.test(a.name)));
     }
   }
 
@@ -114,7 +121,7 @@ function List() {
 
   const sortByName = makeSortHandler(
     'name',
-    (a, b) => a.abbreviation.localeCompare(b.abbreviation)
+    (a, b) => a.name.localeCompare(b.name)
   );
 
   const sortByCreatedAt = makeSortHandler(
@@ -166,13 +173,17 @@ function List() {
   }
   
   const tableRows = filteredAreas.slice(sliceStart, sliceEnd).map(a => {
-    let administrators;
-    if (a.administrators.length === 1) {
-      administrators = a.administrators[0].name;
-    }
-    if (a.administrators.length > 1) {
-      administrators = `${a.administrators[0].name} and ${a.administrators.length - 1} more`;
-    }
+    const administrators = a.administrators.map(user => {
+      const { id, name, imageId } = user;
+        const photoSrc = imageId ? `/photos/${imageId}.jpg` : null;
+        return (
+          <RouterLink key={id} to={`/users/${id}`}>
+            <Tooltip title={name} placement="top">
+              <Avatar className={classes.avatar} src={photoSrc} alt={name} />
+            </Tooltip>
+          </RouterLink>
+        );
+    });
     const rowClassName = selectedArea && selectedArea.id === a.id ? classes.selectedRow : '';
     const cellClassName = selectedArea && selectedArea.id !== a.id ? classes.disabledRow : '';
     const activeUserCount = a.userCount === 0 ? (
@@ -187,15 +198,13 @@ function List() {
               className={`${classes.locationName} ${cellClassName}`}
               onClick={(e) => handleNameClick(e, a)}>{a.name}</span>
           </TableCell>
-          <TableCell align="left" className={cellClassName}>{a.abbreviation}</TableCell>
           <TableCell align="left" className={cellClassName}>{a.locationName}</TableCell>
-          <TableCell align="left" className={cellClassName}>{administrators}</TableCell>
+          <TableCell align="left" className={`${cellClassName} ${classes.iconCell}`}>{administrators}</TableCell>
           <TableCell align="right">
             {activeUserCount}
           </TableCell>
           <TableCell align="right" className={classes.iconCell}>
             <ConfirmButton
-              className={classes.deleteButton}
               title={`Delete ${a.name}?`}
               content="Make sure this areas has no users before deleting it."
               onClick={() => deleteArea(a.id)} />
@@ -229,7 +238,6 @@ function List() {
                   orderBy={orderBy}
                   order={order}
                   onClick={sortByName}>Name</TableSortCell>
-                <TableCell align="left">Abbreviation</TableCell>
                 <TableFilterCell
                   menuId="location-menu"
                   items={locations}
@@ -252,7 +260,7 @@ function List() {
               <TableRow>
                 <TablePagination
                   rowsPerPageOptions={[]}
-                  colSpan={6}
+                  colSpan={5}
                   count={filteredAreas.length}
                   rowsPerPage={rowsPerPage}
                   page={page}

@@ -144,7 +144,7 @@ function AddArea(props) {
 
   const roleItems = roles.map((r, i) => <MenuItem key={r.id} value={i}>{r.name}</MenuItem>);
   const locationItems = locations.map((l, i) => <MenuItem key={l.id} value={i}>{l.name}</MenuItem>);
-  const areaItems = locations[locationIndex].areas.map(a => <MenuItem key={a.id} value={a.id}>{a.abbreviation}</MenuItem>);
+  const areaItems = locations[locationIndex].areas.map(a => <MenuItem key={a.id} value={a.id}>{a.name}</MenuItem>);
 
   const locationSelect = locations.length > 1 ? (
     <FormControl className={classes.spacing}>

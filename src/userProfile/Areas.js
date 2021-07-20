@@ -193,7 +193,7 @@ function Areas(props) {
   });
 
   const areaBars = areas.map(area => {
-    const { name, abbreviation, timeZone, periods } = area;
+    const { name, timeZone, periods } = area;
     const periodsInYear = periods
       .filter(p => 
         p.startTime < endOfYear &&
@@ -279,7 +279,7 @@ function Areas(props) {
     });
     return (
       <div key={area.id} className={classes.area}>
-        <div className={`${classes.areaName} ${selectedPeriod && selectedPeriod.areaId !== area.id ? classes.disabledAreaName : ''}`}>{abbreviation}</div>
+        <div className={`${classes.areaName} ${selectedPeriod && selectedPeriod.areaId !== area.id ? classes.disabledAreaName : ''}`}>{name}</div>
         <Paper className={classes.sections}>{sectionElements}</Paper>
       </div>
     );

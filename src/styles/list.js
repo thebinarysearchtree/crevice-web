@@ -27,10 +27,6 @@ const styles = (theme) => ({
     display: 'flex',
     flexGrow: 1
   },
-  icon: {
-    fontSize: '2.525rem',
-    marginRight: theme.spacing(2)
-  },
   title: {
     display: 'flex',
     flexDirection: 'column'
@@ -53,36 +49,10 @@ const styles = (theme) => ({
     fontWeight: 600,
     cursor: 'pointer'
   },
-  deleteButton: {
-    cursor: 'pointer',
-    fontWeight: 600,
-    color: theme.palette.action.active
-  },
   toolbar: {
     display: 'flex',
     marginBottom: theme.spacing(2),
     alignItems: 'flex-end'
-  },
-  colour: {
-    padding: '0px',
-    width: '8px'
-  },
-  avatar: {
-    width: '24px',
-    height: '24px'
-  },
-  avatarCell: {
-    paddingRight: '0px'
-  },
-  nameCell: {
-    paddingLeft: '0px'
-  },
-  activeDate: {
-    marginBottom: '0px',
-    width: '140px'
-  },
-  filter: {
-    width: '127px'
   },
   iconCell: {
     paddingTop: '2px',
@@ -93,9 +63,6 @@ const styles = (theme) => ({
   },
   disabledRow: {
     color: theme.palette.text.disabled
-  },
-  buttonMargin: {
-    marginRight: theme.spacing(1)
   }
 });
 

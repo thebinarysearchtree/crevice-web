@@ -25,8 +25,24 @@ import MorePopover from '../common/MorePopover';
 import useMessage from '../hooks/useMessage';
 import Button from '@material-ui/core/Button';
 import { makeReviver } from '../utils/data';
+import Chip from '@material-ui/core/Chip';
 
-const useStyles = makeStyles(styles);
+const useStyles = makeStyles((theme) => ({
+  ...styles(theme),
+  avatar: {
+    width: theme.spacing(4),
+    height: theme.spacing(4)
+  },
+  clearFilters: {
+    marginRight: theme.spacing(1)
+  },
+  nameCell: {
+    paddingLeft: '0px'
+  },
+  buttonMargin: {
+    marginRight: theme.spacing(1)
+  }
+}));
 
 const reviver = makeReviver();
 
@@ -85,6 +101,16 @@ function List() {
     setPage(0);
     updateUrl(areaId, roleId, 0, count);
     search({ ...query, page: 0 });
+  }
+
+  const handleClearFilters = () => {
+    const areaId = -1;
+    const roleId = -1;
+    const page = 0;
+    setAreaId(areaId);
+    setRoleId(roleId);
+    updateUrl(areaId, roleId, page, count);
+    search({ ...query, areaId, roleId, page });
   }
 
   const search = async (query) => {
@@ -155,15 +181,20 @@ function List() {
   
   const tableRows = users.map(u => {
     const role = roleMap.get(u.roleIds[0]);
+    const url = `/users/${u.id}`;
     return (
       <TableRow key={u.id}>
-          <TableCell><Avatar className={classes.avatar} alt={u.name} src={u.imageId ? `/photos/${u.imageId}.jpg` : null} /></TableCell>
+          <TableCell className={classes.iconCell}>
+            <RouterLink to={url}>
+              <Avatar className={classes.avatar} alt={u.name} src={u.imageId ? `/photos/${u.imageId}.jpg` : null} />
+            </RouterLink>
+          </TableCell>
           <TableCell className={classes.nameCell} component="th" scope="row">
             <RouterLink 
               className={classes.link} 
-              to={`/users/${u.id}`}>{u.name}</RouterLink>
+              to={url}>{u.name}</RouterLink>
           </TableCell>
-          <TableCell align="left"><RoleChip size="small" label={role.name} colour={role.colour} /></TableCell>
+          <TableCell align="left" className={classes.iconCell}><RoleChip size="small" label={role.name} colour={role.colour} /></TableCell>
           <TableCell align="left"><MorePopover items={u.areaNames} /></TableCell>
           <TableCell align="right">{u.booked}</TableCell>
           <TableCell align="right">{u.attended}</TableCell>
@@ -178,6 +209,14 @@ function List() {
     );
   });
 
+  const clearFilters = areaId === -1 && roleId === -1 ? null : (
+    <Chip 
+      className={classes.clearFilters} 
+      onClick={handleClearFilters} 
+      onDelete={handleClearFilters} 
+      label="Clear filters" />
+  );
+
   return (
     <div className={classes.root}>
       <div className={classes.content}>
@@ -190,8 +229,10 @@ function List() {
             placeholder="Search..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            onClear={() => setSearchTerm('')}
             onSubmit={handleSearch} />
           <div className={classes.grow} />
+          {clearFilters}
           <Button
             className={classes.buttonMargin}
             variant="contained"

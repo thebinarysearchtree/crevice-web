@@ -7,14 +7,17 @@ import Menu from '@material-ui/core/Menu';
 
 const useStyles = makeStyles((theme) => ({
   root: {
-    display: 'flex',
-    cursor: 'pointer'
+    display: 'flex'
   },
   icon: {
     marginLeft: '2px'
   },
   active: {
     backgroundColor: theme.palette.grey[300]
+  },
+  label: {
+    display: 'inline-flex',
+    cursor: 'pointer'
   }
 }));
 
@@ -47,10 +50,13 @@ function TableFilterCell(props) {
       <div 
         className={classes.root} 
         aria-controls={menuId}
-        aria-haspopup="true"
-        onClick={(e) => setAnchorEl(e.currentTarget)}>
-        {label}
-          <ArrowDropDownIcon className={classes.icon} />
+        aria-haspopup="true">
+          <div 
+            className={classes.label}
+            onClick={(e) => setAnchorEl(e.currentTarget)}>
+              {label}
+              <ArrowDropDownIcon className={classes.icon} />
+          </div>
       </div>
       <Menu
         anchorEl={anchorEl}

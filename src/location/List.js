@@ -49,7 +49,6 @@ function List() {
     setSelectedLocation({
       id: -1,
       name: '',
-      abbreviation: '',
       timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       address: '',
       createdAt: new Date().toISOString(),
@@ -105,14 +104,12 @@ function List() {
               className={`${classes.locationName} ${cellClassName}`}
               onClick={(e) => handleNameClick(e, l)}>{l.name}</span>
           </TableCell>
-          <TableCell align="left" className={cellClassName}>{l.abbreviation}</TableCell>
           <TableCell align="left" className={cellClassName}>{l.timeZone.split('/')[1].replace('_', ' ')}</TableCell>
           <TableCell align="right">
             {areaCount}
           </TableCell>
           <TableCell align="right" className={classes.iconCell}>
             <ConfirmButton
-              className={classes.deleteButton}
               title={`Delete ${l.name}?`}
               content="Make sure this location has no areas before deleting it."
               onClick={() => deleteLocation(l.id)} />
@@ -136,7 +133,6 @@ function List() {
             <TableHead>
               <TableRow>
                 <TableCell>Name</TableCell>
-                <TableCell align="left">Abbreviation</TableCell>
                 <TableCell align="left">Time zone</TableCell>
                 <TableCell align="right">Areas</TableCell>
                 <TableCell align="right"></TableCell>
@@ -149,7 +145,7 @@ function List() {
               <TableRow>
                 <TablePagination
                   rowsPerPageOptions={[]}
-                  colSpan={5}
+                  colSpan={4}
                   count={locations.length}
                   rowsPerPage={rowsPerPage}
                   page={page}

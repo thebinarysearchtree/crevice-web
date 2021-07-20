@@ -17,21 +17,19 @@ const useStyles = makeStyles(styles);
 
 function Detail(props) {
   const [name, setName] = useState('');
-  const [abbreviation, setAbbreviation] = useState('');
   const [locationId, setLocationId] = useState(-1);
   const [notes, setNotes] = useState('');
 
-  const isDisabled = !name || !abbreviation || locationId === -1;
+  const isDisabled = !name || locationId === -1;
 
   const { setAreas, setFilteredAreas, selectedArea, setSelectedArea, open, anchorEl, setAnchorEl, setMessage } = props;
   const classes = useStyles();
 
   useEffect(() => {
     if (selectedArea) {
-      const { name, abbreviation, locationId, notes } = selectedArea;
+      const { name, locationId, notes } = selectedArea;
 
       setName(name);
-      setAbbreviation(abbreviation);
       setLocationId(locationId);
       setNotes(notes);
     }
@@ -46,7 +44,7 @@ function Detail(props) {
     return null;
   }
 
-  const area = { ...selectedArea, name, abbreviation, locationId, notes };
+  const area = { ...selectedArea, name, locationId, notes };
 
   const saveArea = async (e) => {
     e.preventDefault();
@@ -121,12 +119,6 @@ function Detail(props) {
           label="Area name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          autoComplete="off" />
-        <TextField
-          className={classes.spacing}
-          label="Abbreviation"
-          value={abbreviation}
-          onChange={(e) => setAbbreviation(e.target.value)}
           autoComplete="off" />
         <FormControl className={classes.spacing}>
           <InputLabel id="location">Location</InputLabel>

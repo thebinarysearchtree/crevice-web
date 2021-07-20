@@ -36,19 +36,19 @@ function AreaButton(props) {
   const menuItems = [];
   const locationCount = locations.length;
   for (const location of locations) {
-    const { id, abbreviation, areas } = location;
+    const { id, name, areas } = location;
     if (locationCount > 1) {
-      const menuItem = <ListSubheader key={`l${id}`}>{abbreviation}</ListSubheader>;
+      const menuItem = <ListSubheader key={`l${id}`}>{name}</ListSubheader>;
       menuItems.push(menuItem);
     }
     for (const area of areas) {
-      const { id, abbreviation } = area;
+      const { id, name } = area;
       const menuItem = (
         <MenuItem
           key={`a${id}`}
           value={area}
           selected={selectedArea.id === id}
-          onClick={() => handleAreaClick(area)}>{abbreviation}</MenuItem>
+          onClick={() => handleAreaClick(area)}>{name}</MenuItem>
       );
       menuItems.push(menuItem);
     }
@@ -64,7 +64,7 @@ function AreaButton(props) {
         aria-haspopup="true"
         endIcon={<ArrowDropDownIcon />}
         onClick={(e) => setAnchorEl(e.currentTarget)}>
-          <span className={classes.label}>{selectedArea.abbreviation}</span>
+          <span className={classes.label}>{selectedArea.name}</span>
       </Button>
       <Menu
         id="area-menu"

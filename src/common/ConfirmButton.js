@@ -38,8 +38,14 @@ function ConfirmButton(props) {
             </DialogContentText>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setOpen(false)} color="primary">Cancel</Button>
-            <Button onClick={handleButtonClick} color="primary" autoFocus>Delete</Button>
+            <Button 
+              onClick={() => setOpen(false)} 
+              color="primary">Cancel</Button>
+            <Button 
+              onClick={handleButtonClick} 
+              variant="contained"
+              color="secondary" 
+              autoFocus>Delete</Button>
           </DialogActions>
       </Dialog>
     </React.Fragment>
