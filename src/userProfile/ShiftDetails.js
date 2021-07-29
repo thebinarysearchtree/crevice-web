@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
-import IconButton from '@material-ui/core/IconButton';
 import Typography from '@material-ui/core/Typography';
-import RoleChip from '../common/RoleChip';
 import Popover from '@material-ui/core/Popover';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
@@ -11,11 +9,10 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import { getTimeString } from '../utils/date';
 import ScheduleIcon from '@material-ui/icons/Schedule';
 import HomeIcon from '@material-ui/icons/Home';
-import NotesIcon from '@material-ui/icons/Notes';
 import Link from '@material-ui/core/Link';
-import Avatar from '@material-ui/core/Avatar';
 import Divider from '@material-ui/core/Divider';
 import client from '../client';
+import Avatar from '../common/Avatar';
 
 const useStyles = makeStyles((theme) => ({
   right: {
@@ -29,12 +26,12 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: 'column',
     width: '375px'
   },
-  time: {
+  detail: {
     display: 'flex',
     alignItems: 'center',
     marginBottom: theme.spacing(1)
   },
-  clock: {
+  icon: {
     marginRight: theme.spacing(1)
   },
   avatar: {
@@ -46,10 +43,15 @@ const useStyles = makeStyles((theme) => ({
   title: {
     marginTop: theme.spacing(1),
     marginBottom: theme.spacing(1)
+  },
+  notes: {
+    whiteSpace: 'pre-line',
+    marginBottom: theme.spacing(1)
   }
 }));
 
-const titleFormatter = new Intl.DateTimeFormat('default', { weekday: 'long', day: 'numeric', month: 'long' });
+const today = new Date();
+today.setHours(0, 0, 0, 0);
 
 function Details(props) {
   const classes = useStyles();
@@ -62,6 +64,8 @@ function Details(props) {
   const canCancel = shiftRoles.find(sr => sr.booked).canCancel;
 
   const time = `${getTimeString(startTime)} to ${getTimeString(endTime)}${breakMinutes ? ` with ${breakMinutes} minutes break` : ' with no break'}`;
+
+  const isPast = startTime.getTime() < today.getTime();
 
   const handleClose = () => {
     setSelectedShift(null);
@@ -94,9 +98,8 @@ function Details(props) {
   }
 
   const notesElement = notes ? (
-    <div className={classes.time}>
-      <NotesIcon className={classes.clock} fontSize="small" color="action" />
-      <Typography variant="body1">{notes}</Typography>
+    <div className={classes.detail}>
+      <Typography className={classes.notes} variant="body1">{notes}</Typography>
     </div>
   ) : null;
 
@@ -110,9 +113,9 @@ function Details(props) {
   }
   else {
     users = bookedUsers.map(user => {
-      const { id, name, imageId } = user;
-      const photoSrc = imageId ? `/photos/${imageId}.jpg` : null;
-      return <Avatar key={id} className={classes.avatar} src={photoSrc} alt={name} />;
+      return (
+        <Avatar key={user.id} className={classes.avatar} user={user} tooltip />
+      );
     });
   }
 
@@ -140,19 +143,19 @@ function Details(props) {
       }}
       onClose={handleClose}
       disableRestoreFocus>
-      <DialogTitle>{titleFormatter.format(startTime)}</DialogTitle>
+      <DialogTitle>{isPast ? 'Attended shift' : 'Booked shift'}</DialogTitle>
       <DialogContent className={classes.content}>
-        <div className={classes.time}>
-          <HomeIcon className={classes.clock} fontSize="small" color="action" />
+        <div className={classes.detail}>
+          <HomeIcon className={classes.icon} fontSize="small" color="action" />
           <Typography variant="body1">{areaName}</Typography>
         </div>
-        <div className={classes.time}>
-          <ScheduleIcon className={classes.clock} fontSize="small" color="action" />
+        <div className={classes.detail}>
+          <ScheduleIcon className={classes.icon} fontSize="small" color="action" />
           <Typography variant="body1">{time}</Typography>
         </div>
         {notesElement}
         <Divider />
-        <Typography className={classes.title} variant="subtitle2">Booked users</Typography>
+        <Typography className={classes.title} variant="subtitle2">{isPast ? 'Attended' : 'Attendees'}</Typography>
         <div className={classes.bookedUsers}>{users}</div>
       </DialogContent>
       <DialogActions>

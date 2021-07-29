@@ -6,12 +6,12 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import { getTimeString, overlaps } from '../utils/date';
 import Button from '@material-ui/core/Button';
-import Avatar from '@material-ui/core/Avatar';
 import Chip from '@material-ui/core/Chip';
 import Typography from '@material-ui/core/Typography';
 import client from '../client';
 import Link from '@material-ui/core/Link';
 import BookedList from './BookedList';
+import Avatar from '../common/Avatar';
 
 const useStyles = makeStyles((theme) => ({
   content: {
@@ -33,8 +33,6 @@ const useStyles = makeStyles((theme) => ({
     border: '2px solid #b71c1c'
   },
   avatar: {
-    width: theme.spacing(3),
-    height: theme.spacing(3),
     marginRight: '4px'
   },
   areaName: {
@@ -45,8 +43,6 @@ const useStyles = makeStyles((theme) => ({
     cursor: 'pointer'
   }
 }));
-
-const formatter = new Intl.DateTimeFormat('default', { weekday: 'long', day: 'numeric', month: 'long' });
 
 function AvailableShifts(props) {
   const [selectedShifts, setSelectedShifts] = useState([]);
@@ -114,9 +110,9 @@ function AvailableShifts(props) {
     }
     else {
       users = bookedUsers.map(user => {
-        const { id, name, imageId } = user;
-        const photoSrc = imageId ? `/photos/${imageId}.jpg` : null;
-        return <Avatar key={id} className={classes.avatar} src={photoSrc} alt={name} />;
+        return (
+          <Avatar key={user.id} className={classes.avatar} user={user} size="small" tooltip />
+        );
       });
     }
     const isDisabled = overlaps(shift, selectedShifts.filter(s => s !== shift));
@@ -162,7 +158,7 @@ function AvailableShifts(props) {
       onClose={handleClose}
       onClick={() => setSelectedShifts([])}
       disableRestoreFocus>
-      <DialogTitle>{formatter.format(date)}</DialogTitle>
+      <DialogTitle>Available shifts</DialogTitle>
       <DialogContent className={classes.content}>
         {shiftElements}
         {bookedUsersPopover}

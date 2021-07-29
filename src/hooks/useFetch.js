@@ -5,7 +5,7 @@ import { makeReviver } from '../utils/data';
 
 const defaultReviver = makeReviver();
 
-function useFetch(url, handler, data, reviver) {
+function useFetch(url, handler, data, reviver, params = []) {
   const history = useHistory();
 
   useEffect(() => {
@@ -26,7 +26,7 @@ function useFetch(url, handler, data, reviver) {
       }
     };
     getState();
-  }, []);
+  }, params);
 }
 
 export default useFetch;

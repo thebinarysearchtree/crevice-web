@@ -56,7 +56,7 @@ function BookedList(props) {
       }}
       onClose={() => setAnchorEl(null)}
       disableRestoreFocus>
-        <List className={classes.list} dense>{users}</List>
+        <List className={classes.list}>{users}</List>
         <div className={classes.actions}>
           <Button color="primary" onClick={() => setAnchorEl(null)}>Close</Button>
         </div>

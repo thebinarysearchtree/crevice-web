@@ -18,7 +18,6 @@ import TablePagination from '@material-ui/core/TablePagination';
 import useFetchMany from '../hooks/useFetchMany';
 import Progress from '../common/Progress';
 import { Link as RouterLink, useLocation, useHistory } from 'react-router-dom';
-import Avatar from '@material-ui/core/Avatar';
 import TableFilterCell from '../common/TableFilterCell';
 import RoleChip from '../common/RoleChip';
 import MorePopover from '../common/MorePopover';
@@ -26,13 +25,10 @@ import useMessage from '../hooks/useMessage';
 import Button from '@material-ui/core/Button';
 import { makeReviver } from '../utils/data';
 import Chip from '@material-ui/core/Chip';
+import Avatar from '../common/Avatar';
 
 const useStyles = makeStyles((theme) => ({
   ...styles(theme),
-  avatar: {
-    width: theme.spacing(4),
-    height: theme.spacing(4)
-  },
   clearFilters: {
     marginRight: theme.spacing(1)
   },
@@ -69,11 +65,6 @@ function List() {
   const [count, setCount] = useState(countParam ? countParam : 0);
   const [activeDate, setActiveDate] = useState(null);
   const [activeState, setActiveState] = useState('All');
-
-  const roleMap = new Map();
-  for (const role of roles) {
-    roleMap.set(role.id, role);
-  }
 
   const query = {
     searchTerm,
@@ -180,14 +171,12 @@ function List() {
   }
   
   const tableRows = users.map(u => {
-    const role = roleMap.get(u.roleIds[0]);
+    const role = u.roles[0];
     const url = `/users/${u.id}`;
     return (
       <TableRow key={u.id}>
           <TableCell className={classes.iconCell}>
-            <RouterLink to={url}>
-              <Avatar className={classes.avatar} alt={u.name} src={u.imageId ? `/photos/${u.imageId}.jpg` : null} />
-            </RouterLink>
+            <Avatar className={classes.avatar} user={u} size="medium" />
           </TableCell>
           <TableCell className={classes.nameCell} component="th" scope="row">
             <RouterLink 

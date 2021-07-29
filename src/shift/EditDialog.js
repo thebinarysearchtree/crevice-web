@@ -6,7 +6,6 @@ import MenuItem from '@material-ui/core/MenuItem';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import FormHelperText from '@material-ui/core/FormHelperText';
-import Popover from '@material-ui/core/Popover';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
@@ -150,14 +149,13 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-const formatter = new Intl.DateTimeFormat('default', { weekday: 'long', day: 'numeric', month: 'long' });
 const defaultSettings = {
   cancelBeforeHours: 1,
   bookBeforeHours: 1,
   canBookAndCancel: true
 };
 
-function AddShift(props) {
+function EditDialog(props) {
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('17:00');
   const [roleIndex, setRoleIndex] = useState(-1);
@@ -178,7 +176,7 @@ function AddShift(props) {
 
   const classes = useStyles();
 
-  const { area, selectedDay, setSelectedDay, makeDays, roles, open, anchorEl, setAnchorEl, setMessage } = props;
+  const { handleClose, area, selectedShift, selectedDay, setSelectedDay, makeDays, roles, open, setMessage } = props;
   
   const { date } = selectedDay;
 
@@ -193,14 +191,24 @@ function AddShift(props) {
 
   useEffect(() => {
     if (open) {
-      setStartTime('09:00');
-      setEndTime('17:00');
-      setBreakMinutes(0);
-      setEditBreakMinutes(false);
-      setNotes('');
-      setShiftRoles([]);
-      setRepeatWeeks(0);
-      setRepeatUntil(date);
+      if (selectedShift) {
+        const { startTime, endTime, breakMinutes, notes, shiftRoles } = selectedShift;
+        setStartTime(startTime);
+        setEndTime(endTime);
+        setBreakMinutes(breakMinutes);
+        setNotes(notes);
+        setShiftRoles(shiftRoles);
+      }
+      else {
+        setStartTime('09:00');
+        setEndTime('17:00');
+        setBreakMinutes(0);
+        setEditBreakMinutes(false);
+        setNotes('');
+        setShiftRoles([]);
+        setRepeatWeeks(0);
+        setRepeatUntil(date);
+      }
       clearRoleFields();
     }
   }, [open]);
@@ -217,11 +225,6 @@ function AddShift(props) {
       }
       return sr;
     }));
-  }
-
-  const handleClose = () => {
-    setSelectedDay(null);
-    setAnchorEl(null);
   }
 
   const makeFullDate = (date, timeString) => {
@@ -307,10 +310,6 @@ function AddShift(props) {
     handleClose();
   }
 
-  const title = formatter.format(date);
-
-  const leftPopover = date.getDay() > 3;
-
   let buttonText;
   if (loading) {
     buttonText = 'Saving...';
@@ -390,20 +389,8 @@ function AddShift(props) {
   );
 
   return (
-    <Popover 
-      open={open}
-      anchorEl={anchorEl}
-      anchorOrigin={{
-        vertical: 'center',
-        horizontal: leftPopover ? 'left' : 'right'
-      }}
-      transformOrigin={{
-        vertical: 'center',
-        horizontal: leftPopover ? 'right' : 'left'
-      }}
-      onClose={handleClose}
-      disableRestoreFocus>
-      <DialogTitle>{title}</DialogTitle>
+    <React.Fragment>
+      <DialogTitle>Create shift</DialogTitle>
       <DialogContent className={classes.root}>
         <div className={`${classes.container} ${classes.spacing}`}>
           <TextField 
@@ -471,8 +458,8 @@ function AddShift(props) {
           disabled={isDisabled}
           onClick={saveShift}>{buttonText}</Button>
       </DialogActions>
-    </Popover>
+    </React.Fragment>
   );
 }
 
-export default AddShift;
+export default EditDialog;

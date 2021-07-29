@@ -209,8 +209,10 @@ function Shifts() {
   }
 
   useEffect(() => {
+    setAnchorEl(null);
+    setDetailsAnchorEl(null);
     makeDays();
-  }, [date]);
+  }, [date, userId]);
 
   if (loading) {
     return <Progress loading={loading} />;

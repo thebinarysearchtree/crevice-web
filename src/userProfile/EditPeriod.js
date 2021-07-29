@@ -3,6 +3,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import client from '../client';
 import Button from '@material-ui/core/Button';
 import Popover from '@material-ui/core/Popover';
+import DialogTitle from '@material-ui/core/DialogTitle';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import { addDays, makeAreaDate } from '../utils/date';
@@ -12,10 +13,9 @@ import {
   MuiPickersUtilsProvider,
   KeyboardDatePicker
 } from '@material-ui/pickers';
-import SupervisorAccountIcon from '@material-ui/icons/SupervisorAccount';
-import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
 import FormHelperText from '@material-ui/core/FormHelperText';
+import PeriodDetails from './PeriodDetails';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -29,17 +29,17 @@ const useStyles = makeStyles((theme) => ({
   popover: {
     marginTop: theme.spacing(1)
   },
-  title: {
-    display: 'flex',
-    padding: `${theme.spacing(2)}px ${theme.spacing(3)}px`,
-    justifyContent: 'space-between'
-  },
-  adminIcon: {
-    alignSelf: 'center'
-  },
   to: {
     marginLeft: '12px',
     marginRight: '12px'
+  },
+  detail: {
+    display: 'flex',
+    alignItems: 'center',
+    marginBottom: theme.spacing(1)
+  },
+  icon: {
+    marginRight: theme.spacing(1)
   }
 }));
 
@@ -48,10 +48,12 @@ function EditPeriod(props) {
   const [endTime, setEndTime] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [overlappingError, setOverlappingError] = useState(false);
+  const [edit, setEdit] = useState(false);
+  const [hasChanged, setHasChanged] = useState(false);
 
   const startError = startTime && endTime && startTime.getTime() > endTime.getTime();
 
-  const isDisabled = !startTime || isNaN(startTime.getTime()) || (endTime && isNaN(endTime.getTime())) || startError;
+  const isDisabled = !startTime || isNaN(startTime.getTime()) || (endTime && isNaN(endTime.getTime())) || startError || !hasChanged;
 
   const { checkOverlapping, setAreas, selectedPeriod, setSelectedPeriod, open, anchorEl, setAnchorEl, setMessage } = props;
   const classes = useStyles();
@@ -72,10 +74,19 @@ function EditPeriod(props) {
     setAnchorEl(null);
   }
 
+  const handleStartTimeChange = (date) => {
+    setStartTime(date);
+    setHasChanged(true);
+  }
+
+  const handleEndTimeChange = (date) => {
+    setEndTime(date);
+    setHasChanged(true);
+  }
+
   const { id, userId, areaId, roleId, roleName, roleColour, timeZone } = selectedPeriod;
 
-  const removePeriod = async (e) => {
-    e.preventDefault();
+  const removePeriod = async () => {
     const response = await client.postData('/userAreas/remove', { userAreaId: selectedPeriod.id });
     if (response.ok) {
       setAreas(areas => {
@@ -148,24 +159,64 @@ function EditPeriod(props) {
     }
   }
 
-  const adminIcon = isAdmin ? (
-    <Tooltip title="Administrator">
-      <SupervisorAccountIcon className={classes.adminIcon} />
-    </Tooltip>
-  ) : null;
+  const periodDetails = (
+    <PeriodDetails
+      roleName={roleName}
+      startTime={startTime}
+      endTime={endTime}
+      isAdmin={isAdmin}
+      onEdit={() => setEdit(true)}
+      onDelete={removePeriod}
+      onClose={handleClose} />
+  );
 
-  const primaryButton = !startTime && !endTime ? (
-    <Button 
-      onClick={removePeriod} 
-      variant="contained" 
-      color="secondary">Delete</Button>
-  ) : (
-    <Button 
-      onBlur={() => setOverlappingError(false)}
-      onClick={updatePeriod} 
-      variant="contained" 
-      color="primary"
-      disabled={isDisabled}>Update</Button>
+  const editForm = (
+    <React.Fragment>
+      <DialogTitle>Edit period</DialogTitle>
+      <DialogContent className={classes.root}>
+        <MuiPickersUtilsProvider utils={DateFnsUtils}>
+          <KeyboardDatePicker
+            className={classes.spacing}
+            disableToolbar
+            variant="inline"
+            format="dd/MM/yyyy"
+            margin="none"
+            id="start-time"
+            label="Start date"
+            error={startError}
+            helperText={startError ? 'Start date must be before end date' : ''}
+            value={startTime}
+            onChange={handleStartTimeChange}
+            KeyboardButtonProps={{ 'aria-label': 'change date' }}
+            autoOk />
+        </MuiPickersUtilsProvider>
+        <Typography className={classes.to} variant="body1">to</Typography>
+        <MuiPickersUtilsProvider utils={DateFnsUtils}>
+          <KeyboardDatePicker
+            className={classes.spacing}
+            disableToolbar
+            variant="inline"
+            format="dd/MM/yyyy"
+            margin="none"
+            id="end-time"
+            label="End date"
+            value={endTime}
+            onChange={handleEndTimeChange}
+            KeyboardButtonProps={{ 'aria-label': 'change date' }}
+            autoOk />
+        </MuiPickersUtilsProvider>
+        <FormHelperText error={overlappingError}>{overlappingError ? 'Areas cannot have overlapping periods' : ''}</FormHelperText>
+      </DialogContent>
+      <DialogActions>
+        <Button color="primary" onClick={handleClose}>Cancel</Button>
+        <Button 
+          onBlur={() => setOverlappingError(false)}
+          onClick={updatePeriod} 
+          variant="contained" 
+          color="primary"
+          disabled={isDisabled}>Update</Button>
+      </DialogActions>
+    </React.Fragment>
   );
 
   return (
@@ -182,47 +233,7 @@ function EditPeriod(props) {
         horizontal: 'left'
       }}
       onClose={handleClose}
-      disableRestoreFocus>
-      <div className={classes.title}><Typography variant="h6">{roleName}</Typography>{adminIcon}</div>
-      <DialogContent className={classes.root}>
-        <MuiPickersUtilsProvider utils={DateFnsUtils}>
-          <KeyboardDatePicker
-            className={classes.spacing}
-            disableToolbar
-            variant="inline"
-            format="dd/MM/yyyy"
-            margin="none"
-            id="start-time"
-            label="Start date"
-            error={startError}
-            helperText={startError ? 'Start date must be before end date' : ''}
-            value={startTime}
-            onChange={(d) => setStartTime(d)}
-            KeyboardButtonProps={{ 'aria-label': 'change date' }}
-            autoOk />
-        </MuiPickersUtilsProvider>
-        <Typography className={classes.to} variant="body1">to</Typography>
-        <MuiPickersUtilsProvider utils={DateFnsUtils}>
-          <KeyboardDatePicker
-            className={classes.spacing}
-            disableToolbar
-            variant="inline"
-            format="dd/MM/yyyy"
-            margin="none"
-            id="end-time"
-            label="End date"
-            value={endTime}
-            onChange={(d) => setEndTime(d)}
-            KeyboardButtonProps={{ 'aria-label': 'change date' }}
-            autoOk />
-        </MuiPickersUtilsProvider>
-        <FormHelperText error={overlappingError}>{overlappingError ? 'Areas cannot have overlapping periods' : ''}</FormHelperText>
-      </DialogContent>
-      <DialogActions>
-        <Button color="primary" onClick={handleClose}>Cancel</Button>
-        {primaryButton}
-      </DialogActions>
-    </Popover>
+      disableRestoreFocus>{edit ? editForm : periodDetails}</Popover>
   );
 }
 

@@ -1,15 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
-import IconButton from '@material-ui/core/IconButton';
 import Typography from '@material-ui/core/Typography';
-import RoleChip from '../common/RoleChip';
 import Popover from '@material-ui/core/Popover';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import { getTimeString } from '../utils/date';
 import ScheduleIcon from '@material-ui/icons/Schedule';
+import Link from '@material-ui/core/Link';
+import Divider from '@material-ui/core/Divider';
+import client from '../client';
+import Avatar from '../common/Avatar';
+import EventNoteIcon from '@material-ui/icons/EventNote';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemText from '@material-ui/core/ListItemText';
+import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
+import RoleChip from '../common/RoleChip';
+import PopoverToolbar from '../common/PopoverToolbar';
 
 const useStyles = makeStyles((theme) => ({
   right: {
@@ -21,33 +30,112 @@ const useStyles = makeStyles((theme) => ({
   content: {
     display: 'flex',
     flexDirection: 'column',
-    width: '375px'
+    width: '375px',
+    marginBottom: theme.spacing(4)
   },
-  time: {
+  detail: {
     display: 'flex',
-    alignItems: 'center'
+    alignItems: 'center',
+    marginBottom: theme.spacing(1)
   },
-  clock: {
+  icon: {
     marginRight: theme.spacing(1)
+  },
+  avatar: {
+    marginRight: theme.spacing(1)
+  },
+  bookedUsers: {
+    display: 'flex'
+  },
+  title: {
+    marginTop: theme.spacing(1),
+    marginBottom: theme.spacing(1)
+  },
+  notes: {
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    width: '200px',
+    color: theme.palette.text.secondary
+  },
+  role: {
+    display: 'flex'
+  },
+  colour: {
+    width: '10px',
+    height: '10px',
+    borderRadius: '5px',
+    marginRight: theme.spacing(1)
+  },
+  roleDetails: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    paddingTop: '12px',
+    paddingBottom: '12px',
+    paddingRight: theme.spacing(2),
+    width: '100%'
   }
 }));
 
-const titleFormatter = new Intl.DateTimeFormat('default', { weekday: 'long', day: 'numeric', month: 'long' });
+const today = new Date();
+today.setHours(0, 0, 0, 0);
 
 function Details(props) {
   const [edit, setEdit] = useState(false);
-
+  
   const classes = useStyles();
 
-  const { selectedShift, setSelectedShift, anchorEl, setAnchorEl, open } = props;
+  const { setMessage, makeDays, userId, selectedShift, setSelectedShift, anchorEl, setAnchorEl, open } = props;
 
-  const { startTime, endTime, breakMinutes, notes, shiftRoles } = selectedShift;
+  const { areaName, startTime, endTime, breakMinutes, notes, shiftRoles } = selectedShift;
+
+  const bookedUsers = shiftRoles.flatMap(sr => sr.bookedUsers.map(b => ({ ...b, roleName: sr.name })));
 
   const time = `${getTimeString(startTime)} to ${getTimeString(endTime)}${breakMinutes ? ` with ${breakMinutes} minutes break` : ' with no break'}`;
+
+  const isPast = startTime.getTime() < today.getTime();
 
   const handleClose = () => {
     setSelectedShift(null);
     setAnchorEl(null);
+  }
+
+  const handleClickBookedUsers = (e, bookedUsers) => {
+    setAnchorEl(null);
+  }
+
+  const roles = shiftRoles.map(shiftRole => {
+    const { id, roleName, roleColour, capacity, bookedUsers } = shiftRole;
+    return (
+      <ListItem key={id} disableGutters>
+        <div className={classes.colour} style={{ backgroundColor: `#${roleColour}` }} />
+        <ListItemText primary={roleName} />
+        <ListItemSecondaryAction><Typography varaint="body1">{capacity}</Typography></ListItemSecondaryAction>
+      </ListItem>
+    );
+  });
+
+  const notesElement = notes ? (
+    <div className={classes.detail}>
+      <EventNoteIcon className={classes.icon} fontSize="small" color="action" />
+      <Typography className={classes.notes} variant="body1">{notes}</Typography>
+    </div>
+  ) : null;
+
+  let users;
+  if (bookedUsers.length > 5) {
+    users = (
+      <Link 
+        className={classes.link}
+        onClick={(e) => handleClickBookedUsers(e, bookedUsers)}>{bookedUsers.length} booked</Link>
+    );
+  }
+  else {
+    users = bookedUsers.map(user => {
+      return (
+        <Avatar key={user.id} className={classes.avatar} user={user} tooltip />
+      );
+    });
   }
 
   const leftPopover = startTime.getDay() > 3;
@@ -67,20 +155,19 @@ function Details(props) {
       }}
       onClose={handleClose}
       disableRestoreFocus>
-      <DialogTitle>{titleFormatter.format(startTime)}</DialogTitle>
+      <PopoverToolbar title="Shift details" onClose={handleClose} />
       <DialogContent className={classes.content}>
-        <div className={classes.time}>
-          <ScheduleIcon className={classes.clock} fontSize="small" />
+        <div className={classes.detail}>
+          <ScheduleIcon className={classes.icon} fontSize="small" color="action" />
           <Typography variant="body1">{time}</Typography>
         </div>
+        {notesElement}
+        <Divider />
+        <List>{roles}</List>
+        <Divider />
+        <Typography className={classes.title} variant="subtitle2">{isPast ? 'Attended' : 'Attendees'}</Typography>
+        <div className={classes.bookedUsers}>{users}</div>
       </DialogContent>
-      <DialogActions>
-        <Button color="primary" onClick={handleClose}>Close</Button>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => setEdit(true)}>Edit</Button>
-      </DialogActions>
     </Popover>
   );
 }

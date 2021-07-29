@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import InputBase from '@material-ui/core/InputBase';
 import SearchIcon from '@material-ui/icons/Search';
 import { makeStyles } from '@material-ui/core/styles';
@@ -46,15 +46,21 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function SearchBox(props) {
+  const ref = useRef();
   const classes = useStyles();
 
   const { value, placeholder, onChange, onClear, onSubmit, variant } = props;
+
+  const wrappedOnClear = () => {
+    onClear();
+    ref.current.focus();
+  }
 
   const clearButton = value ? (
     <InputAdornment position="end">
       <IconButton 
         className={classes.clear} 
-        onClick={onClear} 
+        onClick={wrappedOnClear} 
         size="small"><ClearIcon /></IconButton>
     </InputAdornment>
   ) : null;
@@ -74,7 +80,8 @@ function SearchBox(props) {
         inputProps={{ 'aria-label': 'search' }}
         value={value}
         onChange={onChange}
-        endAdornment={clearButton} />
+        endAdornment={clearButton}
+        inputRef={ref} />
     </React.Fragment>
   );
 

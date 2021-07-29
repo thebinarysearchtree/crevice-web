@@ -24,14 +24,11 @@ import { useLocation } from 'react-router-dom';
 import TableFilterCell from '../common/TableFilterCell';
 import Link from '@material-ui/core/Link';
 import { Link as RouterLink } from 'react-router-dom';
-import Avatar from '@material-ui/core/Avatar';
-import Tooltip from '@material-ui/core/Tooltip';
+import Avatar from '../common/Avatar';
 
 const useStyles = makeStyles((theme) => ({ 
   ...styles(theme),
   avatar: {
-    width: theme.spacing(4),
-    height: theme.spacing(4),
     marginRight: theme.spacing(1)
   }
 }));
@@ -174,15 +171,14 @@ function List() {
   
   const tableRows = filteredAreas.slice(sliceStart, sliceEnd).map(a => {
     const administrators = a.administrators.map(user => {
-      const { id, name, imageId } = user;
-        const photoSrc = imageId ? `/photos/${imageId}.jpg` : null;
-        return (
-          <RouterLink key={id} to={`/users/${id}`}>
-            <Tooltip title={name} placement="top">
-              <Avatar className={classes.avatar} src={photoSrc} alt={name} />
-            </Tooltip>
-          </RouterLink>
-        );
+      return (
+        <Avatar 
+          key={user.id} 
+          className={classes.avatar} 
+          user={user} 
+          size="medium" 
+          tooltip />
+      );
     });
     const rowClassName = selectedArea && selectedArea.id === a.id ? classes.selectedRow : '';
     const cellClassName = selectedArea && selectedArea.id !== a.id ? classes.disabledRow : '';

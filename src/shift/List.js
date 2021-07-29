@@ -6,7 +6,7 @@ import Typography from '@material-ui/core/Typography';
 import Snackbar from '../common/Snackbar';
 import { addMonths, isWeekend, getTimeString, makePgDate, addDays } from '../utils/date';
 import CalendarButtons from '../common/CalendarButtons';
-import AddShift from './AddShift';
+import EditPopover from './EditPopover';
 import client from '../client';
 import AreaButton from './AreaButton';
 import { makeReviver, dateParser } from '../utils/data';
@@ -280,7 +280,7 @@ function List() {
   const calendar = <div className={classes.calendar}>{dayElements}</div>;
   
   const addShift = selectedDay ? (
-    <AddShift
+    <EditPopover
       area={selectedArea}
       selectedDay={selectedDay}
       setSelectedDay={setSelectedDay}

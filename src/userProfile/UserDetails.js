@@ -75,7 +75,7 @@ function UserDetails(props) {
     setLoading(false);
   }
 
-  useFetch('/users/getUserDetails', handler, { userId });
+  useFetch('/users/getUserDetails', handler, { userId }, null, [userId]);
 
   if (loading) {
     return <Progress loading={loading} />;
