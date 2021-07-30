@@ -13,7 +13,7 @@ const useStyles = makeStyles((theme) => ({
     display: 'flex',
     flexDirection: 'column',
     width: '375px',
-    marginBottom: theme.spacing(4)
+    marginBottom: theme.spacing(1)
   },
   detail: {
     display: 'flex',
@@ -44,7 +44,7 @@ function PeriodDetails(props) {
   return (
     <React.Fragment>
       <PopoverToolbar
-        title="Period details"
+        itemName="period"
         onEdit={onEdit}
         onDelete={onDelete}
         onClose={onClose} />

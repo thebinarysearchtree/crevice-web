@@ -64,9 +64,6 @@ const useStyles = makeStyles((theme) => ({
   disabledAreaName: {
     color: theme.palette.text.disabled
   },
-  disabledPeriod: {
-    opacity: 0.3
-  },
   container: {
     display: 'flex'
   },
@@ -272,7 +269,7 @@ function Areas(props) {
       return (
         <div 
           key={start}
-          className={`${classes.section} ${classes.filled} ${selectedPeriod && selectedPeriod.id !== section.id ? classes.disabledPeriod : ''}`} 
+          className={`${classes.section} ${classes.filled}`} 
           style={{ width, backgroundColor: `#${roleColour}` }}
           onClick={(e) => handlePeriodClick(e, section)} />
       );

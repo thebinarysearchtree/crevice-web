@@ -11,38 +11,42 @@ const useStyles = makeStyles((theme) => ({
   root: {
     display: 'flex',
     paddingTop: theme.spacing(1),
-    paddingBottom: theme.spacing(2),
+    paddingBottom: theme.spacing(1),
     paddingLeft: theme.spacing(3),
     paddingRight: theme.spacing(1),
     justifyContent: 'space-between',
-    alignItems: 'center'
+    alignItems: 'center',
+    backgroundColor: theme.palette.grey[300],
+    marginBottom: theme.spacing(1)
   },
   grow: {
     flexGrow: 1
+  },
+  button: {
+    marginRight: theme.spacing(1)
   }
 }));
 
 function PopoverToolbar(props) {
   const classes = useStyles();
   
-  const { title, onEdit, onDelete, onClose } = props;
+  const { itemName, onEdit, onDelete, onClose } = props;
 
   return (
     <div className={classes.root}>
-      <Typography variant="h6">{title}</Typography>
       <div className={classes.grow} />
-      <Tooltip title="Edit">
-        <IconButton onClick={onEdit}>
+      <Tooltip title={`Edit ${itemName}`}>
+        <IconButton className={classes.button} size="small" onClick={onEdit}>
           <EditIcon fontSize="small" color="action" />
         </IconButton>
       </Tooltip>
-      <Tooltip title="Delete">
-        <IconButton onClick={onDelete}>
+      <Tooltip title={`Delete ${itemName}`}>
+        <IconButton className={classes.button} size="small" onClick={onDelete}>
           <DeleteIcon fontSize="small" color="action" />
         </IconButton>
       </Tooltip>
       <Tooltip title="Close">
-        <IconButton onClick={onClose}>
+        <IconButton size="small" onClick={onClose}>
           <CloseIcon fontSize="small" color="action" />
         </IconButton>
       </Tooltip>

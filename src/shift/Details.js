@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import Popover from '@material-ui/core/Popover';
-import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
-import DialogTitle from '@material-ui/core/DialogTitle';
 import { getTimeString } from '../utils/date';
 import ScheduleIcon from '@material-ui/icons/Schedule';
 import Link from '@material-ui/core/Link';
@@ -17,8 +14,9 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
-import RoleChip from '../common/RoleChip';
 import PopoverToolbar from '../common/PopoverToolbar';
+import DeleteDialog from './DeleteDialog';
+import LinearScaleIcon from '@material-ui/icons/LinearScale';
 
 const useStyles = makeStyles((theme) => ({
   right: {
@@ -31,7 +29,7 @@ const useStyles = makeStyles((theme) => ({
     display: 'flex',
     flexDirection: 'column',
     width: '375px',
-    marginBottom: theme.spacing(4)
+    marginBottom: theme.spacing(2)
   },
   detail: {
     display: 'flex',
@@ -82,12 +80,13 @@ today.setHours(0, 0, 0, 0);
 
 function Details(props) {
   const [edit, setEdit] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   
   const classes = useStyles();
 
   const { setMessage, makeDays, userId, selectedShift, setSelectedShift, anchorEl, setAnchorEl, open } = props;
 
-  const { areaName, startTime, endTime, breakMinutes, notes, shiftRoles } = selectedShift;
+  const { id, seriesId, areaName, startTime, endTime, breakMinutes, notes, shiftRoles } = selectedShift;
 
   const bookedUsers = shiftRoles.flatMap(sr => sr.bookedUsers.map(b => ({ ...b, roleName: sr.name })));
 
@@ -104,6 +103,19 @@ function Details(props) {
     setAnchorEl(null);
   }
 
+  const removeShift = async () => {
+    const response = await client.postData('/shifts/remove', { shiftId: id });
+    setDialogOpen(false);
+    setAnchorEl(null);
+    if (response.ok) {
+      makeDays();
+      setMessage('Shift deleted');
+    }
+    else {
+      setMessage('Something went wrong');
+    }
+  }
+
   const roles = shiftRoles.map(shiftRole => {
     const { id, roleName, roleColour, capacity, bookedUsers } = shiftRole;
     return (
@@ -114,6 +126,13 @@ function Details(props) {
       </ListItem>
     );
   });
+
+  const seriesElement = seriesId ? (
+    <div className={classes.detail}>
+      <LinearScaleIcon className={classes.icon} fontSize="small" color="action" />
+      <Typography variant="body1">Part of a series</Typography>
+    </div>
+  ) : null;
 
   const notesElement = notes ? (
     <div className={classes.detail}>
@@ -155,12 +174,16 @@ function Details(props) {
       }}
       onClose={handleClose}
       disableRestoreFocus>
-      <PopoverToolbar title="Shift details" onClose={handleClose} />
+      <PopoverToolbar 
+        itemName="shift" 
+        onDelete={() => setDialogOpen(true)} 
+        onClose={handleClose} />
       <DialogContent className={classes.content}>
         <div className={classes.detail}>
           <ScheduleIcon className={classes.icon} fontSize="small" color="action" />
           <Typography variant="body1">{time}</Typography>
         </div>
+        {seriesElement}
         {notesElement}
         <Divider />
         <List>{roles}</List>
@@ -168,6 +191,10 @@ function Details(props) {
         <Typography className={classes.title} variant="subtitle2">{isPast ? 'Attended' : 'Attendees'}</Typography>
         <div className={classes.bookedUsers}>{users}</div>
       </DialogContent>
+      <DeleteDialog 
+        open={dialogOpen} 
+        setOpen={setDialogOpen} 
+        onDelete={removeShift} />
     </Popover>
   );
 }
