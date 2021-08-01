@@ -17,6 +17,9 @@ import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
 import PopoverToolbar from '../common/PopoverToolbar';
 import DeleteDialog from './DeleteDialog';
 import LinearScaleIcon from '@material-ui/icons/LinearScale';
+import Fab from '@material-ui/core/Fab';
+import AddIcon from '@material-ui/icons/Add';
+import UserTooltip from './UserTooltip';
 
 const useStyles = makeStyles((theme) => ({
   right: {
@@ -72,6 +75,12 @@ const useStyles = makeStyles((theme) => ({
     paddingBottom: '12px',
     paddingRight: theme.spacing(2),
     width: '100%'
+  },
+  grow: {
+    flexGrow: 1
+  },
+  fab: {
+    boxShadow: 'none'
   }
 }));
 
@@ -84,11 +93,11 @@ function Details(props) {
   
   const classes = useStyles();
 
-  const { setMessage, makeDays, userId, selectedShift, setSelectedShift, anchorEl, setAnchorEl, open } = props;
+  const { setMessage, makeDays, selectedShift, setSelectedShift, anchorEl, setAnchorEl, open } = props;
 
   const { id, seriesId, areaName, startTime, endTime, breakMinutes, notes, shiftRoles } = selectedShift;
 
-  const bookedUsers = shiftRoles.flatMap(sr => sr.bookedUsers.map(b => ({ ...b, roleName: sr.name })));
+  const bookedUsers = shiftRoles.flatMap(sr => sr.bookedUsers.map(b => ({ ...b, roleName: sr.roleName })));
 
   const time = `${getTimeString(startTime)} to ${getTimeString(endTime)}${breakMinutes ? ` with ${breakMinutes} minutes break` : ' with no break'}`;
 
@@ -110,6 +119,17 @@ function Details(props) {
     if (response.ok) {
       makeDays();
       setMessage('Shift deleted');
+    }
+    else {
+      setMessage('Something went wrong');
+    }
+  }
+
+  const cancelBooking = async (userId, bookingId) => {
+    const response = await client.postData('/bookings/remove', { userId, bookingId });
+    if (response.ok) {
+      makeDays();
+      setMessage('Booking cancelled');
     }
     else {
       setMessage('Something went wrong');
@@ -151,8 +171,15 @@ function Details(props) {
   }
   else {
     users = bookedUsers.map(user => {
+      const { id, bookingId, name, roleName } = user;
       return (
-        <Avatar key={user.id} className={classes.avatar} user={user} tooltip />
+        <UserTooltip 
+          key={id} 
+          name={name} 
+          roleName={roleName}
+          onCancel={() => cancelBooking(id, bookingId)}>
+            <Avatar className={classes.avatar} user={user} />
+        </UserTooltip>
       );
     });
   }
@@ -189,7 +216,11 @@ function Details(props) {
         <List>{roles}</List>
         <Divider />
         <Typography className={classes.title} variant="subtitle2">{isPast ? 'Attended' : 'Attendees'}</Typography>
-        <div className={classes.bookedUsers}>{users}</div>
+        <div className={classes.bookedUsers}>
+          {users}
+          <div className={classes.grow} />
+          <Fab className={classes.fab} size="small"><AddIcon color="action" /></Fab>
+        </div>
       </DialogContent>
       <DeleteDialog 
         open={dialogOpen} 

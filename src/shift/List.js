@@ -195,6 +195,9 @@ function List() {
         const { startTime } = shift;
         const day = days[date.getDay() + startTime.getDate() - 1];
         day.shifts.push(shift);
+        if (selectedShift && selectedShift.id == shift.id) {
+          setSelectedShift(shift);
+        }
       }
     }
     setDays(days);

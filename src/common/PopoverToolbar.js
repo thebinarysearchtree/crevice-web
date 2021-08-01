@@ -1,7 +1,6 @@
 import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Tooltip from '@material-ui/core/Tooltip';
-import Typography from '@material-ui/core/Typography';
 import EditIcon from '@material-ui/icons/Edit';
 import DeleteIcon from '@material-ui/icons/Delete';
 import CloseIcon from '@material-ui/icons/Close';

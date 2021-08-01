@@ -69,6 +69,9 @@ const useStyles = makeStyles((theme) => ({
   },
   calendarButtons: {
     marginRight: theme.spacing(1)
+  },
+  selectedPeriod: {
+    border: `2px solid ${theme.palette.text.primary}`
   }
 }));
 
@@ -269,14 +272,14 @@ function Areas(props) {
       return (
         <div 
           key={start}
-          className={`${classes.section} ${classes.filled}`} 
+          className={`${classes.section} ${classes.filled} ${selectedPeriod && selectedPeriod.id === section.id ? classes.selectedPeriod : ''}`} 
           style={{ width, backgroundColor: `#${roleColour}` }}
           onClick={(e) => handlePeriodClick(e, section)} />
       );
     });
     return (
       <div key={area.id} className={classes.area}>
-        <div className={`${classes.areaName} ${selectedPeriod && selectedPeriod.areaId !== area.id ? classes.disabledAreaName : ''}`}>{name}</div>
+        <div className={classes.areaName}>{name}</div>
         <Paper className={classes.sections}>{sectionElements}</Paper>
       </div>
     );

@@ -119,11 +119,14 @@ function Details(props) {
     });
   }
 
-  const cancelButton = canCancel ? (
-    <Button
-      variant="contained"
-      color="secondary"
-      onClick={handleCancel}>Cancel booking</Button>
+  const actions = canCancel ? (
+    <React.Fragment>
+      <Button color="primary" onClick={handleClose}>Close</Button>
+      <Button
+        variant="contained"
+        color="secondary"
+        onClick={handleCancel}>Cancel booking</Button>
+    </React.Fragment>
   ) : null;
 
   const leftPopover = startTime.getDay() > 3;
@@ -158,10 +161,7 @@ function Details(props) {
         <Typography className={classes.title} variant="subtitle2">{isPast ? 'Attended' : 'Attendees'}</Typography>
         <div className={classes.bookedUsers}>{users}</div>
       </DialogContent>
-      <DialogActions>
-        <Button color="primary" onClick={handleClose}>Close</Button>
-        {cancelButton}
-      </DialogActions>
+      <DialogActions>{actions}</DialogActions>
     </Popover>
   );
 }
