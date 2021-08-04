@@ -295,6 +295,7 @@ function List() {
       setMessage={setMessage} />) : null;
   const details = selectedShift ? (
     <Details
+      area={selectedArea}
       setMessage={setMessage}
       makeDays={makeDays}
       selectedShift={selectedShift}

@@ -218,7 +218,6 @@ function List() {
             placeholder="Search..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            onClear={() => setSearchTerm('')}
             onSubmit={handleSearch} />
           <div className={classes.grow} />
           {clearFilters}
