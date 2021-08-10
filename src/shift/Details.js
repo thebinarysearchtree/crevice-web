@@ -25,6 +25,7 @@ import ListItemAvatar from '@material-ui/core/ListItemAvatar';
 import MenuItem from '@material-ui/core/MenuItem';
 import Paper from '@material-ui/core/Paper';
 import ClickAwayListener from '@material-ui/core/ClickAwayListener';
+import BookedList from './BookedList';
 
 const useStyles = makeStyles((theme) => ({
   right: {
@@ -89,7 +90,8 @@ const useStyles = makeStyles((theme) => ({
     boxShadow: 'none'
   },
   bookedCount: {
-    cursor: 'pointer'
+    cursor: 'pointer',
+    marginLeft: theme.spacing(1)
   },
   search: {
     marginRight: theme.spacing(1),
@@ -103,6 +105,9 @@ const useStyles = makeStyles((theme) => ({
   menuItem: {
     paddingTop: '0px',
     paddingBottom: '0px'
+  },
+  list: {
+    overflow: 'scroll'
   }
 }));
 
@@ -121,6 +126,9 @@ function Details(props) {
   const [searchTimeout, setSearchTimeout] = useState(0);
   const [searchAnchorEl, setSearchAnchorEl] = useState(null);
   const [selectedUserIndex, setSelectedUserIndex] = useState(-1);
+  const [bookedAnchorEl, setBookedAnchorEl] = useState(null);
+
+  const bookedOpen = Boolean(bookedAnchorEl);
 
   const classes = useStyles();
 
@@ -134,6 +142,7 @@ function Details(props) {
 
   const bookedUsers = shiftRoles.flatMap(sr => sr.bookedUsers.map(b => ({ ...b, roleName: sr.roleName })));
   const roleIds = shiftRoles.map(sr => sr.roleId);
+  const bookedUserIds = bookedUsers.map(u => u.id);
 
   const time = `${getTimeString(startTime)} to ${getTimeString(endTime)}${breakMinutes ? ` with ${breakMinutes} minutes break` : ' with no break'}`;
 
@@ -145,8 +154,14 @@ function Details(props) {
   }
 
   const handleClickBookedUsers = (e) => {
+    if (bookedUsers.length === 0) {
+      return;
+    }
     if (bookedUsers.length <= 5 && searchOpen) {
       setSearchOpen(false);
+    }
+    else {
+      setBookedAnchorEl(e.currentTarget);
     }
   }
 
@@ -172,11 +187,12 @@ function Details(props) {
   }
 
   const search = async (searchTerm) => {
-    const query = { 
+    const query = {
       areaId, 
       roleIds,
       searchTerm, 
-      shiftStartTime 
+      shiftStartTime,
+      bookedUserIds
     };
     const response = await client.postData('/users/findPotentialBookings', query);
     if (response.ok) {
@@ -358,9 +374,9 @@ function Details(props) {
       onClose={handleClose}
       disableRestoreFocus>
       <PopoverToolbar 
-        itemName="shift" 
         onDelete={() => setDialogOpen(true)} 
-        onClose={handleClose} />
+        onClose={handleClose}
+        deleteText="Delete shift" />
       <DialogContent className={classes.content}>
         <div className={classes.detail}>
           <ScheduleIcon className={classes.icon} fontSize="small" color="action" />
@@ -384,6 +400,12 @@ function Details(props) {
           </Fab>
         </div>
       </DialogContent>
+      <BookedList 
+        makeDays={makeDays}
+        open={bookedOpen} 
+        anchorEl={bookedAnchorEl} 
+        setAnchorEl={setBookedAnchorEl} 
+        bookedUsers={bookedUsers} />
       <DeleteDialog 
         open={dialogOpen} 
         setOpen={setDialogOpen} 
@@ -394,7 +416,7 @@ function Details(props) {
         <Paper 
           className={classes.searchResults} 
           style={{ top: searchPosition ? searchPosition.bottom : 0, left: searchPosition ? searchPosition.left : 0 }}>
-            <List>{userItems}</List>
+            <List className={classes.list} style={{ maxHeight: searchPosition ? (window.innerHeight + window.scrollY) - searchPosition.bottom : null }}>{userItems}</List>
         </Paper>
       </ClickAwayListener>
     )}

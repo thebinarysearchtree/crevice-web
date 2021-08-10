@@ -87,7 +87,10 @@ function EditPeriod(props) {
   const { id, userId, areaId, roleId, roleName, roleColour, timeZone } = selectedPeriod;
 
   const removePeriod = async () => {
-    const response = await client.postData('/userAreas/remove', { userAreaId: selectedPeriod.id });
+    const userAreaId = selectedPeriod.id;
+    setSelectedPeriod(null);
+    setAnchorEl(null);
+    const response = await client.postData('/userAreas/remove', { userAreaId });
     if (response.ok) {
       setAreas(areas => {
         return areas.map(area => {
@@ -99,13 +102,9 @@ function EditPeriod(props) {
           return updatedArea;
         });
       });
-      setSelectedPeriod(null);
-      setAnchorEl(null);
       setMessage('Period deleted');
     }
     else {
-      setSelectedPeriod(null);
-      setAnchorEl(null);
       setMessage('Something went wrong');
     }
   }

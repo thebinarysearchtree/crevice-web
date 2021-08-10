@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import client from '../client';
 import Avatar from '@material-ui/core/Avatar';
-import { useHistory, useParams } from 'react-router-dom';
+import { useHistory, useParams, useLocation } from 'react-router-dom';
 import useFetch from '../hooks/useFetch';
 import Progress from '../common/Progress';
 import Typography from '@material-ui/core/Typography';
@@ -66,8 +66,22 @@ function UserDetails(props) {
   const [activeTab, setActiveTab] = useState(0);
 
   const classes = useStyles();
+  const history = useHistory();
+  const location = useLocation();
 
   const { userId } = useParams();
+
+  const params = new URLSearchParams(location.search);
+  const tabParam = parseInt(params.get('tab')) || 0;
+
+  useEffect(() => {
+    setActiveTab(tabParam);
+  }, [tabParam]);
+
+  const handleChangeTab = (e, tabIndex) => {
+    setActiveTab(tabIndex);
+    history.push(`${location.pathname}?tab=${tabIndex}`);
+  }
 
   const handler = (users) => {
     const user = users[0];
@@ -145,16 +159,16 @@ function UserDetails(props) {
         {areas}
       </div>
       <div className={classes.content}>
-        <Tabs className={classes.tabs} value={activeTab} onChange={(e, i) => setActiveTab(i)}>
+        <Tabs className={classes.tabs} value={activeTab} onChange={handleChangeTab}>
           <Tab label="Shifts" />
           <Tab label="Areas" />
         </Tabs>
         <Divider />
         <div hidden={activeTab !== 0}>
-          <Shifts userId={userId} />
+          {activeTab === 0 ? <Shifts userId={userId} /> : null}
         </div>
         <div hidden={activeTab !== 1}>
-          <Areas userId={userId} />
+          {activeTab === 1 ? <Areas userId={userId} /> : null}
         </div>
       </div>
     </div>

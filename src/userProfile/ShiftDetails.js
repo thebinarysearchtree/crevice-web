@@ -1,18 +1,16 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import Popover from '@material-ui/core/Popover';
-import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
-import DialogTitle from '@material-ui/core/DialogTitle';
 import { getTimeString } from '../utils/date';
 import ScheduleIcon from '@material-ui/icons/Schedule';
 import HomeIcon from '@material-ui/icons/Home';
-import Link from '@material-ui/core/Link';
 import Divider from '@material-ui/core/Divider';
 import client from '../client';
 import Avatar from '../common/Avatar';
+import PopoverToolbar from '../common/PopoverToolbar';
+import BookedList from './BookedList';
 
 const useStyles = makeStyles((theme) => ({
   right: {
@@ -24,7 +22,8 @@ const useStyles = makeStyles((theme) => ({
   content: {
     display: 'flex',
     flexDirection: 'column',
-    width: '375px'
+    width: '375px',
+    paddingBottom: theme.spacing(3)
   },
   detail: {
     display: 'flex',
@@ -47,6 +46,10 @@ const useStyles = makeStyles((theme) => ({
   notes: {
     whiteSpace: 'pre-line',
     marginBottom: theme.spacing(1)
+  },
+  bookedCount: {
+    cursor: 'pointer',
+    marginLeft: theme.spacing(1)
   }
 }));
 
@@ -54,6 +57,10 @@ const today = new Date();
 today.setHours(0, 0, 0, 0);
 
 function Details(props) {
+  const [bookedAnchorEl, setBookedAnchorEl] = useState(null);
+
+  const bookedUsersOpen = Boolean(bookedAnchorEl);
+
   const classes = useStyles();
 
   const { setMessage, makeDays, userId, selectedShift, setSelectedShift, anchorEl, setAnchorEl, open } = props;
@@ -67,34 +74,36 @@ function Details(props) {
 
   const isPast = startTime.getTime() < today.getTime();
 
+  useEffect(() => {
+    setBookedAnchorEl(null);
+  }, [open]);
+
   const handleClose = () => {
     setSelectedShift(null);
     setAnchorEl(null);
   }
 
   const handleCancel = async () => {
+    handleClose();
     const bookingId = shiftRoles.find(sr => sr.booked).bookedUsers.find(u => u.id === userId).bookingId;
     const response = await client.postData('/bookings/remove', { userId, bookingId });
     if (response.ok) {
       const { cancelledCount } = await response.json();
       if (cancelledCount === 1) {
-        handleClose();
         setMessage('Booking cancelled');
         makeDays();
       }
       else {
-        handleClose();
         setMessage('Something went wrong');
       }
     }
     else {
-      handleClose();
       setMessage('Something went wrong');
     }
   }
 
-  const handleClickBookedUsers = (e, bookedUsers) => {
-    setAnchorEl(null);
+  const handleBookedUsersClick = (e, bookedUsers) => {
+    setBookedAnchorEl(e.currentTarget);
   }
 
   const notesElement = notes ? (
@@ -106,9 +115,10 @@ function Details(props) {
   let users;
   if (bookedUsers.length > 5) {
     users = (
-      <Link 
-        className={classes.link}
-        onClick={(e) => handleClickBookedUsers(e, bookedUsers)}>{bookedUsers.length} booked</Link>
+      <Typography 
+        className={classes.bookedCount} 
+        variant="body1"
+        onClick={handleBookedUsersClick}>{bookedUsers.length}</Typography>
     );
   }
   else {
@@ -119,14 +129,12 @@ function Details(props) {
     });
   }
 
-  const actions = canCancel ? (
-    <React.Fragment>
-      <Button color="primary" onClick={handleClose}>Close</Button>
-      <Button
-        variant="contained"
-        color="secondary"
-        onClick={handleCancel}>Cancel booking</Button>
-    </React.Fragment>
+  const bookedUsersPopover = bookedUsersOpen ? (
+    <BookedList
+      anchorEl={bookedAnchorEl}
+      setAnchorEl={setBookedAnchorEl}
+      open={bookedUsersOpen}
+      bookedUsers={bookedUsers} />
   ) : null;
 
   const leftPopover = startTime.getDay() > 3;
@@ -146,22 +154,25 @@ function Details(props) {
       }}
       onClose={handleClose}
       disableRestoreFocus>
-      <DialogTitle>{isPast ? 'Attended shift' : 'Booked shift'}</DialogTitle>
-      <DialogContent className={classes.content}>
-        <div className={classes.detail}>
-          <HomeIcon className={classes.icon} fontSize="small" color="action" />
-          <Typography variant="body1">{areaName}</Typography>
-        </div>
-        <div className={classes.detail}>
-          <ScheduleIcon className={classes.icon} fontSize="small" color="action" />
-          <Typography variant="body1">{time}</Typography>
-        </div>
-        {notesElement}
-        <Divider />
-        <Typography className={classes.title} variant="subtitle2">{isPast ? 'Attended' : 'Attendees'}</Typography>
-        <div className={classes.bookedUsers}>{users}</div>
-      </DialogContent>
-      <DialogActions>{actions}</DialogActions>
+        <PopoverToolbar 
+          onDelete={canCancel ? handleCancel : null} 
+          onClose={handleClose} 
+          deleteText="Cancel shift" />
+        <DialogContent className={classes.content}>
+          <div className={classes.detail}>
+            <HomeIcon className={classes.icon} fontSize="small" color="action" />
+            <Typography variant="body1">{areaName}</Typography>
+          </div>
+          <div className={classes.detail}>
+            <ScheduleIcon className={classes.icon} fontSize="small" color="action" />
+            <Typography variant="body1">{time}</Typography>
+          </div>
+          {notesElement}
+          <Divider />
+          <Typography className={classes.title} variant="subtitle2">{isPast ? 'Attended' : 'Attendees'}</Typography>
+          <div className={classes.bookedUsers}>{users}</div>
+          {bookedUsersPopover}
+        </DialogContent>
     </Popover>
   );
 }

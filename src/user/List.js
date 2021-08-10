@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import client from '../client';
 import Paper from '@material-ui/core/Paper';
@@ -52,17 +52,17 @@ function List() {
   const classes = useStyles();
   const location = useLocation();
   const params = new URLSearchParams(location.search);
-  const roleIdParam = parseInt(params.get('roleId'));
-  const areaIdParam = parseInt(params.get('areaId'));
-  const pageParam = parseInt(params.get('page'));
-  const countParam = parseInt(params.get('count'));
-  const searchParam = params.get('search');
+  const roleIdParam = parseInt(params.get('roleId')) || -1;
+  const areaIdParam = parseInt(params.get('areaId')) || -1;
+  const pageParam = parseInt(params.get('page')) || 0;
+  const searchParam = params.get('search') || '';
 
-  const [searchTerm, setSearchTerm] = useState(searchParam ? searchParam : '');
-  const [roleId, setRoleId] = useState(roleIdParam ? roleIdParam : -1);
-  const [areaId, setAreaId] = useState(areaIdParam ? areaIdParam : -1);
-  const [page, setPage] = useState(pageParam ? pageParam : 0);
-  const [count, setCount] = useState(countParam ? countParam : 0);
+  const [searchTerm, setSearchTerm] = useState(searchParam);
+  const [activeSearchTerm, setActiveSearchTerm] = useState(searchParam);
+  const [roleId, setRoleId] = useState(roleIdParam);
+  const [areaId, setAreaId] = useState(areaIdParam);
+  const [page, setPage] = useState(pageParam);
+  const [count, setCount] = useState(0);
   const [activeDate, setActiveDate] = useState(null);
   const [activeState, setActiveState] = useState('All');
 
@@ -77,6 +77,21 @@ function List() {
 
   const history = useHistory();
 
+  useEffect(() => {
+    if (!loading) {
+      updateUrl();
+      search();
+    }
+  }, [areaId, roleId, page, searchTerm]);
+
+  useEffect(() => {
+    setAreaId(areaIdParam);
+    setRoleId(roleIdParam);
+    setPage(pageParam);
+    setSearchTerm(searchParam);
+    setActiveSearchTerm(searchParam);
+  }, [areaIdParam, roleIdParam, pageParam, searchParam]);
+
   const usersHandler = (users) => {
     setUsers(users);
     if (users.length === 0) {
@@ -90,21 +105,16 @@ function List() {
   const handleSearch = (e) => {
     e.preventDefault();
     setPage(0);
-    updateUrl(areaId, roleId, 0, count);
-    search({ ...query, page: 0 });
+    setSearchTerm(activeSearchTerm);
   }
 
   const handleClearFilters = () => {
-    const areaId = -1;
-    const roleId = -1;
-    const page = 0;
-    setAreaId(areaId);
-    setRoleId(roleId);
-    updateUrl(areaId, roleId, page, count);
-    search({ ...query, areaId, roleId, page });
+    setAreaId(-1);
+    setRoleId(-1);
+    setPage(0);
   }
 
-  const search = async (query) => {
+  const search = async () => {
     const response = await client.postData('/users/find', query);
     if (response.ok) {
       const text = await response.text();
@@ -116,29 +126,23 @@ function List() {
     }
   }
 
-  const updateUrl = (areaId, roleId, page, count) => {
-    const url = `${location.pathname}?areaId=${areaId}&roleId=${roleId}&page=${page}&count=${count}&search=${searchTerm}`;
-    history.replace(url, null);
+  const updateUrl = () => {
+    const url = `${location.pathname}?areaId=${areaId}&roleId=${roleId}&page=${page}&search=${searchTerm}`;
+    history.push(url);
   }
 
   const handleChangePage = (e, page) => {
     setPage(page);
-    search({ ...query, page });
-    updateUrl(areaId, roleId, page, count);
   }
 
   const handleRoleChange = (roleId) => {
     setRoleId(roleId);
     setPage(0);
-    search({ ...query, roleId, page: 0 });
-    updateUrl(areaId, roleId, 0, count);
   }
 
   const handleAreaChange = (areaId) => {
     setAreaId(areaId);
     setPage(0);
-    search({ ...query, areaId, page: 0 });
-    updateUrl(areaId, roleId, 0, count);
   }
 
   const deleteUser = async (userId) => {
@@ -216,8 +220,8 @@ function List() {
           <SearchBox 
             variant="form"
             placeholder="Search..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            value={activeSearchTerm}
+            onChange={(e) => setActiveSearchTerm(e.target.value)}
             onSubmit={handleSearch} />
           <div className={classes.grow} />
           {clearFilters}

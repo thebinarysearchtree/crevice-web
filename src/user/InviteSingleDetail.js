@@ -155,15 +155,13 @@ function InviteSingleDetail() {
     }
   }
 
-  const checkOverlapping = (suppliedUserAreas) => {
-    return suppliedUserAreas.some(supplied => {
-      const existing = userAreas.filter(ua => ua.area.id === supplied.area.id);
-      return overlaps(supplied, existing);
-    });
+  const checkOverlapping = (userArea) => {
+    const existing = userAreas.filter(ua => ua.area.id === userArea.area.id);
+    return overlaps(userArea, existing);
   }
 
-  const handleAddAreas = (suppliedUserAreas) => {
-    setUserAreas(areas => [...areas, ...suppliedUserAreas]);
+  const handleAddArea = (userArea) => {
+    setUserAreas(areas => [...areas, userArea]);
   }
 
   const handleUpload = async (e) => {
@@ -219,7 +217,7 @@ function InviteSingleDetail() {
         roles={roles}
         locations={locations}
         checkOverlapping={checkOverlapping}
-        handleAddAreas={handleAddAreas} />
+        handleAddArea={handleAddArea} />
     );
   }
 

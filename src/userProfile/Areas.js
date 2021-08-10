@@ -115,6 +115,10 @@ function Areas(props) {
     setMonths(months);
   }, [year]);
 
+  useEffect(() => {
+    setYear(today.getFullYear());
+  }, [userId]);
+
   const handlePeriodClick = (e, period) => {
     setSelectedPeriod(period);
     setPeriodEl(e.currentTarget);
@@ -128,36 +132,30 @@ function Areas(props) {
       (!p.endTime || p.endTime >= period.startTime));
   }
 
-  const checkOverlapping = (suppliedUserAreas) => {
-    let overlapping = false;
-    for (const userArea of suppliedUserAreas) {
-      const area = areas.find(a => a.id === userArea.area.id);
-      if (area) {
-        overlapping = area.periods.some(p => 
-          (!userArea.endTime || p.startTime <= userArea.endTime.getTime()) &&
-          (!p.endTime || p.endTime >= userArea.startTime.getTime()));
-        if (overlapping) {
-          break;
-        }
-      }
+  const checkOverlapping = (userArea) => {
+    const area = areas.find(a => a.id === userArea.area.id);
+    if (area) {
+      return area.periods.some(p => 
+        (!userArea.endTime || p.startTime <= userArea.endTime.getTime()) &&
+        (!p.endTime || p.endTime >= userArea.startTime.getTime()));
     }
-    return overlapping;
+    return false;
   }
 
-  const handleAddAreas = async (suppliedUserAreas) => {
-    const userAreas = suppliedUserAreas.map(ua => {
-      const timeZone = ua.area.timeZone;
-      return {
-        userId,
-        roleId: ua.role.id, 
-        areaId: ua.area.id,
-        startTime: makeAreaDate(ua.startTime, timeZone),
-        endTime: makeAreaDate(ua.endTime, timeZone, 1),
-        isAdmin: ua.isAdmin
-      }
-    });
-    const response = await client.postData('/userAreas/insertMany', { userAreas, userId });
+  const handleAddArea = async (suppliedUserArea) => {
+    const { role, area, startTime, endTime, isAdmin } = suppliedUserArea;
+    const timeZone = area.timeZone;
+    const userArea = {
+      userId,
+      roleId: role.id, 
+      areaId: area.id,
+      startTime: makeAreaDate(startTime, timeZone),
+      endTime: makeAreaDate(endTime, timeZone, 1),
+      isAdmin
+    }
+    let response = await client.postData('/userAreas/insert', userArea);
     if (response.ok) {
+      response = await client.postData('/userAreas/find', { userId });
       const updatedAreas = await parse(response);
       areasHandler(updatedAreas);
       return false;
@@ -181,7 +179,7 @@ function Areas(props) {
   useFetchMany(setLoading, [
     { url: '/userAreas/find', handler: areasHandler, data: { userId } },
     { url: '/roles/getSelectListItems', handler: rolesHandler },
-    { url: '/areas/getWithLocation', handler: locationsHandler }]);
+    { url: '/areas/getWithLocation', handler: locationsHandler }], [userId]);
 
   if (loading) {
     return <Progress loading={loading} />;
@@ -320,7 +318,7 @@ function Areas(props) {
       {areaBars}
       <AddArea
         checkOverlapping={checkOverlapping}
-        asyncHandleAddAreas={handleAddAreas}
+        asyncHandleAddArea={handleAddArea}
         roles={roles}
         locations={locations}
         open={buttonOpen}

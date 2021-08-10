@@ -18,6 +18,7 @@ import Popover from '@material-ui/core/Popover';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
+import areIntervalsOverlapping from 'date-fns/areIntervalsOverlapping/index.js';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -75,57 +76,50 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function AddArea(props) {
-  const [roleIndex, setRoleIndex] = useState(-1);
+  const [selectedRole, setSelectedRole] = useState(null);
   const [startTime, setStartTime] = useState(new Date());
   const [endTime, setEndTime] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [locationIndex, setLocationIndex] = useState(0);
   const [overlappingError, setOverlappingError] = useState(false);
-  const [selectedAreaIds, setSelectedAreaIds] = useState([]);
+  const [selectedArea, setSelectedArea] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const startError = startTime && endTime && startTime.getTime() > endTime.getTime();
 
   const classes = useStyles();
 
-  const { checkOverlapping, asyncHandleAddAreas, handleAddAreas, roles, locations, open, anchorEl, setAnchorEl, setMessage } = props;
+  const { checkOverlapping, asyncHandleAddArea, handleAddArea, roles, locations, open, anchorEl, setAnchorEl, setMessage } = props;
 
-  const isDisabled = loading || roleIndex === -1 || selectedAreaIds.length === 0 || !startTime || isNaN(startTime.getTime()) || (endTime && isNaN(endTime.getTime())) || startError;
+  const isDisabled = loading || !selectedRole || !selectedArea || !startTime || isNaN(startTime.getTime()) || (endTime && isNaN(endTime.getTime())) || startError;
 
   useEffect(() => {
     if (open) {
-      setRoleIndex(-1);
+      setSelectedRole(null);
       setStartTime(new Date());
       setEndTime(null);
       setLocationIndex(0);
-      setSelectedAreaIds([]);
+      setSelectedArea(null);
     }
   }, [open]);
 
   const addAreas = async (e) => {
     e.preventDefault();
-    const role = roles[roleIndex]
-    const userAreas = locations
-      .flatMap(l => l.areas)
-      .filter(a => selectedAreaIds.includes(a.id))
-      .map(a => {
-        const area = {...a };
-        return {
-          role,
-          area,
-          startTime,
-          endTime,
-          isAdmin
-        }
-      });
-    const overlapping = checkOverlapping(userAreas);
+    const area = {
+      role: selectedRole,
+      area: selectedArea,
+      startTime,
+      endTime,
+      isAdmin
+    };
+    const overlapping = checkOverlapping(area);
     if (overlapping) {
       setOverlappingError(true);
     }
     else {
-      if (asyncHandleAddAreas) {
+      if (asyncHandleAddArea) {
         setLoading(true);
-        const error = await asyncHandleAddAreas(userAreas);
+        const error = await asyncHandleAddArea(area);
         setLoading(false);
         if (error) {
           setMessage('Something went wrong');
@@ -136,15 +130,15 @@ function AddArea(props) {
         }
       }
       else {
-        handleAddAreas(userAreas);
+        handleAddArea(area);
         setAnchorEl(null);
       }
     }
   }
 
-  const roleItems = roles.map((r, i) => <MenuItem key={r.id} value={i}>{r.name}</MenuItem>);
+  const roleItems = roles.map(r => <MenuItem key={r.id} value={r}>{r.name}</MenuItem>);
   const locationItems = locations.map((l, i) => <MenuItem key={l.id} value={i}>{l.name}</MenuItem>);
-  const areaItems = locations[locationIndex].areas.map(a => <MenuItem key={a.id} value={a.id}>{a.name}</MenuItem>);
+  const areaItems = locations[locationIndex].areas.map(a => <MenuItem key={a.id} value={a}>{a.name}</MenuItem>);
 
   const locationSelect = locations.length > 1 ? (
     <FormControl className={classes.spacing}>
@@ -163,14 +157,8 @@ function AddArea(props) {
   if (loading) {
     addButtonText = 'Saving...';
   }
-  else if (selectedAreaIds.length === 0) {
-    addButtonText = 'Add';
-  }
-  else if (selectedAreaIds.length === 1) {
-    addButtonText = 'Add 1 area';
-  }
   else {
-    addButtonText = `Add ${selectedAreaIds.length} areas`;
+    addButtonText = 'Add';
   }
 
   return (
@@ -188,27 +176,26 @@ function AddArea(props) {
       }}
       onClose={() => setAnchorEl(null)}
       disableRestoreFocus>
-      <DialogTitle>Add areas</DialogTitle>
+      <DialogTitle>Add area</DialogTitle>
       <DialogContent className={classes.root}>
         <FormControl className={classes.spacing}>
             <InputLabel id="role-label">Role</InputLabel>
             <Select
               labelId="role-label"
               label="Role"
-              value={roleIndex !== -1 ? roleIndex : ''}
-              onChange={(e) => setRoleIndex(e.target.value)}>
+              value={selectedRole ? selectedRole : ''}
+              onChange={(e) => setSelectedRole(e.target.value)}>
                 {roleItems}
             </Select>
         </FormControl>
         {locationSelect}
         <FormControl className={classes.spacing}>
-          <InputLabel id="area-label">Areas</InputLabel>
+          <InputLabel id="area-label">Area</InputLabel>
           <Select
-            multiple
             labelId="area-label"
             label="Areas"
-            value={selectedAreaIds}
-            onChange={(e) => setSelectedAreaIds(e.target.value)}>
+            value={selectedArea ? selectedArea : ''}
+            onChange={(e) => setSelectedArea(e.target.value)}>
               {areaItems}
           </Select>
         </FormControl>
@@ -245,7 +232,7 @@ function AddArea(props) {
         <FormControlLabel
           className={classes.spacing}
           control={<Checkbox checked={isAdmin} onChange={(e) => setIsAdmin(e.target.checked)} />}
-          label="Is administrator for these areas?" />
+          label="Is administrator for this area?" />
         <FormHelperText error={overlappingError}>{overlappingError ? 'Areas cannot have overlapping periods' : ''}</FormHelperText>
       </DialogContent>
       <DialogActions>

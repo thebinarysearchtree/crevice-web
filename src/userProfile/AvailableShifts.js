@@ -73,21 +73,21 @@ function AvailableShifts(props) {
   }
 
   const handleClickBookedUsers = (e, bookedUsers) => {
+    e.stopPropagation();
     setBookedAnchorEl(e.currentTarget);
     setBookedUsers(bookedUsers);
   }
 
   const handleBookClick = async () => {
+    handleClose();
     const shiftRoleIds = selectedShifts.map(s => s.shiftRoleId);
     const response = await client.postData('/bookings/insert', { userId, shiftRoleIds });
     if (response.ok) {
       const { bookedCount } = await response.json();
       setMessage('Shift booked');
       makeDays();
-      handleClose();
     }
     else {
-      handleClose();
       setMessage('Something went wrong');
     }
   }

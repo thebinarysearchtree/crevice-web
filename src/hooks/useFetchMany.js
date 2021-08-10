@@ -5,7 +5,7 @@ import { makeReviver } from '../utils/data';
 
 const defaultReviver = makeReviver();
 
-function useFetchMany(setLoading, requests) {
+function useFetchMany(setLoading, requests, params = []) {
   const history = useHistory();
 
   useEffect(() => {
@@ -36,7 +36,7 @@ function useFetchMany(setLoading, requests) {
       setLoading(false);
     };
     getState();
-  }, []);
+  }, params);
 }
 
 export default useFetchMany;

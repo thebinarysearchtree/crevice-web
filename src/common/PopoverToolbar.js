@@ -29,21 +29,29 @@ const useStyles = makeStyles((theme) => ({
 function PopoverToolbar(props) {
   const classes = useStyles();
   
-  const { itemName, onEdit, onDelete, onClose } = props;
+  const { onEdit, onDelete, onClose, editText, deleteText } = props;
+
+  const editButton = onEdit ? (
+    <Tooltip title={editText}>
+      <IconButton className={classes.button} size="small" onClick={onEdit}>
+        <EditIcon fontSize="small" color="action" />
+      </IconButton>
+    </Tooltip>
+  ) : null;
+
+  const deleteButton = onDelete ? (
+    <Tooltip title={deleteText}>
+      <IconButton className={classes.button} size="small" onClick={onDelete}>
+        <DeleteIcon fontSize="small" color="action" />
+      </IconButton>
+    </Tooltip>
+  ) : null;
 
   return (
     <div className={classes.root}>
       <div className={classes.grow} />
-      <Tooltip title={`Edit ${itemName}`}>
-        <IconButton className={classes.button} size="small" onClick={onEdit}>
-          <EditIcon fontSize="small" color="action" />
-        </IconButton>
-      </Tooltip>
-      <Tooltip title={`Delete ${itemName}`}>
-        <IconButton className={classes.button} size="small" onClick={onDelete}>
-          <DeleteIcon fontSize="small" color="action" />
-        </IconButton>
-      </Tooltip>
+      {editButton}
+      {deleteButton}
       <Tooltip title="Close">
         <IconButton size="small" onClick={onClose}>
           <CloseIcon fontSize="small" color="action" />

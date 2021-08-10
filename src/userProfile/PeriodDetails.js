@@ -44,10 +44,11 @@ function PeriodDetails(props) {
   return (
     <React.Fragment>
       <PopoverToolbar
-        itemName="period"
         onEdit={onEdit}
         onDelete={onDelete}
-        onClose={onClose} />
+        onClose={onClose}
+        editText="Edit period"
+        deleteText="Delete period" />
       <DialogContent className={classes.root}>
         <div className={classes.detail}>
           <Tooltip title="Role" placement="top">

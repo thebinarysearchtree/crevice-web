@@ -88,7 +88,7 @@ function InviteSingleAreas(props) {
 
   const classes = useStyles();
 
-  const { userAreas, setUserAreas, user, inviteUser, roles, locations, checkOverlapping, handleAddAreas } = props;
+  const { userAreas, setUserAreas, user, inviteUser, roles, locations, checkOverlapping, handleAddArea } = props;
 
   function DisplayField(props) {
     const { label, value } = props;
@@ -138,7 +138,7 @@ function InviteSingleAreas(props) {
           disabled={userAreas.length === 0}>Invite user</Button>
         <AddArea
           checkOverlapping={checkOverlapping}
-          handleAddAreas={handleAddAreas}
+          handleAddArea={handleAddArea}
           roles={roles}
           locations={locations}
           open={open}
