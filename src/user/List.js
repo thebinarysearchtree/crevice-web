@@ -79,8 +79,8 @@ function List() {
   const history = useHistory();
 
   useEffect(() => {
+    updateUrl();
     if (!loading) {
-      updateUrl();
       search();
     }
   }, [areaId, roleId, page, searchTerm]);
@@ -131,7 +131,12 @@ function List() {
   const updateUrl = () => {
     const url = `${location.pathname}?areaId=${areaId}&roleId=${roleId}&page=${page}&search=${searchTerm}&count=${count}`;
     if (`${location.pathname}${location.search}` !== url) {
-      history.push(url);
+      if (location.search === '') {
+        history.replace(url);
+      }
+      else {
+        history.push(url);
+      }
     }
   }
 
