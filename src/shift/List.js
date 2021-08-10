@@ -11,6 +11,7 @@ import client from '../client';
 import AreaButton from './AreaButton';
 import { makeReviver, dateParser } from '../utils/data';
 import Details from './Details';
+import { useLocation, useHistory } from 'react-router-dom';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -152,6 +153,13 @@ function List() {
   const year = date.getFullYear();
 
   const classes = useStyles();
+  const history = useHistory();
+  const location = useLocation();
+
+  const params = new URLSearchParams(location.search);
+
+  const areaIdParam = parseInt(params.get('areaId')) || -1;
+  const dateParam = parseInt(params.get('date')) || -1;
 
   const handleDayClick = (e, day) => {
     setSelectedDay(day);
@@ -206,12 +214,39 @@ function List() {
   useEffect(() => {
     if (selectedArea) {
       makeDays();
+      updateUrl();
     }
   }, [date, selectedArea]);
 
+  useEffect(() => {
+    if (!loading) {
+      if (areaIdParam !== -1) {
+        const area = locations.flatMap(l => l.areas).find(a => a.id === areaIdParam);
+        const date = new Date(dateParam);
+        setSelectedArea(a => (a && a.id === area.id) ? a : area);
+        setDate(d => d.getTime() === dateParam ? d : date);
+      }
+      else {
+        setSelectedArea(locations[0].areas[0]);
+        setDate(startDate);
+      }
+    }
+  }, [loading, areaIdParam, dateParam]);
+
+  const updateUrl = () => {
+    const url = `${location.pathname}?areaId=${selectedArea.id}&date=${date.getTime()}`;
+    if (`${location.pathname}${location.search}` !== url) {
+      if (location.search === '') {
+        history.replace(url);
+      }
+      else {
+        history.push(url);
+      }
+    }
+  }
+
   const locationsHandler = (locations) => {
     setLocations(locations);
-    setSelectedArea(locations[0].areas[0]);
   }
   const rolesHandler = (roles) => setRoles(roles);
 
@@ -220,7 +255,7 @@ function List() {
     { url: '/roles/getSelectListItems', handler: rolesHandler }
   ]);
 
-  if (loading) {
+  if (!selectedArea) {
     return <Progress loading={loading} />;
   }
 

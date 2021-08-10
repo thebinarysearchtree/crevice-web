@@ -56,13 +56,14 @@ function List() {
   const areaIdParam = parseInt(params.get('areaId')) || -1;
   const pageParam = parseInt(params.get('page')) || 0;
   const searchParam = params.get('search') || '';
+  const countParam = parseInt(params.get('count')) || 0;
 
   const [searchTerm, setSearchTerm] = useState(searchParam);
   const [activeSearchTerm, setActiveSearchTerm] = useState(searchParam);
   const [roleId, setRoleId] = useState(roleIdParam);
   const [areaId, setAreaId] = useState(areaIdParam);
   const [page, setPage] = useState(pageParam);
-  const [count, setCount] = useState(0);
+  const [count, setCount] = useState(countParam);
   const [activeDate, setActiveDate] = useState(null);
   const [activeState, setActiveState] = useState('All');
 
@@ -90,6 +91,7 @@ function List() {
     setPage(pageParam);
     setSearchTerm(searchParam);
     setActiveSearchTerm(searchParam);
+    setCount(countParam);
   }, [areaIdParam, roleIdParam, pageParam, searchParam]);
 
   const usersHandler = (users) => {
@@ -127,8 +129,10 @@ function List() {
   }
 
   const updateUrl = () => {
-    const url = `${location.pathname}?areaId=${areaId}&roleId=${roleId}&page=${page}&search=${searchTerm}`;
-    history.push(url);
+    const url = `${location.pathname}?areaId=${areaId}&roleId=${roleId}&page=${page}&search=${searchTerm}&count=${count}`;
+    if (`${location.pathname}${location.search}` !== url) {
+      history.push(url);
+    }
   }
 
   const handleChangePage = (e, page) => {
