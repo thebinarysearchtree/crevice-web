@@ -25,6 +25,7 @@ import TableFilterCell from '../common/TableFilterCell';
 import Link from '@material-ui/core/Link';
 import { Link as RouterLink } from 'react-router-dom';
 import Avatar from '../common/Avatar';
+import useScrollRestore from '../hooks/useScrollRestore';
 
 const useStyles = makeStyles((theme) => ({ 
   ...styles(theme),
@@ -48,8 +49,10 @@ function List() {
   const open = Boolean(anchorEl);
 
   const classes = useStyles();
-  const params = new URLSearchParams(useLocation().search);
 
+  useScrollRestore();
+
+  const params = new URLSearchParams(useLocation().search);
   const locationIdParam = parseInt(params.get('locationId'), 10);
 
   const [locationId, setLocationId] = useState(locationIdParam ? locationIdParam : -1);
@@ -160,13 +163,7 @@ function List() {
     { url: '/locations/getSelectListItems', handler: locationsHandler }]);
 
   if (loading) {
-    return (
-      <div className={classes.root}>
-        <div className={classes.content}>
-          <Progress loading={loading} />
-        </div>
-      </div>
-    );
+    return <Progress loading={loading} />;
   }
   
   const tableRows = filteredAreas.slice(sliceStart, sliceEnd).map(a => {

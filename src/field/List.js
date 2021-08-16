@@ -22,6 +22,7 @@ import IconButton from '@material-ui/core/IconButton';
 import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
 import Tooltip from '@material-ui/core/Tooltip';
 import EditField from './EditField';
+import useScrollRestore from '../hooks/useScrollRestore';
 
 const useStyles = makeStyles(styles);
 
@@ -37,6 +38,8 @@ function List() {
   const open = Boolean(anchorEl);
 
   const classes = useStyles();
+
+  useScrollRestore();
 
   const rowsPerPage = 10;
 
@@ -103,13 +106,7 @@ function List() {
   useFetch('/fields/find', fieldsHandler);
 
   if (loading) {
-    return (
-      <div className={classes.root}>
-        <div className={classes.content}>
-          <Progress loading={loading} />
-        </div>
-      </div>
-    );
+    return <Progress loading={loading} />;
   }
 
   const tableRows = fields.slice(sliceStart, sliceEnd).map((f, i) => {

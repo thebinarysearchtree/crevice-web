@@ -12,6 +12,7 @@ import AreaButton from './AreaButton';
 import { makeReviver, dateParser } from '../utils/data';
 import Details from './Details';
 import { useLocation, useHistory } from 'react-router-dom';
+import useScrollRestore from '../hooks/useScrollRestore';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -120,6 +121,9 @@ const useStyles = makeStyles((theme) => ({
   },
   grow: {
     flexGrow: 1
+  },
+  loading: {
+    height: '2000px'
   }
 }));
 
@@ -145,6 +149,7 @@ function List() {
   const [roles, setRoles] = useState([]);
   const [selectedShift, setSelectedShift] = useState(null);
   const [detailsAnchorEl, setDetailsAnchorEl] = useState(null);
+  const [shiftsLoading, setShiftsLoading] = useState(true);
 
   const open = Boolean(anchorEl);
   const detailsOpen = Boolean(detailsAnchorEl);
@@ -155,6 +160,8 @@ function List() {
   const classes = useStyles();
   const history = useHistory();
   const location = useLocation();
+
+  useScrollRestore();
 
   const params = new URLSearchParams(location.search);
 
@@ -209,6 +216,7 @@ function List() {
       }
     }
     setDays(days);
+    setShiftsLoading(false);
   }
 
   useEffect(() => {
@@ -255,7 +263,7 @@ function List() {
     { url: '/roles/getSelectListItems', handler: rolesHandler }
   ]);
 
-  if (!selectedArea) {
+  if (shiftsLoading) {
     return <Progress loading={loading} />;
   }
 

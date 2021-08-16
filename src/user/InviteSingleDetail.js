@@ -187,7 +187,7 @@ function InviteSingleDetail() {
   }
 
   if (loading) {
-    return <Progress setLoading={setLoading} />;
+    return <Progress loading={loading} />;
   }
 
   const additionalFields = fields.map((field, i) => {

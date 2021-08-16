@@ -26,6 +26,7 @@ import Button from '@material-ui/core/Button';
 import { makeReviver } from '../utils/data';
 import Chip from '@material-ui/core/Chip';
 import Avatar from '../common/Avatar';
+import useScrollRestore from '../hooks/useScrollRestore';
 
 const useStyles = makeStyles((theme) => ({
   ...styles(theme),
@@ -78,6 +79,14 @@ function List() {
 
   const history = useHistory();
 
+  useScrollRestore();
+
+  useEffect(() => {
+    if (!loading) {
+      window.scrollTo(0, 0);
+    }
+  }, [page]);
+
   useEffect(() => {
     updateUrl();
     if (!loading) {
@@ -129,14 +138,26 @@ function List() {
   }
 
   const updateUrl = () => {
-    const url = `${location.pathname}?areaId=${areaId}&roleId=${roleId}&page=${page}&search=${searchTerm}&count=${count}`;
+    const params = new URLSearchParams();
+    if (areaId !== -1) {
+      params.append('areaId', areaId);
+    }
+    if (roleId !== -1) {
+      params.append('roleId', roleId);
+    }
+    if (page !== 0) {
+      params.append('page', page);
+    }
+    if (searchTerm !== '') {
+      params.append('search', searchTerm);
+    }
+    if (count !== 0) {
+      params.append('count', count);
+    }
+    const search = params.toString();
+    const url = search === '' ? location.pathname : `${location.pathname}?${search}`;
     if (`${location.pathname}${location.search}` !== url) {
-      if (location.search === '') {
-        history.replace(url);
-      }
-      else {
-        history.push(url);
-      }
+      history.push(url);
     }
   }
 
@@ -174,13 +195,7 @@ function List() {
     { url: '/areas/getSelectListItems', handler: areasHandler }]);
 
   if (loading) {
-    return (
-      <div className={classes.root}>
-        <div className={classes.content}>
-          <Progress loading={loading} />
-        </div>
-      </div>
-    );
+    return <Progress loading={loading} />;
   }
   
   const tableRows = users.map(u => {

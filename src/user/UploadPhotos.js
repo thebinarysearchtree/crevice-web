@@ -168,7 +168,7 @@ function UploadPhotos() {
   }
 
   if (loading) {
-    return <Progress setLoading={setLoading} />;
+    return <Progress loading={loading} />;
   }
 
   const tableRows = errors.map(e => {

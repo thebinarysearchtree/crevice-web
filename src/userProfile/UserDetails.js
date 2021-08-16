@@ -13,6 +13,7 @@ import Tab from '@material-ui/core/Tab';
 import Divider from '@material-ui/core/Divider';
 import Areas from './Areas';
 import Shifts from './Shifts';
+import useScrollRestore from '../hooks/useScrollRestore';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -69,10 +70,19 @@ function UserDetails(props) {
   const history = useHistory();
   const location = useLocation();
 
+  useScrollRestore();
+
   const { userId } = useParams();
 
   const params = new URLSearchParams(location.search);
   const tabParam = parseInt(params.get('tab')) || 0;
+
+  useEffect(() => {
+    if (!loading) {
+      window.scrollTo(0, 0);
+      setLoading(true);
+    }
+  }, [userId]);
 
   useEffect(() => {
     setActiveTab(tabParam);

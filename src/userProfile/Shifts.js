@@ -127,7 +127,7 @@ startDate.setHours(0, 0, 0, 0);
 const today = new Date();
 today.setHours(0, 0, 0, 0);
 
-function Shifts() {
+function Shifts(props) {
   const [loading, setLoading] = useState(false);
   const [days, setDays] = useState([]);
   const [date, setDate] = useState(startDate);

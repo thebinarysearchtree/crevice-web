@@ -33,7 +33,9 @@ function useFetchMany(setLoading, requests, params = []) {
         const result = JSON.parse(state, reviver ? reviver : defaultReviver);
         handler(result);
       });
-      setLoading(false);
+      if (setLoading) {
+        setLoading(false);
+      }
     };
     getState();
   }, params);

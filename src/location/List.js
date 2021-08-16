@@ -20,6 +20,7 @@ import TablePagination from '@material-ui/core/TablePagination';
 import useFetch from '../hooks/useFetch';
 import Link from '@material-ui/core/Link';
 import { Link as RouterLink } from 'react-router-dom';
+import useScrollRestore from '../hooks/useScrollRestore';
 
 const useStyles = makeStyles(styles);
 
@@ -34,6 +35,8 @@ function List() {
   const open = Boolean(anchorEl);
 
   const classes = useStyles();
+
+  useScrollRestore();
 
   const rowsPerPage = 10;
 
@@ -80,13 +83,7 @@ function List() {
   useFetch('/locations/find', locationsHandler);
 
   if (loading) {
-    return (
-      <div className={classes.root}>
-        <div className={classes.content}>
-          <Progress loading={loading} />
-        </div>
-      </div>
-    );
+    return <Progress loading={loading} />;
   }
 
   const tableRows = locations.slice(sliceStart, sliceEnd).map(l => {
