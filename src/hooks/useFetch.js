@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import client from '../client';
 import { makeReviver } from '../utils/data';
+import cache from '../cache';
 
 const defaultReviver = makeReviver();
 
@@ -14,6 +15,7 @@ function useFetch(url, handler, data, reviver, params = []) {
       if (response.ok) {
         const text = await response.text();
         const result = JSON.parse(text, reviver ? reviver : defaultReviver);
+        cache.set(url, data, result);
         handler(result);
       }
       else {
@@ -25,7 +27,13 @@ function useFetch(url, handler, data, reviver, params = []) {
         }
       }
     };
-    getState();
+    const cachedResult = cache.get(url, data);
+    if (cachedResult) {
+      handler(cachedResult);
+    }
+    else {
+      getState();
+    }
   }, params);
 }
 

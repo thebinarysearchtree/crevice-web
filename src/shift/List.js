@@ -13,6 +13,8 @@ import { makeReviver, dateParser } from '../utils/data';
 import Details from './Details';
 import { useLocation, useHistory } from 'react-router-dom';
 import useScrollRestore from '../hooks/useScrollRestore';
+import cache from '../cache';
+import useSyncParams from '../hooks/useSyncParams';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -140,16 +142,28 @@ today.setHours(0, 0, 0, 0);
 function List() {
   const [locations, setLocations] = useState([]);
   const [selectedArea, setSelectedArea] = useState(null);
+  const [initialArea, setInitialArea] = useState(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [days, setDays] = useState([]);
-  const [date, setDate] = useState(startDate);
+
+  const location = useLocation();
+
+  const params = new URLSearchParams(location.search);
+
+  const areaIdParam = parseInt(params.get('areaId')) || null;
+  const dateParam = parseInt(params.get('date')) || null;
+
+  const [date, setDate] = useState(dateParam ? new Date(dateParam) : startDate);
   const [selectedDay, setSelectedDay] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [roles, setRoles] = useState([]);
   const [selectedShift, setSelectedShift] = useState(null);
   const [detailsAnchorEl, setDetailsAnchorEl] = useState(null);
-  const [shiftsLoading, setShiftsLoading] = useState(true);
+
+  const currentUrl = `${location.pathname}${location.search}`;
+
+  const area = selectedArea ? selectedArea : initialArea;
 
   const open = Boolean(anchorEl);
   const detailsOpen = Boolean(detailsAnchorEl);
@@ -159,14 +173,20 @@ function List() {
 
   const classes = useStyles();
   const history = useHistory();
-  const location = useLocation();
 
   useScrollRestore();
 
-  const params = new URLSearchParams(location.search);
-
-  const areaIdParam = parseInt(params.get('areaId')) || -1;
-  const dateParam = parseInt(params.get('date')) || -1;
+  const monthStartTime = date;
+  const monthEndTime = new Date(monthStartTime);
+  monthEndTime.setMonth(monthEndTime.getMonth() + 1);
+  monthEndTime.setDate(0);
+  const timeZone = area ? area.timeZone : '';
+  const areaId = area ? area.id : areaIdParam;
+  const query = {
+    areaId,
+    startTime: makePgDate(monthStartTime, timeZone),
+    endTime: makePgDate(monthEndTime, timeZone)
+  };
 
   const handleDayClick = (e, day) => {
     setSelectedDay(day);
@@ -179,17 +199,7 @@ function List() {
     setDetailsAnchorEl(e.currentTarget);
   }
 
-  const makeDays = async () => {
-    const monthStartTime = date;
-    const monthEndTime = new Date(monthStartTime);
-    monthEndTime.setMonth(monthEndTime.getMonth() + 1);
-    monthEndTime.setDate(0);
-    const query = {
-      areaId: selectedArea.id,
-      startTime: makePgDate(monthStartTime, selectedArea.timeZone),
-      endTime: makePgDate(monthEndTime, selectedArea.timeZone)
-    }
-    const promise = client.postData('/shifts/find', query);
+  const makeDays = (shifts) => {
     const calendarStart = addDays(monthStartTime, -monthStartTime.getDay());
     const calendarEnd = addDays(monthEndTime, 6 - monthEndTime.getDay());
     const days = [];
@@ -202,48 +212,57 @@ function List() {
       });
       currentDate = addDays(currentDate, 1);
     }
-    const response = await promise;
-    if (response.ok) {
-      const text = await response.text();
-      const shifts = JSON.parse(text, reviver);
-      for (const shift of shifts) {
-        const { startTime } = shift;
-        const day = days[date.getDay() + startTime.getDate() - 1];
-        day.shifts.push(shift);
-        if (selectedShift && selectedShift.id == shift.id) {
-          setSelectedShift(shift);
-        }
+    for (const shift of shifts) {
+      const { startTime } = shift;
+      const day = days[date.getDay() + startTime.getDate() - 1];
+      day.shifts.push(shift);
+      if (selectedShift && selectedShift.id === shift.id) {
+        setSelectedShift(shift);
       }
     }
     setDays(days);
-    setShiftsLoading(false);
   }
 
+  useSyncParams(area, [
+    { 
+      name: 'areaId', 
+      state: area?.id, 
+      param: areaIdParam, 
+      reviver: (param) => setSelectedArea(locations.flatMap(l => l.areas).find(a => a.id === param))
+    },
+    {
+      name: 'date',
+      state: date.getTime(),
+      param: dateParam,
+      reviver: (param) => setDate(new Date(param))
+    }
+  ]);
+
+  /*useEffect(() => {
+    if (area) {
+      if (areaIdParam && areaIdParam !== area.id) {
+        const area = locations.flatMap(l => l.areas).find(a => a.id === areaIdParam);
+        setSelectedArea(area);
+      }
+      if (dateParam && dateParam !== date.getTime()) {
+        setDate(new Date(dateParam));
+      }
+    }
+  }, [location]);
+
   useEffect(() => {
-    if (selectedArea) {
-      makeDays();
+    if (area) {
       updateUrl();
     }
-  }, [date, selectedArea]);
-
-  useEffect(() => {
-    if (!loading) {
-      if (areaIdParam !== -1) {
-        const area = locations.flatMap(l => l.areas).find(a => a.id === areaIdParam);
-        const date = new Date(dateParam);
-        setSelectedArea(a => (a && a.id === area.id) ? a : area);
-        setDate(d => d.getTime() === dateParam ? d : date);
-      }
-      else {
-        setSelectedArea(locations[0].areas[0]);
-        setDate(startDate);
-      }
-    }
-  }, [loading, areaIdParam, dateParam]);
+  }, [date, area]);
 
   const updateUrl = () => {
-    const url = `${location.pathname}?areaId=${selectedArea.id}&date=${date.getTime()}`;
-    if (`${location.pathname}${location.search}` !== url) {
+    const params = new URLSearchParams();
+    params.append('areaId', area.id);
+    params.append('date', date.getTime());
+    const search = params.toString();
+    const url = `${location.pathname}?${search}`;
+    if (url !== currentUrl) {
       if (location.search === '') {
         history.replace(url);
       }
@@ -251,19 +270,21 @@ function List() {
         history.push(url);
       }
     }
-  }
+  }*/
 
   const locationsHandler = (locations) => {
     setLocations(locations);
+    setInitialArea(areaIdParam ? locations.flatMap(l => l.areas).find(a => a.id === areaIdParam) : locations[0].areas[0]);
   }
   const rolesHandler = (roles) => setRoles(roles);
 
   useFetchMany(setLoading, [
-    { url: '/areas/getWithLocation', handler: locationsHandler },
-    { url: '/roles/getSelectListItems', handler: rolesHandler }
-  ]);
+    { url: '/shifts/find', data: query, handler: makeDays, reviver },
+    { url: '/areas/getWithLocation', handler: locationsHandler, once: true },
+    { url: '/roles/getSelectListItems', handler: rolesHandler, once: true }
+  ], [date, selectedArea]);
 
-  if (shiftsLoading) {
+  if (loading) {
     return <Progress loading={loading} />;
   }
 
@@ -327,7 +348,7 @@ function List() {
   
   const addShift = selectedDay ? (
     <EditPopover
-      area={selectedArea}
+      area={area}
       selectedDay={selectedDay}
       setSelectedDay={setSelectedDay}
       makeDays={makeDays}
@@ -338,7 +359,7 @@ function List() {
       setMessage={setMessage} />) : null;
   const details = selectedShift ? (
     <Details
-      area={selectedArea}
+      area={area}
       setMessage={setMessage}
       makeDays={makeDays}
       selectedShift={selectedShift}
@@ -354,7 +375,7 @@ function List() {
         <div className={classes.toolbar}>
           <Typography variant="h4">{`${monthName} ${year}`}</Typography>
           <div className={classes.grow} />
-          <AreaButton selectedArea={selectedArea} setSelectedArea={setSelectedArea} locations={locations} />
+          <AreaButton selectedArea={area} setSelectedArea={setSelectedArea} locations={locations} />
           <CalendarButtons
             onBack={() => setDate(date => addMonths(date, -1))}
             onToday={() => setDate(startDate)}

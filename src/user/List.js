@@ -27,6 +27,7 @@ import { makeReviver } from '../utils/data';
 import Chip from '@material-ui/core/Chip';
 import Avatar from '../common/Avatar';
 import useScrollRestore from '../hooks/useScrollRestore';
+import cache from '../cache';
 
 const useStyles = makeStyles((theme) => ({
   ...styles(theme),
@@ -126,14 +127,22 @@ function List() {
   }
 
   const search = async () => {
-    const response = await client.postData('/users/find', query);
-    if (response.ok) {
-      const text = await response.text();
-      const users = JSON.parse(text, reviver);
-      usersHandler(users);
+    const url = '/users/find';
+    const cachedResult = cache.get(url, query);
+    if (cachedResult) {
+      usersHandler(cachedResult);
     }
     else {
-      setMessage('Something went wrong');
+      const response = await client.postData(url, query);
+      if (response.ok) {
+        const text = await response.text();
+        const users = JSON.parse(text, reviver);
+        cache.set(url, query, users);
+        usersHandler(users);
+      }
+      else {
+        setMessage('Something went wrong');
+      }
     }
   }
 
@@ -216,12 +225,6 @@ function List() {
           <TableCell align="right">{u.booked}</TableCell>
           <TableCell align="right">{u.attended}</TableCell>
           <TableCell align="right">{u.attendedTime}</TableCell>
-          <TableCell align="right" className={classes.iconCell}>
-            <ConfirmButton
-              title={`Delete ${u.name}?`}
-              content="All information related to this user will be deleted."
-              onClick={() => deleteUser(u.id)} />
-          </TableCell>
       </TableRow>
     );
   });
@@ -284,7 +287,6 @@ function List() {
                 <TableCell align="right">Booked</TableCell>
                 <TableCell align="right">Attended</TableCell>
                 <TableCell align="right">Attended Time</TableCell>
-                <TableCell align="right"></TableCell>
               </TableRow>
             </TableHead>
             <TableBody>

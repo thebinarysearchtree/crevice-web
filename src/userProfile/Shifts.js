@@ -12,6 +12,7 @@ import { makeReviver, dateParser } from '../utils/data';
 import AvailableShifts from './AvailableShifts';
 import Snackbar from '../common/Snackbar';
 import ShiftDetails from './ShiftDetails';
+import useFetch from '../hooks/useFetch';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -147,6 +148,17 @@ function Shifts(props) {
 
   const userId = parseInt(useParams().userId, 10);
 
+  const monthStartTime = date;
+  const monthEndTime = new Date(monthStartTime);
+  monthEndTime.setMonth(monthEndTime.getMonth() + 1);
+  monthEndTime.setDate(0);
+
+  const query = {
+    userId,
+    startTime: addDays(monthStartTime, -1),
+    endTime: addDays(monthEndTime, 1)
+  };
+
   const handleDayClick = (e, day) => {
     setSelectedDay(day);
     setAnchorEl(e.currentTarget);
@@ -158,17 +170,9 @@ function Shifts(props) {
     setDetailsAnchorEl(e.currentTarget);
   }
 
-  const makeDays = async () => {
-    const monthStartTime = date;
-    const monthEndTime = new Date(monthStartTime);
-    monthEndTime.setMonth(monthEndTime.getMonth() + 1);
-    monthEndTime.setDate(0);
-    const query = {
-      userId,
-      startTime: addDays(monthStartTime, -1),
-      endTime: addDays(monthEndTime, 1)
-    };
-    const promise = client.postData('/shifts/getAvailableShifts', query);
+  const makeDays = (shifts) => {
+    setAnchorEl(null);
+    setDetailsAnchorEl(null);
     const calendarStart = addDays(monthStartTime, -monthStartTime.getDay());
     const calendarEnd = addDays(monthEndTime, 6 - monthEndTime.getDay());
     const days = [];
@@ -182,37 +186,28 @@ function Shifts(props) {
       });
       currentDate = addDays(currentDate, 1);
     }
-    const response = await promise;
-    if (response.ok) {
-      const text = await response.text();
-      const shifts = JSON.parse(text, reviver);
-      const booked = shifts.filter(s => s.booked);
-      const available = shifts
-        .filter(s => !s.booked)
-        .filter(s => !overlaps(s, booked));
-      const filteredShifts = booked.concat(available);
-      for (const shift of filteredShifts) {
-        const { startTime } = shift;
-        if (startTime.getMonth() !== date.getMonth()) {
-          continue;
-        }
-        const day = days[date.getDay() + startTime.getDate() - 1];
-        if (shift.booked) {
-          day.bookedShifts.push(shift);
-        }
-        else {
-          day.availableShifts.push(shift);
-        }
+    const booked = shifts.filter(s => s.booked);
+    const available = shifts
+      .filter(s => !s.booked)
+      .filter(s => !overlaps(s, booked));
+    const filteredShifts = booked.concat(available);
+    for (const shift of filteredShifts) {
+      const { startTime } = shift;
+      if (startTime.getMonth() !== date.getMonth()) {
+        continue;
+      }
+      const day = days[date.getDay() + startTime.getDate() - 1];
+      if (shift.booked) {
+        day.bookedShifts.push(shift);
+      }
+      else {
+        day.availableShifts.push(shift);
       }
     }
     setDays(days);
   }
 
-  useEffect(() => {
-    setAnchorEl(null);
-    setDetailsAnchorEl(null);
-    makeDays();
-  }, [date, userId]);
+  useFetch('/shifts/getAvailableShifts', makeDays, query, reviver, [date, userId]);
 
   if (loading) {
     return <Progress loading={loading} />;
