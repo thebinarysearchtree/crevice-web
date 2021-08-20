@@ -6,17 +6,24 @@ function useParamState(options) {
 
   const params = new URLSearchParams(location.search);
 
-  const { name, extractor, defaultValue, parser, makeReviver } = options;
+  let { name, to, from, parser, defaultValue } = options;
+
+  defaultValue = defaultValue === undefined ? null : defaultValue;
+  parser = parser ? parser : parseInt;
 
   const param = parser(params.get(name)) || null;
 
-  const [state, setState] = useState(param ? param : defaultValue);
+  const hydrated = from ? from(param) : param;
+
+  const [state, setState] = useState(param ? hydrated : defaultValue);
 
   const translator = {
     name,
-    state: extractor(state),
+    state: to ? to(state) : state,
     param,
-    reviver: makeReviver(setState)
+    reviver: () => setState(hydrated)
   }
-  return [state, setState, translator];
+  return [state, setState, translator, param];
 }
+
+export default useParamState;

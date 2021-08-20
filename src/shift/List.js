@@ -15,6 +15,7 @@ import { useLocation, useHistory } from 'react-router-dom';
 import useScrollRestore from '../hooks/useScrollRestore';
 import cache from '../cache';
 import useSyncParams from '../hooks/useSyncParams';
+import useParamState from '../hooks/useParamState';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -141,29 +142,31 @@ today.setHours(0, 0, 0, 0);
 
 function List() {
   const [locations, setLocations] = useState([]);
-  const [selectedArea, setSelectedArea] = useState(null);
-  const [initialArea, setInitialArea] = useState(null);
+  const getAreaById = (areaId) => locations.flatMap(l => l.areas).find(a => a.id === areaId);
+  const [initialAreaId, setInitialAreaId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [days, setDays] = useState([]);
 
-  const location = useLocation();
-
-  const params = new URLSearchParams(location.search);
-
-  const areaIdParam = parseInt(params.get('areaId')) || null;
-  const dateParam = parseInt(params.get('date')) || null;
-
-  const [date, setDate] = useState(dateParam ? new Date(dateParam) : startDate);
+  const [date, setDate, dateTranslator] = useParamState({ 
+    name: 'date',
+    to: (date) => date.getTime(),
+    from: (dateMs) => new Date(dateMs),
+    defaultValue: startDate 
+  });
+  const [selectedArea, setSelectedArea, areaTranslator, areaIdParam] = useParamState({
+    name: 'areaId',
+    to: (selectedArea) => selectedArea?.id || initialAreaId,
+    from: getAreaById
+  });
   const [selectedDay, setSelectedDay] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [roles, setRoles] = useState([]);
   const [selectedShift, setSelectedShift] = useState(null);
   const [detailsAnchorEl, setDetailsAnchorEl] = useState(null);
 
-  const currentUrl = `${location.pathname}${location.search}`;
-
-  const area = selectedArea ? selectedArea : initialArea;
+  const areaId = selectedArea?.id || initialAreaId || areaIdParam;
+  const area = getAreaById(areaId);
 
   const open = Boolean(anchorEl);
   const detailsOpen = Boolean(detailsAnchorEl);
@@ -172,7 +175,6 @@ function List() {
   const year = date.getFullYear();
 
   const classes = useStyles();
-  const history = useHistory();
 
   useScrollRestore();
 
@@ -180,8 +182,7 @@ function List() {
   const monthEndTime = new Date(monthStartTime);
   monthEndTime.setMonth(monthEndTime.getMonth() + 1);
   monthEndTime.setDate(0);
-  const timeZone = area ? area.timeZone : '';
-  const areaId = area ? area.id : areaIdParam;
+  const timeZone = area?.timeZone || '';
   const query = {
     areaId,
     startTime: makePgDate(monthStartTime, timeZone),
@@ -199,7 +200,8 @@ function List() {
     setDetailsAnchorEl(e.currentTarget);
   }
 
-  const makeDays = (shifts) => {
+  const makeDays = (queryResult) => {
+    const { shifts, areaId } = queryResult[0];
     const calendarStart = addDays(monthStartTime, -monthStartTime.getDay());
     const calendarEnd = addDays(monthEndTime, 6 - monthEndTime.getDay());
     const days = [];
@@ -221,61 +223,14 @@ function List() {
       }
     }
     setDays(days);
+    if (!initialAreaId) {
+      setInitialAreaId(areaId);
+    }
   }
 
-  useSyncParams(area, [
-    { 
-      name: 'areaId', 
-      state: area?.id, 
-      param: areaIdParam, 
-      reviver: (param) => setSelectedArea(locations.flatMap(l => l.areas).find(a => a.id === param))
-    },
-    {
-      name: 'date',
-      state: date.getTime(),
-      param: dateParam,
-      reviver: (param) => setDate(new Date(param))
-    }
-  ]);
+  useSyncParams(area, [areaTranslator, dateTranslator]);
 
-  /*useEffect(() => {
-    if (area) {
-      if (areaIdParam && areaIdParam !== area.id) {
-        const area = locations.flatMap(l => l.areas).find(a => a.id === areaIdParam);
-        setSelectedArea(area);
-      }
-      if (dateParam && dateParam !== date.getTime()) {
-        setDate(new Date(dateParam));
-      }
-    }
-  }, [location]);
-
-  useEffect(() => {
-    if (area) {
-      updateUrl();
-    }
-  }, [date, area]);
-
-  const updateUrl = () => {
-    const params = new URLSearchParams();
-    params.append('areaId', area.id);
-    params.append('date', date.getTime());
-    const search = params.toString();
-    const url = `${location.pathname}?${search}`;
-    if (url !== currentUrl) {
-      if (location.search === '') {
-        history.replace(url);
-      }
-      else {
-        history.push(url);
-      }
-    }
-  }*/
-
-  const locationsHandler = (locations) => {
-    setLocations(locations);
-    setInitialArea(areaIdParam ? locations.flatMap(l => l.areas).find(a => a.id === areaIdParam) : locations[0].areas[0]);
-  }
+  const locationsHandler = (locations) => setLocations(locations);
   const rolesHandler = (roles) => setRoles(roles);
 
   useFetchMany(setLoading, [
@@ -284,7 +239,7 @@ function List() {
     { url: '/roles/getSelectListItems', handler: rolesHandler, once: true }
   ], [date, selectedArea]);
 
-  if (loading) {
+  if (!area) {
     return <Progress loading={loading} />;
   }
 
