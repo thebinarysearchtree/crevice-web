@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import client from '../client';
 import Paper from '@material-ui/core/Paper';
@@ -11,23 +11,23 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Snackbar from '../common/Snackbar';
 import styles from '../styles/list';
-import ConfirmButton from '../common/ConfirmButton';
 import SearchBox from '../common/SearchBox';
 import TableFooter from '@material-ui/core/TableFooter';
 import TablePagination from '@material-ui/core/TablePagination';
 import useFetchMany from '../hooks/useFetchMany';
 import Progress from '../common/Progress';
-import { Link as RouterLink, useLocation, useHistory } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 import TableFilterCell from '../common/TableFilterCell';
 import RoleChip from '../common/RoleChip';
 import MorePopover from '../common/MorePopover';
 import useMessage from '../hooks/useMessage';
 import Button from '@material-ui/core/Button';
-import { makeReviver } from '../utils/data';
 import Chip from '@material-ui/core/Chip';
 import Avatar from '../common/Avatar';
 import useScrollRestore from '../hooks/useScrollRestore';
 import cache from '../cache';
+import useParamState from '../hooks/useParamState';
+import useSyncParams from '../hooks/useSyncParams';
 
 const useStyles = makeStyles((theme) => ({
   ...styles(theme),
@@ -42,30 +42,31 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-const reviver = makeReviver();
-
 function List() {
   const [users, setUsers] = useState(null);
   const [message, setMessage] = useMessage();
   const [loading, setLoading] = useState(true);
   const [roles, setRoles] = useState([]);
   const [areas, setAreas] = useState([]);
-
-  const classes = useStyles();
-  const location = useLocation();
-  const params = new URLSearchParams(location.search);
-  const roleIdParam = parseInt(params.get('roleId')) || -1;
-  const areaIdParam = parseInt(params.get('areaId')) || -1;
-  const pageParam = parseInt(params.get('page')) || 0;
-  const searchParam = params.get('search') || '';
-  const countParam = parseInt(params.get('count')) || 0;
-
-  const [searchTerm, setSearchTerm] = useState(searchParam);
-  const [activeSearchTerm, setActiveSearchTerm] = useState(searchParam);
-  const [roleId, setRoleId] = useState(roleIdParam);
-  const [areaId, setAreaId] = useState(areaIdParam);
-  const [page, setPage] = useState(pageParam);
-  const [count, setCount] = useState(countParam);
+  const [searchTerm, setSearchTerm, searchTermTranslator, searchTermParam] = useParamState({
+    name: 'searchTerm',
+    parser: null,
+    defaultValue: ''
+  });
+  const [activeSearchTerm, setActiveSearchTerm] = useState(searchTermParam ? searchTermParam : '');
+  const [roleId, setRoleId, roleTranslator] = useParamState({
+    name: 'roleId',
+    defaultValue: -1
+  });
+  const [areaId, setAreaId, areaTranslator] = useParamState({
+    name: 'areaId',
+    defaultValue: -1
+  });
+  const [page, setPage, pageTranslator] = useParamState({
+    name: 'page',
+    defaultValue: 0
+  });
+  const [count, setCount] = useState(null);
   const [activeDate, setActiveDate] = useState(null);
   const [activeState, setActiveState] = useState('All');
 
@@ -75,34 +76,13 @@ function List() {
     areaId,
     page,
     activeDate,
-    activeState
+    activeState,
+    count
   };
 
-  const history = useHistory();
+  const classes = useStyles();
 
   useScrollRestore();
-
-  useEffect(() => {
-    if (!loading) {
-      window.scrollTo(0, 0);
-    }
-  }, [page]);
-
-  useEffect(() => {
-    updateUrl();
-    if (!loading) {
-      search();
-    }
-  }, [areaId, roleId, page, searchTerm]);
-
-  useEffect(() => {
-    setAreaId(areaIdParam);
-    setRoleId(roleIdParam);
-    setPage(pageParam);
-    setSearchTerm(searchParam);
-    setActiveSearchTerm(searchParam);
-    setCount(countParam);
-  }, [areaIdParam, roleIdParam, pageParam, searchParam]);
 
   const usersHandler = (users) => {
     setUsers(users);
@@ -126,50 +106,6 @@ function List() {
     setPage(0);
   }
 
-  const search = async () => {
-    const url = '/users/find';
-    const cachedResult = cache.get(url, query);
-    if (cachedResult) {
-      usersHandler(cachedResult);
-    }
-    else {
-      const response = await client.postData(url, query);
-      if (response.ok) {
-        const text = await response.text();
-        const users = JSON.parse(text, reviver);
-        cache.set(url, query, users);
-        usersHandler(users);
-      }
-      else {
-        setMessage('Something went wrong');
-      }
-    }
-  }
-
-  const updateUrl = () => {
-    const params = new URLSearchParams();
-    if (areaId !== -1) {
-      params.append('areaId', areaId);
-    }
-    if (roleId !== -1) {
-      params.append('roleId', roleId);
-    }
-    if (page !== 0) {
-      params.append('page', page);
-    }
-    if (searchTerm !== '') {
-      params.append('search', searchTerm);
-    }
-    if (count !== 0) {
-      params.append('count', count);
-    }
-    const search = params.toString();
-    const url = search === '' ? location.pathname : `${location.pathname}?${search}`;
-    if (`${location.pathname}${location.search}` !== url) {
-      history.push(url);
-    }
-  }
-
   const handleChangePage = (e, page) => {
     setPage(page);
   }
@@ -184,24 +120,16 @@ function List() {
     setPage(0);
   }
 
-  const deleteUser = async (userId) => {
-    const response = await client.postData('/users/remove', { userId });
-    if (response.ok) {
-      setUsers(users => users.filter(u => u.id !== userId));
-      setMessage('User deleted');
-    }
-    else {
-      setMessage('Something went wrong');
-    }
-  }
+  useSyncParams(true, [searchTermTranslator, roleTranslator, areaTranslator, pageTranslator]);
 
   const rolesHandler = (roles) => setRoles(roles);
   const areasHandler = (areas) => setAreas(areas);
 
   useFetchMany(setLoading, [
     { url: '/users/find', handler: usersHandler, data: query },
-    { url: '/roles/getSelectListItems', handler: rolesHandler },
-    { url: '/areas/getSelectListItems', handler: areasHandler }]);
+    { url: '/roles/getSelectListItems', handler: rolesHandler, once: true },
+    { url: '/areas/getSelectListItems', handler: areasHandler, once: true }],
+    [areaId, roleId, page, searchTerm]);
 
   if (loading) {
     return <Progress loading={loading} />;
@@ -297,7 +225,7 @@ function List() {
                 <TablePagination
                   rowsPerPageOptions={[]}
                   colSpan={8}
-                  count={count}
+                  count={count ? count : 0}
                   rowsPerPage={10}
                   page={page}
                   onChangePage={handleChangePage} />

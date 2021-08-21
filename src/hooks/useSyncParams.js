@@ -1,7 +1,10 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useHistory } from 'react-router-dom';
 
 function useSyncParams(ready, translators) {
+  const [initialRun, setInitialRun] = useState(true);
+  const [syncFromParam, setSyncFromParam] = useState(false);
+
   const location = useLocation();
   const history = useHistory();
 
@@ -12,16 +15,21 @@ function useSyncParams(ready, translators) {
   useEffect(() => {
     if (ready) {
       for (const translator of translators) {
-        const { state, param, reviver } = translator;
+        const { state, defaultValue, param, reviver } = translator;
         if (param !== null && param !== state) {
+          setSyncFromParam(true);
           reviver(param);
+        }
+        if (param === null && state !== defaultValue) {
+          setSyncFromParam(true);
+          reviver(defaultValue);
         }
       }
     }
   }, [location]);
 
   useEffect(() => {
-    if (ready) {
+    if (ready && !initialRun && !syncFromParam) {
       const params = new URLSearchParams();
       for (const translator of translators) {
         const { name, state } = translator;
@@ -30,13 +38,14 @@ function useSyncParams(ready, translators) {
       const search = params.toString();
       const url = `${location.pathname}?${search}`;
       if (url !== currentUrl) {
-        if (location.search === '') {
-          history.replace(url);
-        }
-        else {
-          history.push(url);
-        }
+        history.push(url);
       }
+    }
+    if (ready && !initialRun && syncFromParam) {
+      setSyncFromParam(false);
+    }
+    if (ready) {
+      setInitialRun(false);
     }
   }, states);
 }

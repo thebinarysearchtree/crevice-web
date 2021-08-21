@@ -9,9 +9,19 @@ function useParamState(options) {
   let { name, to, from, parser, defaultValue } = options;
 
   defaultValue = defaultValue === undefined ? null : defaultValue;
-  parser = parser ? parser : parseInt;
+  if (parser === null) {
+    parser = (param) => param;
+  }
+  else if (parser === undefined) {
+    parser = parseInt;
+  }
 
-  const param = parser(params.get(name)) || null;
+  let param = parser(params.get(name));
+  if (!param) {
+    if (param !== 0 && param !== '') {
+      param = null;
+    }
+  }
 
   const hydrated = from ? from(param) : param;
 
@@ -20,8 +30,9 @@ function useParamState(options) {
   const translator = {
     name,
     state: to ? to(state) : state,
+    defaultValue,
     param,
-    reviver: () => setState(hydrated)
+    reviver: () => setState(param ? hydrated : defaultValue)
   }
   return [state, setState, translator, param];
 }

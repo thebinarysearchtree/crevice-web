@@ -228,7 +228,7 @@ function List() {
     }
   }
 
-  useSyncParams(area, [areaTranslator, dateTranslator]);
+  useSyncParams(areaId !== null, [areaTranslator, dateTranslator]);
 
   const locationsHandler = (locations) => setLocations(locations);
   const rolesHandler = (roles) => setRoles(roles);
