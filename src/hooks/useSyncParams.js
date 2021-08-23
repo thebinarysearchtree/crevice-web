@@ -32,7 +32,10 @@ function useSyncParams(ready, translators) {
     if (ready && !initialRun && !syncFromParam) {
       const params = new URLSearchParams();
       for (const translator of translators) {
-        const { name, state } = translator;
+        const { name, state, defaultValue, hideDefault } = translator;
+        if (hideDefault && state === defaultValue) {
+          continue;
+        }
         params.append(name, state);
       }
       const search = params.toString();

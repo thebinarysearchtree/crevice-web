@@ -6,7 +6,7 @@ function useParamState(options) {
 
   const params = new URLSearchParams(location.search);
 
-  let { name, to, from, parser, defaultValue } = options;
+  let { name, to, from, parser, defaultValue, hideDefault } = options;
 
   defaultValue = defaultValue === undefined ? null : defaultValue;
   if (parser === null) {
@@ -30,7 +30,8 @@ function useParamState(options) {
   const translator = {
     name,
     state: to ? to(state) : state,
-    defaultValue,
+    defaultValue: to ? to(defaultValue) : defaultValue,
+    hideDefault,
     param,
     reviver: () => setState(param ? hydrated : defaultValue)
   }

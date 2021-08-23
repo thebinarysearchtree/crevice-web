@@ -12,6 +12,7 @@ import Snackbar from '../common/Snackbar';
 import Typography from '@material-ui/core/Typography';
 import CalendarButtons from '../common/CalendarButtons';
 import { parse } from '../utils/data';
+import useAnchorState from '../hooks/useAnchorState';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -83,10 +84,10 @@ function Areas(props) {
   const [months, setMonths] = useState([]);
   const [areas, setAreas] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPeriod, setSelectedPeriod] = useState(null);
+  const [selectedPeriod, setSelectedPeriod] = useAnchorState(null);
   const [message, setMessage] = useState('');
-  const [periodEl, setPeriodEl] = useState(null);
-  const [buttonEl, setButtonEl] = useState(null);
+  const [periodEl, setPeriodEl] = useAnchorState(null);
+  const [buttonEl, setButtonEl] = useAnchorState(null);
   const [roles, setRoles] = useState([]);
   const [locations, setLocations] = useState([]);
 

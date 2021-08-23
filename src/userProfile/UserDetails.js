@@ -2,18 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import client from '../client';
 import Avatar from '@material-ui/core/Avatar';
-import { useHistory, useParams, useLocation } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import useFetch from '../hooks/useFetch';
 import Progress from '../common/Progress';
 import Typography from '@material-ui/core/Typography';
 import Link from '@material-ui/core/Link';
-import Paper from '@material-ui/core/Paper';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import Divider from '@material-ui/core/Divider';
 import Areas from './Areas';
 import Shifts from './Shifts';
 import useScrollRestore from '../hooks/useScrollRestore';
+import useParamState from '../hooks/useParamState';
+import useSyncParams from '../hooks/useSyncParams';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -61,36 +62,41 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-function UserDetails(props) {
+const startDate = new Date();
+startDate.setDate(1);
+startDate.setHours(0, 0, 0, 0);
+
+function UserDetails() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab, tabTranslator] = useParamState({
+    name: 'tab',
+    defaultValue: 0,
+    hideDefault: true
+  });
+  const [date, setDate, dateTranslator] = useParamState({
+    name: 'date',
+    defaultValue: startDate,
+    to: (date) => date.getTime(),
+    from: (param) => new Date(param)
+  });
 
   const classes = useStyles();
-  const history = useHistory();
-  const location = useLocation();
 
   useScrollRestore();
 
   const { userId } = useParams();
 
-  const params = new URLSearchParams(location.search);
-  const tabParam = parseInt(params.get('tab')) || 0;
-
   useEffect(() => {
     if (!loading) {
       window.scrollTo(0, 0);
-      setLoading(true);
     }
   }, [userId]);
 
-  useEffect(() => {
-    setActiveTab(tabParam);
-  }, [tabParam]);
+  useSyncParams(true, [tabTranslator, dateTranslator]);
 
   const handleChangeTab = (e, tabIndex) => {
     setActiveTab(tabIndex);
-    history.push(`${location.pathname}?tab=${tabIndex}`);
   }
 
   const handler = (users) => {
@@ -175,10 +181,10 @@ function UserDetails(props) {
         </Tabs>
         <Divider />
         <div hidden={activeTab !== 0}>
-          {activeTab === 0 ? <Shifts userId={userId} /> : null}
+          <Shifts userId={userId} date={date} setDate={setDate} />
         </div>
         <div hidden={activeTab !== 1}>
-          {activeTab === 1 ? <Areas userId={userId} /> : null}
+          <Areas userId={userId} />
         </div>
       </div>
     </div>

@@ -13,6 +13,7 @@ import AvailableShifts from './AvailableShifts';
 import Snackbar from '../common/Snackbar';
 import ShiftDetails from './ShiftDetails';
 import useFetch from '../hooks/useFetch';
+import useAnchorState from '../hooks/useAnchorState';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -131,15 +132,16 @@ today.setHours(0, 0, 0, 0);
 function Shifts(props) {
   const [loading, setLoading] = useState(false);
   const [days, setDays] = useState([]);
-  const [date, setDate] = useState(startDate);
   const [selectedDay, setSelectedDay] = useState(null);
-  const [anchorEl, setAnchorEl] = useState(null);
+  const [anchorEl, setAnchorEl] = useAnchorState(null);
   const [message, setMessage] = useState('');
-  const [selectedShift, setSelectedShift] = useState(null);
-  const [detailsAnchorEl, setDetailsAnchorEl] = useState(null);
+  const [selectedShift, setSelectedShift] = useAnchorState(null);
+  const [detailsAnchorEl, setDetailsAnchorEl] = useAnchorState(null);
 
   const open = Boolean(anchorEl);
   const detailsOpen = Boolean(detailsAnchorEl);
+
+  const { date, setDate } = props;
 
   const monthName = formatter.format(date);
   const year = date.getFullYear();

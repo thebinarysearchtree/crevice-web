@@ -51,20 +51,24 @@ function List() {
   const [searchTerm, setSearchTerm, searchTermTranslator, searchTermParam] = useParamState({
     name: 'searchTerm',
     parser: null,
-    defaultValue: ''
+    defaultValue: '',
+    hideDefault: true
   });
   const [activeSearchTerm, setActiveSearchTerm] = useState(searchTermParam ? searchTermParam : '');
   const [roleId, setRoleId, roleTranslator] = useParamState({
     name: 'roleId',
-    defaultValue: -1
+    defaultValue: -1,
+    hideDefault: true
   });
   const [areaId, setAreaId, areaTranslator] = useParamState({
     name: 'areaId',
-    defaultValue: -1
+    defaultValue: -1,
+    hideDefault: true
   });
   const [page, setPage, pageTranslator] = useParamState({
     name: 'page',
-    defaultValue: 0
+    defaultValue: 0,
+    hideDefault: true
   });
   const [count, setCount] = useState(null);
   const [activeDate, setActiveDate] = useState(null);
