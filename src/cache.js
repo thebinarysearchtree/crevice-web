@@ -17,11 +17,11 @@ const has = (url, data) => {
   return cache.has(key);
 }
 
-const invalidate = () => cache.clear();
+const clear = () => cache.clear();
 
 export default {
   set,
   get,
   has,
-  invalidate
+  clear
 };

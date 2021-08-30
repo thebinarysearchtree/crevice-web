@@ -1,21 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import useFetchMany from '../hooks/useFetchMany';
+import useFetch from '../hooks/useFetch';
 import Progress from '../common/Progress';
 import Typography from '@material-ui/core/Typography';
-import Snackbar from '../common/Snackbar';
-import { addMonths, isWeekend, getTimeString, makePgDate, addDays } from '../utils/date';
+import { addMonths, isWeekend, makePgDate, addDays } from '../utils/date';
 import CalendarButtons from '../common/CalendarButtons';
 import EditPopover from './EditPopover';
-import client from '../client';
 import AreaButton from './AreaButton';
 import { makeReviver, dateParser } from '../utils/data';
 import Details from './Details';
-import { useLocation, useHistory } from 'react-router-dom';
-import useScrollRestore from '../hooks/useScrollRestore';
-import cache from '../cache';
 import useSyncParams from '../hooks/useSyncParams';
 import useParamState from '../hooks/useParamState';
+import Shift from '../common/Shift';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -62,7 +58,8 @@ const useStyles = makeStyles((theme) => ({
     height: '139px',
     padding: '5px',
     borderTop: '1px solid #ddd',
-    borderLeft: '1px solid #ddd'
+    borderLeft: '1px solid #ddd',
+    overflowY: 'scroll'
   },
   dayNumber: {
     display: 'flex',
@@ -92,36 +89,6 @@ const useStyles = makeStyles((theme) => ({
     justifyContent: 'space-between',
     marginBottom: theme.spacing(1)
   },
-  shift: {
-    width: '100px',
-    padding: '4px',
-    marginBottom: theme.spacing(1),
-    borderRadius: '5px',
-    cursor: 'pointer'
-  },
-  empty: {
-    backgroundColor: '#ffcdd2',
-    '&$selected': {
-      border: '2px solid #b71c1c'
-    }
-  },
-  full: {
-    backgroundColor: '#c8e6c9',
-    '&$selected': {
-      border: '2px solid #1b5e20'
-    }
-  },
-  partial: {
-    backgroundColor: '#bbdefb',
-    '&$selected': {
-      border: '2px solid #0d47a1'
-    }
-  },
-  selected: {
-    marginTop: '-2px',
-    marginBottom: '6px',
-    paddingLeft: '2px'
-  },
   grow: {
     flexGrow: 1
   },
@@ -145,7 +112,6 @@ function List() {
   const getAreaById = (areaId) => locations.flatMap(l => l.areas).find(a => a.id === areaId);
   const [initialAreaId, setInitialAreaId] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState('');
   const [days, setDays] = useState([]);
 
   const [date, setDate, dateTranslator] = useParamState({ 
@@ -175,8 +141,6 @@ function List() {
   const year = date.getFullYear();
 
   const classes = useStyles();
-
-  useScrollRestore();
 
   const monthStartTime = date;
   const monthEndTime = new Date(monthStartTime);
@@ -233,7 +197,7 @@ function List() {
   const locationsHandler = (locations) => setLocations(locations);
   const rolesHandler = (roles) => setRoles(roles);
 
-  useFetchMany(setLoading, [
+  useFetch(setLoading, [
     { url: '/shifts/find', data: query, handler: makeDays, reviver },
     { url: '/areas/getWithLocation', handler: locationsHandler, once: true },
     { url: '/roles/getSelectListItems', handler: rolesHandler, once: true }
@@ -261,30 +225,15 @@ function List() {
     }
     const shifts = day.shifts.map(shift => {
       const { id, startTime, endTime, capacity, booked } = shift;
-      const start = getTimeString(startTime);
-      const end = getTimeString(endTime);
-      const time = `${start} - ${end}`;
-      const selected = shift === selectedShift;
-      let className;
-      if (booked === 0) {
-        className = classes.empty;
-      }
-      else if (booked === capacity) {
-        className = classes.full;
-      }
-      else {
-        className = classes.partial;
-      }
-      if (selected) {
-        className += ` ${classes.selected}`;
-      }
       return (
-        <div 
-          key={id} 
-          className={`${classes.shift} ${className}`}
-          onClick={(e) => handleShiftClick(e, shift)}>
-            <Typography variant="body2">{time}</Typography>
-        </div>
+        <Shift 
+          key={id}
+          startTime={startTime} 
+          endTime={endTime} 
+          booked={booked} 
+          capacity={capacity}
+          selected={shift === selectedShift}
+          onClick={(e) => handleShiftClick(e, shift)} />
       );
     });
     return (
@@ -306,17 +255,13 @@ function List() {
       area={area}
       selectedDay={selectedDay}
       setSelectedDay={setSelectedDay}
-      makeDays={makeDays}
       roles={roles}
       anchorEl={anchorEl}
       setAnchorEl={setAnchorEl}
-      open={open}
-      setMessage={setMessage} />) : null;
+      open={open} />) : null;
   const details = selectedShift ? (
     <Details
       area={area}
-      setMessage={setMessage}
-      makeDays={makeDays}
       selectedShift={selectedShift}
       setSelectedShift={setSelectedShift}
       anchorEl={detailsAnchorEl}
@@ -348,7 +293,6 @@ function List() {
         {calendar}
         {addShift}
         {details}
-        <Snackbar message={message} setMessage={setMessage} />
       </div>
     </div>
   );

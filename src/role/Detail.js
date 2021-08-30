@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import client from '../client';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import Popover from '@material-ui/core/Popover';
@@ -9,6 +8,7 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import ColourGrid from '../common/ColourGrid';
+import { useClient } from '../auth';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -33,8 +33,10 @@ function Detail(props) {
   const error = colour && !hex.test(colour);
   const isDisabled = !name || !hex.test(colour);
 
-  const { setRoles, selectedRole, setSelectedRole, open, anchorEl, setAnchorEl, setMessage } = props;
   const classes = useStyles();
+  const client = useClient();
+
+  const { selectedRole, setSelectedRole, open, anchorEl, setAnchorEl } = props;
 
   useEffect(() => {
     if (selectedRole) {
@@ -58,34 +60,20 @@ function Detail(props) {
 
   const saveRole = async (e) => {
     e.preventDefault();
-    setAnchorEl(null);
+    handleClose();
     if (role.id !== -1) {
-      const response = await client.postData('/roles/update', role);
-      if (response.ok) {
-        setRoles(roles => roles.map(r => {
-          if (r.id === role.id) {
-            return role;
-          }
-          return r;
-        }));
-        setMessage('Role updated');
-      }
-      else {
-        setMessage('Something went wrong');
-      }
+      await client.postMutation({
+        url: '/roles/update',
+        data: role,
+        message: 'Role updated'
+      });
     }
     else {
-      const response = await client.postData('/roles/insert', role);
-      if (response.ok) {
-        const result = await response.json();
-        const { roleId } = result;
-        const savedRole = { ...role, id: roleId };
-        setRoles(roles => [savedRole, ...roles]);
-        setMessage('Role created');
-      }
-      else {
-        setMessage('Something went wrong');
-      }
+      await client.postMutation({
+        url: '/roles/insert',
+        data: role,
+        message: 'Role created'
+      });
     }
   }
 

@@ -10,7 +10,6 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import TextField from '@material-ui/core/TextField';
-import client from '../client';
 import { makePgDate, addDays } from '../utils/date';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import IconButton from '@material-ui/core/IconButton';
@@ -21,6 +20,7 @@ import RoleChip from '../common/RoleChip';
 import RepeatSelector from './RepeatSelector';
 import NotesChip from './NotesChip';
 import SettingsButton from './SettingsButton';
+import { useClient } from '../auth';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -175,8 +175,9 @@ function EditDialog(props) {
   const editError = editIndex !== -1 && (shiftRoles[editIndex].capacity === '' || shiftRoles[editIndex].capacity < 0 || !Number.isInteger(Number(shiftRoles[editIndex].capacity)));
 
   const classes = useStyles();
+  const client = useClient();
 
-  const { handleClose, area, selectedShift, selectedDay, setSelectedDay, makeDays, roles, open, setMessage } = props;
+  const { handleClose, area, selectedShift, selectedDay, setSelectedDay, roles, open } = props;
   
   const { date } = selectedDay;
 
@@ -299,14 +300,11 @@ function EditDialog(props) {
       const bookBeforeMinutes = parseInt(sr.bookBeforeHours * 60, 10);
       return {...sr, cancelBeforeMinutes, bookBeforeMinutes };
     });
-    const response = await client.postData('/shifts/insert', { shift, shiftRoles: adjustedShiftRoles });
-    if (response.ok) {
-      makeDays();
-      setMessage(times.length === 1 ? 'Shift added' : `${times.length} shifts added`);
-    }
-    else {
-      setMessage('Something went wrong');
-    }
+    await client.postMutation({
+      url: '/shifts/insert',
+      data: { shift, shiftRoles: adjustedShiftRoles },
+      message: times.length === 1 ? 'Shift added' : `${times.length} shifts added`
+    });
     handleClose();
   }
 

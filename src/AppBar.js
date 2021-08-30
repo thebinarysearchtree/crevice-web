@@ -7,9 +7,9 @@ import Typography from '@material-ui/core/Typography';
 import MenuItem from '@material-ui/core/MenuItem';
 import Menu from '@material-ui/core/Menu';
 import AccountCircle from '@material-ui/icons/AccountCircle';
-import client from './client';
 import { Link, useHistory } from 'react-router-dom';
 import SearchBox from './common/SearchBox';
+import { useClient } from './auth';
 
 const drawerWidth = 240;
 
@@ -45,6 +45,7 @@ function AppBar() {
 
   const classes = useStyles();
   const history = useHistory();
+  const client = useClient();
 
   const isMenuOpen = Boolean(anchorEl);
 

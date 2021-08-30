@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import client from '../client';
 import TextField from '@material-ui/core/TextField';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -12,6 +11,7 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import styles from '../styles/dialog';
+import { useClient } from '../auth';
 
 const useStyles = makeStyles(styles);
 
@@ -22,8 +22,10 @@ function Detail(props) {
 
   const isDisabled = !name || !timeZone;
 
-  const { setLocations, selectedLocation, setSelectedLocation, open, anchorEl, setAnchorEl, setMessage } = props;
   const classes = useStyles();
+  const client = useClient();
+
+  const { selectedLocation, setSelectedLocation, open, anchorEl, setAnchorEl } = props;
 
   useEffect(() => {
     if (selectedLocation) {
@@ -48,34 +50,20 @@ function Detail(props) {
 
   const saveLocation = async (e) => {
     e.preventDefault();
-    setAnchorEl(null);
+    handleClose();
     if (location.id !== -1) {
-      const response = await client.postData('/locations/update', location);
-      if (response.ok) {
-        setLocations(locations => locations.map(l => {
-          if (l.id === location.id) {
-            return location;
-          }
-          return l;
-        }));
-        setMessage('Location updated');
-      }
-      else {
-        setMessage('Something went wrong');
-      }
+      await client.postMutation({
+        url: '/locations/update',
+        data: location,
+        message: 'Location updated'
+      });
     }
     else {
-      const response = await client.postData('/locations/insert', location);
-      if (response.ok) {
-        const result = await response.json();
-        const { locationId } = result;
-        const savedLocation = { ...location, id: locationId };
-        setLocations(locations => [savedLocation, ...locations]);
-        setMessage('Location created');
-      }
-      else {
-        setMessage('Something went wrong');
-      }
+      await client.postMutation({
+        url: '/locations/insert',
+        data: location,
+        message: 'Location created'
+      });
     }
   }
 

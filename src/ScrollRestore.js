@@ -1,28 +1,32 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
-function useScrollRestore() {
+const map = new Map();
+
+function ScrollRestore() {
   const location = useLocation();
 
   useEffect(() => {
     const scrollY = window.scrollY;
-    const restoredScrollY = sessionStorage.getItem(location.key);
+    const restoredScrollY = map.get(location.key);
     if (restoredScrollY !== null) {
       window.scrollTo(0, restoredScrollY);
-      sessionStorage.removeItem(location.key);
+      map.delete(location.key);
     }
     else {
       window.scrollTo(0, 0);
     }
-    const lastKey = sessionStorage.getItem('lastKey');
+    const lastKey = map.get('lastKey');
     if (lastKey) {
-      sessionStorage.setItem(lastKey, scrollY);
+      map.set(lastKey, scrollY);
     }
   }, [location.pathname]);
 
   useEffect(() => {
-    sessionStorage.setItem('lastKey', location.key);
+    map.set('lastKey', location.key);
   }, [location.key]);
+
+  return null;
 }
 
-export default useScrollRestore;
+export default ScrollRestore;

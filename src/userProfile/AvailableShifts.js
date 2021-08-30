@@ -8,10 +8,10 @@ import { getTimeString, overlaps } from '../utils/date';
 import Button from '@material-ui/core/Button';
 import Chip from '@material-ui/core/Chip';
 import Typography from '@material-ui/core/Typography';
-import client from '../client';
 import Link from '@material-ui/core/Link';
 import BookedList from './BookedList';
 import Avatar from '../common/Avatar';
+import { useClient } from '../auth';
 
 const useStyles = makeStyles((theme) => ({
   content: {
@@ -52,8 +52,9 @@ function AvailableShifts(props) {
   const bookedUsersOpen = Boolean(bookedAnchorEl);
 
   const classes = useStyles();
+  const client = useClient();
 
-  const { setSelectedDay, setMessage, makeDays, userId, date, shifts, anchorEl, setAnchorEl, open } = props;
+  const { setSelectedDay, userId, date, shifts, anchorEl, setAnchorEl, open } = props;
 
   const isDisabled = selectedShifts.length === 0;
 
@@ -81,15 +82,11 @@ function AvailableShifts(props) {
   const handleBookClick = async () => {
     handleClose();
     const shiftRoleIds = selectedShifts.map(s => s.shiftRoleId);
-    const response = await client.postData('/bookings/insert', { userId, shiftRoleIds });
-    if (response.ok) {
-      const { bookedCount } = await response.json();
-      setMessage('Shift booked');
-      makeDays();
-    }
-    else {
-      setMessage('Something went wrong');
-    }
+    await client.postMutation({
+      url: '/bookings/insert',
+      data: { userId, shiftRoleIds },
+      message: shiftRoleIds.length === 1 ? 'Shift booked' : 'Shifts booked'
+    });
   }
 
   const shiftElements = shifts.map(shift => {

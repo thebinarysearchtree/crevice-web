@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import client from '../client';
 import Button from '@material-ui/core/Button';
 import Popover from '@material-ui/core/Popover';
 import DialogTitle from '@material-ui/core/DialogTitle';
@@ -16,6 +15,7 @@ import {
 import Typography from '@material-ui/core/Typography';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import PeriodDetails from './PeriodDetails';
+import { useClient } from '../auth';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -55,8 +55,10 @@ function EditPeriod(props) {
 
   const isDisabled = !startTime || isNaN(startTime.getTime()) || (endTime && isNaN(endTime.getTime())) || startError || !hasChanged;
 
-  const { checkOverlapping, setAreas, selectedPeriod, setSelectedPeriod, open, anchorEl, setAnchorEl, setMessage } = props;
   const classes = useStyles();
+  const client = useClient();
+
+  const { checkOverlapping, selectedPeriod, setSelectedPeriod, open, anchorEl, setAnchorEl } = props;
 
   useEffect(() => {
     const { start, end, isAdmin } = selectedPeriod;
@@ -84,29 +86,17 @@ function EditPeriod(props) {
     setHasChanged(true);
   }
 
-  const { id, userId, areaId, roleId, roleName, roleColour, timeZone } = selectedPeriod;
+  const { id, userId, areaId, roleId, roleName, timeZone } = selectedPeriod;
 
   const removePeriod = async () => {
     const userAreaId = selectedPeriod.id;
     setSelectedPeriod(null);
     setAnchorEl(null);
-    const response = await client.postData('/userAreas/remove', { userAreaId });
-    if (response.ok) {
-      setAreas(areas => {
-        return areas.map(area => {
-          if (area.id !== areaId) {
-            return area;
-          }
-          const updatedArea = {...area };
-          updatedArea.periods = updatedArea.periods.filter(p => p.id !== id);
-          return updatedArea;
-        });
-      });
-      setMessage('Period deleted');
-    }
-    else {
-      setMessage('Something went wrong');
-    }
+    await client.postMutation({
+      url: '/userAreas/remove',
+      data: { userAreaId },
+      message: 'Period deleted'
+    });
   }
 
   const updatePeriod = async (e) => {
@@ -125,37 +115,13 @@ function EditPeriod(props) {
       endTime: makeAreaDate(endTime, timeZone, 1),
       isAdmin
     };
-    const response = await client.postData('/userAreas/update', userArea);
-    if (response.ok) {
-      setAreas(areas => {
-        return areas.map(area => {
-          if (area.id !== areaId) {
-            return area;
-          }
-          const updatedArea = {...area };
-          updatedArea.periods = updatedArea.periods.map(period => {
-            if (period.id !== id) {
-              return period;
-            }
-            return {
-              ...selectedPeriod,
-              startTime: startTime.getTime(),
-              endTime: endTime ? addDays(endTime, 1).getTime() : null,
-              isAdmin
-            };
-          });
-          return updatedArea;
-        });
-      });
-      setSelectedPeriod(null);
-      setAnchorEl(null);
-      setMessage('Period updated');
-    }
-    else {
-      setSelectedPeriod(null);
-      setAnchorEl(null);
-      setMessage('Something went wrong');
-    }
+    setSelectedPeriod(null);
+    setAnchorEl(null);
+    await client.postMutation({
+      url: '/userAreas/update',
+      data: userArea,
+      message: 'Period updated'
+    });
   }
 
   const periodDetails = (

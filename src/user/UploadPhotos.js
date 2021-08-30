@@ -1,15 +1,12 @@
 import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import client from '../client';
 import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
 import Button from '@material-ui/core/Button';
-import Snackbar from '../common/Snackbar';
 import { useHistory } from 'react-router-dom';
 import Avatar from '@material-ui/core/Avatar';
 import Tooltip from '@material-ui/core/Tooltip';
 import BackButton from '../common/BackButton';
-import useFetch from '../hooks/useFetch';
 import Progress from '../common/Progress';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -26,6 +23,9 @@ import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
+import useFetch from '../hooks/useFetch';
+import { useClient } from '../auth';
+import cache from '../cache';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -101,13 +101,15 @@ function UploadPhotos() {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [errors, setErrors] = useState([]);
   const [fieldNames, setFieldNames] = useState([]);
-  const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [showErrors, setShowErrors] = useState(false);
   const [uploading, setUploading] = useState(false);
 
   const history = useHistory();
   const classes = useStyles();
+  const client = useClient();
+
+  const { setMessage } = client;
 
   const isDisabled = uploading || selectedFiles.length === 0;
 
@@ -117,7 +119,10 @@ function UploadPhotos() {
     setLoading(false);
   }
 
-  useFetch('/fields/getFilenameFields', fieldsHandler);
+  useFetch(setLoading, [{
+    url: '/fields/getFilenameFields',
+    handler: fieldsHandler
+  }]);
 
   const updateImages = async (e) => {
     e.preventDefault();
@@ -140,7 +145,9 @@ function UploadPhotos() {
           setShowErrors(true);
         }
         else {
-          history.push('/users', { message: `${storedFiles.length} photos added` });
+          cache.clear();
+          history.push('/users');
+          setMessage(`${storedFiles.length} photos added`);
         }
       }
       else {
@@ -264,7 +271,6 @@ function UploadPhotos() {
               color="primary">Close</Button>
           </DialogActions>
         </Dialog>
-        <Snackbar message={message} setMessage={setMessage} />
       </div>
     </div>
   );

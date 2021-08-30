@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import client from '../client';
 import Avatar from '@material-ui/core/Avatar';
 import { useParams } from 'react-router-dom';
-import useFetch from '../hooks/useFetch';
 import Progress from '../common/Progress';
 import Typography from '@material-ui/core/Typography';
 import Link from '@material-ui/core/Link';
@@ -12,9 +10,9 @@ import Tab from '@material-ui/core/Tab';
 import Divider from '@material-ui/core/Divider';
 import Areas from './Areas';
 import Shifts from './Shifts';
-import useScrollRestore from '../hooks/useScrollRestore';
 import useParamState from '../hooks/useParamState';
 import useSyncParams from '../hooks/useSyncParams';
+import useFetch from '../hooks/useFetch';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -83,8 +81,6 @@ function UserDetails() {
 
   const classes = useStyles();
 
-  useScrollRestore();
-
   const { userId } = useParams();
 
   useEffect(() => {
@@ -99,13 +95,11 @@ function UserDetails() {
     setActiveTab(tabIndex);
   }
 
-  const handler = (users) => {
-    const user = users[0];
-    setUser(user);
-    setLoading(false);
-  }
-
-  useFetch('/users/getUserDetails', handler, { userId }, null, [userId]);
+  useFetch(setLoading, [{
+    url: '/users/getUserDetails',
+    data: { userId },
+    handler: (users) => setUser(users[0])
+  }], [userId]);
 
   if (loading) {
     return <Progress loading={loading} />;

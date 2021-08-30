@@ -1,18 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import client from '../client';
-import useFetchMany from '../hooks/useFetchMany';
+import useFetch from '../hooks/useFetch';
 import Progress from '../common/Progress';
 import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
 import EditPeriod from './EditPeriod';
 import AddArea from '../user/AddArea';
 import { makeAreaDate } from '../utils/date';
-import Snackbar from '../common/Snackbar';
 import Typography from '@material-ui/core/Typography';
 import CalendarButtons from '../common/CalendarButtons';
-import { parse } from '../utils/data';
 import useAnchorState from '../hooks/useAnchorState';
+import { useClient } from '../auth';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -85,7 +83,6 @@ function Areas(props) {
   const [areas, setAreas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useAnchorState(null);
-  const [message, setMessage] = useState('');
   const [periodEl, setPeriodEl] = useAnchorState(null);
   const [buttonEl, setButtonEl] = useAnchorState(null);
   const [roles, setRoles] = useState([]);
@@ -95,6 +92,7 @@ function Areas(props) {
   const buttonOpen = Boolean(buttonEl);
 
   const classes = useStyles();
+  const client = useClient();
 
   const startOfYear = new Date(year, 0, 1).getTime();
   const endOfYear = new Date(year + 1, 0, 1).getTime();
@@ -154,14 +152,11 @@ function Areas(props) {
       endTime: makeAreaDate(endTime, timeZone, 1),
       isAdmin
     }
-    let response = await client.postData('/userAreas/insert', userArea);
-    if (response.ok) {
-      response = await client.postData('/userAreas/find', { userId });
-      const updatedAreas = await parse(response);
-      areasHandler(updatedAreas);
-      return false;
-    }
-    return true;
+    await client.postMutation({
+      url: '/userAreas/insert',
+      data: userArea,
+      message: 'Area added'
+    });
   }
 
   const areasHandler = (areas) => {
@@ -177,7 +172,7 @@ function Areas(props) {
   const rolesHandler = (roles) => setRoles(roles);
   const locationsHandler = (locations) => setLocations(locations);
 
-  useFetchMany(setLoading, [
+  useFetch(setLoading, [
     { url: '/userAreas/find', handler: areasHandler, data: { userId } },
     { url: '/roles/getSelectListItems', handler: rolesHandler },
     { url: '/areas/getWithLocation', handler: locationsHandler }], [userId]);
@@ -291,9 +286,7 @@ function Areas(props) {
       setAnchorEl={setPeriodEl}
       selectedPeriod={selectedPeriod}
       setSelectedPeriod={setSelectedPeriod}
-      checkOverlapping={checkOverlappingPeriod}
-      setAreas={setAreas}
-      setMessage={setMessage} />
+      checkOverlapping={checkOverlappingPeriod} />
   ) : null;
 
   return (
@@ -319,15 +312,13 @@ function Areas(props) {
       {areaBars}
       <AddArea
         checkOverlapping={checkOverlapping}
-        asyncHandleAddArea={handleAddArea}
+        handleAddArea={handleAddArea}
         roles={roles}
         locations={locations}
         open={buttonOpen}
         anchorEl={buttonEl}
-        setAnchorEl={setButtonEl}
-        setMessage={setMessage} />
+        setAnchorEl={setButtonEl} />
       {editPeriod}
-      <Snackbar message={message} setMessage={setMessage} />
     </div>
   );
 }

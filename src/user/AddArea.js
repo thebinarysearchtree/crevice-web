@@ -83,15 +83,14 @@ function AddArea(props) {
   const [locationIndex, setLocationIndex] = useState(0);
   const [overlappingError, setOverlappingError] = useState(false);
   const [selectedArea, setSelectedArea] = useState(null);
-  const [loading, setLoading] = useState(false);
 
   const startError = startTime && endTime && startTime.getTime() > endTime.getTime();
 
   const classes = useStyles();
 
-  const { checkOverlapping, asyncHandleAddArea, handleAddArea, roles, locations, open, anchorEl, setAnchorEl, setMessage } = props;
+  const { checkOverlapping, handleAddArea, roles, locations, open, anchorEl, setAnchorEl, setMessage } = props;
 
-  const isDisabled = loading || !selectedRole || !selectedArea || !startTime || isNaN(startTime.getTime()) || (endTime && isNaN(endTime.getTime())) || startError;
+  const isDisabled = !selectedRole || !selectedArea || !startTime || isNaN(startTime.getTime()) || (endTime && isNaN(endTime.getTime())) || startError;
 
   useEffect(() => {
     if (open) {
@@ -117,22 +116,8 @@ function AddArea(props) {
       setOverlappingError(true);
     }
     else {
-      if (asyncHandleAddArea) {
-        setLoading(true);
-        const error = await asyncHandleAddArea(area);
-        setLoading(false);
-        if (error) {
-          setMessage('Something went wrong');
-        }
-        else {
-          setAnchorEl(null);
-          setMessage('Areas added');
-        }
-      }
-      else {
-        handleAddArea(area);
-        setAnchorEl(null);
-      }
+      setAnchorEl(null);
+      handleAddArea(area);
     }
   }
 
@@ -152,14 +137,6 @@ function AddArea(props) {
       </Select>
     </FormControl>
   ) : null;
-
-  let addButtonText;
-  if (loading) {
-    addButtonText = 'Saving...';
-  }
-  else {
-    addButtonText = 'Add';
-  }
 
   return (
     <Popover 
@@ -242,7 +219,7 @@ function AddArea(props) {
           color="primary"
           disabled={isDisabled}
           onBlur={() => setOverlappingError(false)}
-          onClick={addAreas}>{addButtonText}</Button>
+          onClick={addAreas}>Add</Button>
       </DialogActions>
     </Popover>
   );

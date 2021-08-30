@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import client from '../client';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import Popover from '@material-ui/core/Popover';
@@ -12,6 +11,7 @@ import MenuItem from '@material-ui/core/MenuItem';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import styles from '../styles/dialog';
+import { useClient } from '../auth';
 
 const useStyles = makeStyles(styles);
 
@@ -22,8 +22,10 @@ function Detail(props) {
 
   const isDisabled = !name || locationId === -1;
 
-  const { setAreas, setFilteredAreas, selectedArea, setSelectedArea, open, anchorEl, setAnchorEl, setMessage } = props;
   const classes = useStyles();
+  const client = useClient();
+
+  const { selectedArea, setSelectedArea, open, anchorEl, setAnchorEl } = props;
 
   useEffect(() => {
     if (selectedArea) {
@@ -49,46 +51,21 @@ function Detail(props) {
   const saveArea = async (e) => {
     e.preventDefault();
     setAnchorEl(null);
-    const locationName = props
-      .locations
-      .find(l => l.id === area.locationId)
-      .name;
     if (area.id !== -1) {
-      const response = await client.postData('/areas/update', area);
-      if (response.ok) {
-        setAreas(areas => {
-          const updatedAreas = areas.map(a => {
-            if (a.id === area.id) {
-              return { ...area, locationName };
-            }
-            return a;
-          });
-          setFilteredAreas(updatedAreas);
-          return updatedAreas;
-        });
-        setMessage('Area updated');
-      }
-      else {
-        setMessage('Something went wrong');
-      }
+      await client.postMutation({
+        url: '/areas/update',
+        data: area,
+        message: 'Area updated'
+      });
     }
     else {
-      const response = await client.postData('/areas/insert', area);
-      if (response.ok) {
-        const result = await response.json();
-        const { areaId } = result;
-        const savedArea = { ...area, id: areaId, locationName };
-        setAreas(areas => {
-          const newAreas = [...areas, savedArea];
-          setFilteredAreas(newAreas);
-          return newAreas;
-        });
-        setMessage('Area created');
-      }
-      else {
-        setMessage('Something went wrong');
-      }
+      await client.postMutation({
+        url: '/areas/insert',
+        data: area,
+        message: 'Area created'
+      });
     }
+    setSelectedArea(null);
   }
 
   const title = area.id !== -1 ? 'Edit area' : 'Create a new area';

@@ -23,17 +23,18 @@ import InviteSingleDetail from './user/InviteSingleDetail';
 import InviteMany from './user/InviteMany';
 import UploadPhotos from './user/UploadPhotos';
 import UserDetails from './userProfile/UserDetails';
-import { useAuth, ProvideAuth } from './auth';
+import { useClient, ProvideAuth } from './auth';
 import MainDrawer from './MainDrawer';
+import ScrollRestore from './ScrollRestore';
 
 function PrivateRoute({ children, ...rest }) {
-  const auth = useAuth();
+  const client = useClient();
   
   return (
     <Route
       {...rest}
       render={({ location }) =>
-        auth.user ? (
+        client.user ? (
           children
         ) : (
           <Redirect
@@ -56,6 +57,7 @@ function App() {
       <CssBaseline />
       <ProvideAuth>
         <Router>
+          <ScrollRestore />
           <Switch>
             <Route exact path="/">
               <SignUp />

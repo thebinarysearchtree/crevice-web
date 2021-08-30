@@ -6,7 +6,6 @@ import DialogContent from '@material-ui/core/DialogContent';
 import { getTimeString, makePgDate } from '../utils/date';
 import ScheduleIcon from '@material-ui/icons/Schedule';
 import Divider from '@material-ui/core/Divider';
-import client from '../client';
 import Avatar from '../common/Avatar';
 import EventNoteIcon from '@material-ui/icons/EventNote';
 import List from '@material-ui/core/List';
@@ -26,6 +25,7 @@ import MenuItem from '@material-ui/core/MenuItem';
 import Paper from '@material-ui/core/Paper';
 import ClickAwayListener from '@material-ui/core/ClickAwayListener';
 import BookedList from './BookedList';
+import { useClient } from '../auth';
 
 const useStyles = makeStyles((theme) => ({
   right: {
@@ -131,8 +131,9 @@ function Details(props) {
   const bookedOpen = Boolean(bookedAnchorEl);
 
   const classes = useStyles();
+  const client = useClient();
 
-  const { area, setMessage, makeDays, selectedShift, setSelectedShift, anchorEl, setAnchorEl, open } = props;
+  const { area, selectedShift, setSelectedShift, anchorEl, setAnchorEl, open } = props;
 
   const { id: shiftId, seriesId, startTime, endTime, breakMinutes, notes, shiftRoles } = selectedShift;
 
@@ -170,20 +171,11 @@ function Details(props) {
     setPotentialUsers([]);
     const { id: userId, roleId } = user;
     const shiftRoleId = shiftRoles.find(sr => sr.roleId === roleId).id;
-    const response = await client.postData('/bookings/insert', { userId, shiftRoleIds: [shiftRoleId] });
-    if (response.ok) {
-      const { bookedCount } = await response.json();
-      if (bookedCount === 1) {
-        setMessage('User booked');
-        makeDays();
-      }
-      else {
-        setMessage('Something went wrong');
-      }
-    }
-    else {
-      setMessage('Something went wrong');
-    }
+    await client.postMutation({
+      url: '/bookings/insert',
+      data: { userId, shiftRoleIds: [shiftRoleId] },
+      message: 'User booked'
+    });
   }
 
   const search = async (searchTerm) => {
@@ -259,27 +251,21 @@ function Details(props) {
   }
 
   const removeShift = async () => {
-    const response = await client.postData('/shifts/remove', { shiftId });
     setDialogOpen(false);
     setAnchorEl(null);
-    if (response.ok) {
-      makeDays();
-      setMessage('Shift deleted');
-    }
-    else {
-      setMessage('Something went wrong');
-    }
+    await client.postMutation({
+      url: '/shifts/remove',
+      data: { shiftId },
+      message: 'Shift deleted'
+    });
   }
 
   const cancelBooking = async (userId, bookingId) => {
-    const response = await client.postData('/bookings/remove', { userId, bookingId });
-    if (response.ok) {
-      makeDays();
-      setMessage('Booking cancelled');
-    }
-    else {
-      setMessage('Something went wrong');
-    }
+    await client.postMutation({
+      url: '/bookings/remove',
+      data: { userId, bookingId },
+      message: 'Booking cancelled'
+    });
   }
 
   const roleItems = shiftRoles.map(shiftRole => {
@@ -401,7 +387,6 @@ function Details(props) {
         </div>
       </DialogContent>
       <BookedList 
-        makeDays={makeDays}
         open={bookedOpen} 
         anchorEl={bookedAnchorEl} 
         setAnchorEl={setBookedAnchorEl} 

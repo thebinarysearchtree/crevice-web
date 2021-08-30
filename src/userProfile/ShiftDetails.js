@@ -7,10 +7,10 @@ import { getTimeString } from '../utils/date';
 import ScheduleIcon from '@material-ui/icons/Schedule';
 import HomeIcon from '@material-ui/icons/Home';
 import Divider from '@material-ui/core/Divider';
-import client from '../client';
 import Avatar from '../common/Avatar';
 import PopoverToolbar from '../common/PopoverToolbar';
 import BookedList from './BookedList';
+import { useClient } from '../auth';
 
 const useStyles = makeStyles((theme) => ({
   right: {
@@ -62,8 +62,9 @@ function Details(props) {
   const bookedUsersOpen = Boolean(bookedAnchorEl);
 
   const classes = useStyles();
+  const client = useClient();
 
-  const { setMessage, makeDays, userId, selectedShift, setSelectedShift, anchorEl, setAnchorEl, open } = props;
+  const { userId, selectedShift, setSelectedShift, anchorEl, setAnchorEl, open } = props;
 
   const { areaName, startTime, endTime, breakMinutes, notes, shiftRoles } = selectedShift;
 
@@ -86,20 +87,11 @@ function Details(props) {
   const handleCancel = async () => {
     handleClose();
     const bookingId = shiftRoles.find(sr => sr.booked).bookedUsers.find(u => u.id === userId).bookingId;
-    const response = await client.postData('/bookings/remove', { userId, bookingId });
-    if (response.ok) {
-      const { cancelledCount } = await response.json();
-      if (cancelledCount === 1) {
-        setMessage('Booking cancelled');
-        makeDays();
-      }
-      else {
-        setMessage('Something went wrong');
-      }
-    }
-    else {
-      setMessage('Something went wrong');
-    }
+    await client.postMutation({
+      url: '/bookings/remove',
+      data: { userId, bookingId },
+      message: 'Booking cancelled'
+    });
   }
 
   const handleBookedUsersClick = (e, bookedUsers) => {

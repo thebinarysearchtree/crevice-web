@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import client from '../client';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import { Link, useHistory } from 'react-router-dom';
 import styles from '../styles/form';
+import { useClient } from '../auth';
 
 const useStyles = makeStyles(styles);
 
@@ -21,6 +21,7 @@ function SignUp() {
 
   const history = useHistory();
   const classes = useStyles();
+  const client = useClient();
 
   const isValid = organisationName && firstName && lastName && email && email.includes('@') && password && password.length >= 6;
   

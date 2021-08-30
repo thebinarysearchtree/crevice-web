@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import client from '../client';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
@@ -11,35 +10,33 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Snackbar from '../common/Snackbar';
-import useMessage from '../hooks/useMessage';
 import styles from '../styles/list';
 import ConfirmButton from '../common/ConfirmButton';
 import Progress from '../common/Progress';
 import TableFooter from '@material-ui/core/TableFooter';
 import TablePagination from '@material-ui/core/TablePagination';
-import useFetch from '../hooks/useFetch';
 import IconButton from '@material-ui/core/IconButton';
 import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
 import Tooltip from '@material-ui/core/Tooltip';
 import EditField from './EditField';
-import useScrollRestore from '../hooks/useScrollRestore';
+import { useClient } from '../auth';
+import useFetch from '../hooks/useFetch';
 
 const useStyles = makeStyles(styles);
 
 function List() {
   const [fields, setFields] = useState(null);
-  const [message, setMessage] = useMessage();
   const [selectedField, setSelectedField] = useState(null);
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [moving, setMoving] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
 
   const open = Boolean(anchorEl);
 
   const classes = useStyles();
+  const client = useClient();
 
-  useScrollRestore();
+  const { processing } = client;
 
   const rowsPerPage = 10;
 
@@ -69,41 +66,26 @@ function List() {
 
   const moveUp = async (index) => {
     if (index !== 0) {
-      const updatedFields = [...fields];
-      const fieldAbove = updatedFields[index - 1];
-      const selectedField = updatedFields[index];
-      setMoving(true);
-      const response = await client.postData('/fields/moveUp', { fieldId: selectedField.id });
-      if (response.ok) {
-        updatedFields[index] = fieldAbove;
-        updatedFields[index - 1] = selectedField;
-        setFields(updatedFields);
-      }
-      else {
-        setMessage('Something went wrong');
-      }
-      setMoving(false);
+      await client.postMutation({
+        url: '/fields/moveUp',
+        data: { fieldId: fields[index].id }
+      });
     }
   }
 
   const deleteField = async (field) => {
     const { id: fieldId, fieldType } = field;
-    const response = await client.postData('/fields/remove', { fieldId, fieldType });
-    if (response.ok) {
-      setFields(fields.filter(f => f.id !== fieldId));
-      setMessage('Field deleted');
-    }
-    else {
-      setMessage('Something went wrong');
-    }
+    await client.postMutation({
+      url: '/fields/remove',
+      data: { fieldId, fieldType },
+      message: 'Field deleted'
+    });
   }
 
-  const fieldsHandler = (fields) => {
-    setFields(fields);
-    setLoading(false);
-  }
-
-  useFetch('/fields/find', fieldsHandler);
+  useFetch(setLoading, [{
+    url: '/fields/find',
+    handler: (fields) => setFields(fields)
+  }]);
 
   if (loading) {
     return <Progress loading={loading} />;
@@ -125,7 +107,7 @@ function List() {
           <Tooltip title="Move up">
             <IconButton
               onClick={() => moveUp(i + sliceStart)}
-              disabled={moving}>
+              disabled={processing}>
                 <ArrowUpwardIcon fontSize="small" />
             </IconButton>
           </Tooltip>
@@ -179,10 +161,7 @@ function List() {
           anchorEl={anchorEl}
           setAnchorEl={setAnchorEl}
           selectedField={selectedField}
-          setSelectedField={setSelectedField}
-          setFields={setFields}
-          setMessage={setMessage} />
-        <Snackbar message={message} setMessage={setMessage} />
+          setSelectedField={setSelectedField} />
       </div>
     </div>
   );

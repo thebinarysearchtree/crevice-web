@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import client from '../client';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
@@ -10,22 +9,22 @@ import TableCell from '@material-ui/core/TableCell';
 import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
-import Snackbar from '../common/Snackbar';
 import styles from '../styles/list';
 import Detail from './Detail';
 import ConfirmButton from '../common/ConfirmButton';
 import SearchBox from '../common/SearchBox';
 import TableFooter from '@material-ui/core/TableFooter';
 import TablePagination from '@material-ui/core/TablePagination';
-import useFetchMany from '../hooks/useFetchMany';
+import useFetch from '../hooks/useFetch';
 import Progress from '../common/Progress';
 import TableSortCell from '../common/TableSortCell';
-import { useLocation } from 'react-router-dom';
 import TableFilterCell from '../common/TableFilterCell';
 import Link from '@material-ui/core/Link';
 import { Link as RouterLink } from 'react-router-dom';
 import Avatar from '../common/Avatar';
-import useScrollRestore from '../hooks/useScrollRestore';
+import useParamState from '../hooks/useParamState';
+import useSyncParams from '../hooks/useSyncParams';
+import { useClient } from '../auth';
 
 const useStyles = makeStyles((theme) => ({ 
   ...styles(theme),
@@ -34,33 +33,80 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
+const rowsPerPage = 10;
+
 function List() {
-  const [areas, setAreas] = useState(null);
-  const [filteredAreas, setFilteredAreas] = useState(null);
-  const [message, setMessage] = useState('');
+  const [areas, setAreas] = useState([]);
+  const [filteredAreas, setFilteredAreas] = useState([]);
   const [selectedArea, setSelectedArea] = useState(null);
-  const [page, setPage] = useState(0);
-  const [order, setOrder] = useState('asc');
-  const [orderBy, setOrderBy] = useState('');
+  const [page, setPage, pageTranslator] = useParamState({
+    name: 'page',
+    defaultValue: 0,
+    hideDefault: true
+  });
+  const [order, setOrder, orderTranslator] = useParamState({
+    name: 'order',
+    parser: null,
+    defaultValue: 'asc',
+    hideDefault: true
+  });
+  const [orderBy, setOrderBy, orderByTranslator] = useParamState({
+    name: 'orderBy',
+    parser: null,
+    defaultValue: '',
+    hideDefault: true
+  });
   const [loading, setLoading] = useState(true);
   const [locations, setLocations] = useState([]);
   const [anchorEl, setAnchorEl] = useState(null);
+  const [locationId, setLocationId, locationTranslator] = useParamState({
+    name: 'locationId',
+    defaultValue: -1,
+    hideDefault: true
+  });
+  const [count, setCount] = useState(0);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const open = Boolean(anchorEl);
 
   const classes = useStyles();
+  const client = useClient();
 
-  useScrollRestore();
+  useSyncParams(true, [pageTranslator, orderTranslator, orderByTranslator, locationTranslator]);
 
-  const params = new URLSearchParams(useLocation().search);
-  const locationIdParam = parseInt(params.get('locationId'), 10);
+  useEffect(() => {
+    let filteredAreas = [...areas];
+    if (locationId !== -1) {
+      filteredAreas = filteredAreas.filter(a => a.locationId === locationId);
+    }
+    if (searchTerm !== '') {
+      const pattern = new RegExp(searchTerm, 'i');
+      filteredAreas = filteredAreas.filter(a => pattern.test(a.name));
+    }
+    if (orderBy === 'name') {
+      if (order === 'asc') {
+        filteredAreas.sort((a, b) => a.name.localeCompare(b.name));
+      }
+      else {
+        filteredAreas.sort((a, b) => b.name.localeCompare(a.name));
+      }
+    }
+    if (orderBy === 'activeUserCount') {
+      if (order === 'asc') {
+        filteredAreas.sort((a, b) => a.activeUserCount - b.activeUserCount);
+      }
+      else {
+        filteredAreas.sort((a, b) => b.activeUserCount - a.activeUserCount);
+      }
+    }
+    setCount(filteredAreas.length);
 
-  const [locationId, setLocationId] = useState(locationIdParam ? locationIdParam : -1);
+    const start = page * rowsPerPage;
+    const end = start + rowsPerPage;
+    filteredAreas = filteredAreas.slice(start, end);
 
-  const rowsPerPage = 10;
-
-  const sliceStart = page * rowsPerPage;
-  const sliceEnd = sliceStart + rowsPerPage;
+    setFilteredAreas(filteredAreas);
+  }, [areas, page, order, orderBy, locationId, searchTerm]);
 
   const handleNameClick = (e, area) => {
     setSelectedArea({ ...area });
@@ -80,93 +126,38 @@ function List() {
     setAnchorEl(e.currentTarget);
   }
 
-  const handleChangePage = (e, newPage) => {
-    setPage(newPage);
-  }
-
-  const handleSearch = (e) => {
-    const term = e.target.value;
-    if (!term) {
-      setFilteredAreas(areas);
-    }
-    else {
-      const pattern = new RegExp(term, 'i');
-      setFilteredAreas(areas.filter(a => pattern.test(a.name)));
-    }
-  }
-
-  const handleLocationChange = (locationId) => {
-    setLocationId(locationId);
-    if (locationId === -1) {
-      setFilteredAreas(areas);
-    }
-    else {
-      setFilteredAreas(areas.filter(a => a.locationId === locationId));
-    }
-  }
-
-  const makeSortHandler = (orderName, comparitor) => {
+  const makeSortHandler = (orderName) => {
     return () => {
-      const isAsc = orderBy === orderName && order === 'asc';
+      const isAsc = orderBy !== orderName || order === 'asc';
       setOrder(isAsc ? 'desc' : 'asc');
       setOrderBy(orderName);
-      if (orderBy === orderName) {
-        setFilteredAreas(a => [ ...a].reverse());
-      }
-      else {
-        setFilteredAreas(a => [ ...a].sort(comparitor));
-      }
     }
   }
 
-  const sortByName = makeSortHandler(
-    'name',
-    (a, b) => a.name.localeCompare(b.name)
-  );
+  const sortByName = makeSortHandler('name');
 
-  const sortByCreatedAt = makeSortHandler(
-    'createdAt',
-    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-  );
-
-  const sortByActiveUserCount = makeSortHandler(
-    'activeUserCount',
-    (a, b) => a.activeUserCount - b.activeUserCount);
+  const sortByActiveUserCount = makeSortHandler('activeUserCount');
 
   const deleteArea = async (areaId) => {
-    const response = await client.postData('/areas/remove', { areaId });
-    if (response.ok) {
-      const updatedAreas = areas.filter(a => a.id !== areaId);
-      setAreas(updatedAreas);
-      setFilteredAreas(updatedAreas);
-      setMessage('Area deleted');
-    }
-    else {
-      setMessage('Something went wrong');
-    }
+    await client.postMutation({
+      url: '/areas/remove',
+      data: { areaId },
+      message: 'Area deleted'
+    });
   }
 
-  const areasHandler = (areas) => {
-    setAreas(areas);
-    if (locationId !== -1) {
-      setFilteredAreas(areas.filter(a => a.locationId === locationId));
-    }
-    else {
-      setFilteredAreas(areas);
-    }
-  }
-
+  const areasHandler = (areas) => setAreas(areas);
   const locationsHandler = (locations) => setLocations(locations);
 
-  useFetchMany(setLoading, [
+  useFetch(setLoading, [
     { url: '/areas/find', handler: areasHandler },
-    { url: '/locations/getSelectListItems', handler: locationsHandler }]);
+    { url: '/locations/getSelectListItems', handler: locationsHandler, once: true }]);
 
   if (loading) {
     return <Progress loading={loading} />;
   }
   
-  const tableRows = filteredAreas.slice(sliceStart, sliceEnd).map(a => {
+  const tableRows = filteredAreas.map(a => {
     const administrators = a.administrators.map(user => {
       return (
         <Avatar 
@@ -215,7 +206,7 @@ function List() {
         <div className={classes.toolbar}>
           <SearchBox 
             placeholder="Search..."
-            onChange={handleSearch} />
+            onChange={(e) => setSearchTerm(e.target.value)} />
           <div className={classes.grow} />
           <Button 
             variant="contained"
@@ -235,7 +226,7 @@ function List() {
                   menuId="location-menu"
                   items={locations}
                   selectedItemId={locationId}
-                  filter={handleLocationChange}>Location</TableFilterCell>
+                  filter={(locationId) => setLocationId(locationId)}>Location</TableFilterCell>
                 <TableCell align="left">Administrators</TableCell>
                 <TableSortCell
                   align="right"
@@ -254,10 +245,10 @@ function List() {
                 <TablePagination
                   rowsPerPageOptions={[]}
                   colSpan={5}
-                  count={filteredAreas.length}
+                  count={count}
                   rowsPerPage={rowsPerPage}
                   page={page}
-                  onChangePage={handleChangePage} />
+                  onChangePage={(e, page) => setPage(page)} />
               </TableRow>
             </TableFooter>
           </Table>
@@ -268,11 +259,7 @@ function List() {
           setAnchorEl={setAnchorEl}
           selectedArea={selectedArea}
           setSelectedArea={setSelectedArea}
-          setAreas={setAreas}
-          setFilteredAreas={setFilteredAreas}
-          setMessage={setMessage}
           locations={locations} />
-        <Snackbar message={message} setMessage={setMessage} />
       </div>
     </div>
   );

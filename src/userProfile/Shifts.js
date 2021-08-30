@@ -1,19 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import useFetchMany from '../hooks/useFetchMany';
 import Progress from '../common/Progress';
 import Typography from '@material-ui/core/Typography';
-import { addMonths, isWeekend, getTimeString, makePgDate, addDays, overlaps } from '../utils/date';
+import { addMonths, isWeekend, addDays, overlaps } from '../utils/date';
 import CalendarButtons from '../common/CalendarButtons';
-import Paper from '@material-ui/core/Paper';
-import client from '../client';
 import { useParams } from 'react-router-dom';
 import { makeReviver, dateParser } from '../utils/data';
 import AvailableShifts from './AvailableShifts';
-import Snackbar from '../common/Snackbar';
 import ShiftDetails from './ShiftDetails';
-import useFetch from '../hooks/useFetch';
 import useAnchorState from '../hooks/useAnchorState';
+import Shift from '../common/Shift';
+import useFetch from '../hooks/useFetch';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -87,35 +84,11 @@ const useStyles = makeStyles((theme) => ({
     justifyContent: 'space-between',
     marginBottom: theme.spacing(1)
   },
-  shift: {
-    width: '100px',
-    padding: '4px',
-    marginBottom: theme.spacing(1),
-    borderRadius: '5px',
-    cursor: 'pointer'
-  },
   available: {
     backgroundColor: '#e3f2fd'
   },
   selectedDay: {
     backgroundColor: theme.palette.grey[100]
-  },
-  past: {
-    backgroundColor: '#ffcdd2',
-    '&$selected': {
-      border: '2px solid #b71c1c'
-    }
-  },
-  future: {
-    backgroundColor: '#90caf9',
-    '&$selected': {
-      border: '2px solid #0d47a1'
-    }
-  },
-  selected: {
-    marginTop: '-2px',
-    marginBottom: '6px',
-    paddingLeft: '2px'
   }
 }));
 
@@ -134,7 +107,6 @@ function Shifts(props) {
   const [days, setDays] = useState([]);
   const [selectedDay, setSelectedDay] = useState(null);
   const [anchorEl, setAnchorEl] = useAnchorState(null);
-  const [message, setMessage] = useState('');
   const [selectedShift, setSelectedShift] = useAnchorState(null);
   const [detailsAnchorEl, setDetailsAnchorEl] = useAnchorState(null);
 
@@ -209,7 +181,12 @@ function Shifts(props) {
     setDays(days);
   }
 
-  useFetch('/shifts/getAvailableShifts', makeDays, query, reviver, [date, userId]);
+  useFetch(setLoading, [{
+    url: '/shifts/getAvailableShifts',
+    data: query,
+    handler: makeDays,
+    reviver
+  }], [date, userId]);
 
   if (loading) {
     return <Progress loading={loading} />;
@@ -235,19 +212,15 @@ function Shifts(props) {
     if (day.isDifferentMonth) {
       return <div key={`e${i}`} className={`${classes.day} ${dayClassName}`}></div>;
     }
-    const isPast = day.date.getTime() < today.getTime();
     const bookedShifts = day.bookedShifts.map(shift => {
       const { id, startTime, endTime } = shift;
-      const time = `${getTimeString(startTime)} - ${getTimeString(endTime)}`;
-      let className = isPast ? `${classes.shift} ${classes.past}` : `${classes.shift} ${classes.future}`;
-      if (shift === selectedShift) {
-        className += ` ${classes.selected}`;
-      }
       return (
-        <div 
-          key={id} 
-          className={className}
-          onClick={(e) => handleShiftClick(e, shift)}>{time}</div>
+        <Shift
+          key={id}
+          startTime={startTime}
+          endTime={endTime}
+          selected={shift === selectedShift}
+          onClick={(e) => handleShiftClick(e, shift)} />
       );
     });
     return (
@@ -266,8 +239,6 @@ function Shifts(props) {
   const availableShifts = selectedDay ? (
     <AvailableShifts
       setSelectedDay={setSelectedDay}
-      setMessage={setMessage}
-      makeDays={makeDays}
       userId={userId}
       date={selectedDay.date}
       shifts={selectedDay.availableShifts}
@@ -277,8 +248,6 @@ function Shifts(props) {
   ) : null;
   const details = selectedShift ? (
     <ShiftDetails
-      setMessage={setMessage}
-      makeDays={makeDays}
       userId={userId}
       selectedShift={selectedShift}
       setSelectedShift={setSelectedShift}
@@ -310,7 +279,6 @@ function Shifts(props) {
       </div>
       {availableShifts}
       {details}
-      <Snackbar message={message} setMessage={setMessage} />
     </div>
   );
 }

@@ -12,9 +12,9 @@ import RoomIcon from '@material-ui/icons/Room';
 import HomeIcon from '@material-ui/icons/Home';
 import PersonIcon from '@material-ui/icons/Person';
 import LabelIcon from '@material-ui/icons/Label';
-import client from './client';
 import { Link, useLocation } from 'react-router-dom';
 import ScheduleIcon from '@material-ui/icons/Schedule';
+import { useClient } from './auth';
 
 function ListItemLink(props) {
   const { icon, primary, to, selected } = props;
@@ -62,10 +62,12 @@ const useStyles = makeStyles((theme) => ({
 function MainDrawer() {
   const classes = useStyles();
   const location = useLocation();
+  const client = useClient();
 
-  const user = client.user;
+  const { user } = client;
+
   const menuItemGroups = [];
-  if (true || user.isAdmin) {
+  if (user.isAdmin) {
     menuItemGroups.push([
       {
         icon: <SupervisorAccountIcon />,

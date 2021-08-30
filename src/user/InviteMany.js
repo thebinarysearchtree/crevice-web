@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import client from '../client';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
-import Snackbar from '../common/Snackbar';
 import { useHistory } from 'react-router-dom';
 import BackButton from '../common/BackButton';
-import useFetchMany from '../hooks/useFetchMany';
+import useFetch from '../hooks/useFetch';
 import Progress from '../common/Progress';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
@@ -23,6 +21,8 @@ import AreasTable from './AreasTable';
 import AddArea from './AddArea';
 import Paper from '@material-ui/core/Paper';
 import { makeAreaDate, overlaps } from '../utils/date';
+import { useClient } from '../auth';
+import cache from '../cache';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -109,7 +109,6 @@ function InviteMany() {
   const [updateUsers, setUpdateUsers] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [errors, setErrors] = useState([]);
-  const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [showErrors, setShowErrors] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -123,6 +122,9 @@ function InviteMany() {
 
   const history = useHistory();
   const classes = useStyles();
+  const client = useClient();
+
+  const { setMessage } = client;
 
   const isDisabled = uploading || selectedFiles.length === 0 || userAreas.length === 0;
 
@@ -161,7 +163,9 @@ function InviteMany() {
           setShowErrors(true);
         }
         else {
-          history.push('/users', { message: 'Users added' });
+          cache.clear();
+          history.push('/users');
+          setMessage('Users added');
         }
       }
       else {
@@ -182,7 +186,7 @@ function InviteMany() {
   const rolesHandler = (roles) => setRoles(roles);
   const locationsHandler = (locations) => setLocations(locations);
 
-  useFetchMany(setLoading, [
+  useFetch(setLoading, [
     { url: '/fields/getCsvFields', handler: fieldsHandler },
     { url: '/roles/getSelectListItems', handler: rolesHandler },
     { url: '/areas/getWithLocation', handler: locationsHandler }]);
@@ -306,7 +310,6 @@ function InviteMany() {
               color="primary">Close</Button>
           </DialogActions>
         </Dialog>
-        <Snackbar message={message} setMessage={setMessage} />
       </div>
     </div>
   );

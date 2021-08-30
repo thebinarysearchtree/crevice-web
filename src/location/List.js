@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import client from '../client';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
@@ -10,23 +9,21 @@ import TableCell from '@material-ui/core/TableCell';
 import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
-import Snackbar from '../common/Snackbar';
 import styles from '../styles/list';
 import Detail from './Detail';
 import ConfirmButton from '../common/ConfirmButton';
 import Progress from '../common/Progress';
 import TableFooter from '@material-ui/core/TableFooter';
 import TablePagination from '@material-ui/core/TablePagination';
-import useFetch from '../hooks/useFetch';
 import Link from '@material-ui/core/Link';
 import { Link as RouterLink } from 'react-router-dom';
-import useScrollRestore from '../hooks/useScrollRestore';
+import useFetch from '../hooks/useFetch';
+import { useClient } from '../auth';
 
 const useStyles = makeStyles(styles);
 
 function List() {
   const [locations, setLocations] = useState(null);
-  const [message, setMessage] = useState('');
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -35,8 +32,7 @@ function List() {
   const open = Boolean(anchorEl);
 
   const classes = useStyles();
-
-  useScrollRestore();
+  const client = useClient();
 
   const rowsPerPage = 10;
 
@@ -65,22 +61,17 @@ function List() {
   }
 
   const deleteLocation = async (locationId) => {
-    const response = await client.postData('/locations/remove', { locationId });
-    if (response.ok) {
-      setLocations(locations.filter(l => l.id !== locationId));
-      setMessage('Location deleted');
-    }
-    else {
-      setMessage('Something went wrong');
-    }
+    await client.postMutation({
+      url: '/locations/remove',
+      data: { locationId },
+      message: 'Location deleted'
+    });
   }
 
-  const locationsHandler = (locations) => {
-    setLocations(locations);
-    setLoading(false);
-  }
-
-  useFetch('/locations/find', locationsHandler);
+  useFetch(setLoading, [{
+    url: '/locations/find',
+    handler: (locations) => setLocations(locations)
+  }]);
 
   if (loading) {
     return <Progress loading={loading} />;
@@ -156,10 +147,7 @@ function List() {
           anchorEl={anchorEl}
           setAnchorEl={setAnchorEl}
           selectedLocation={selectedLocation}
-          setSelectedLocation={setSelectedLocation}
-          setLocations={setLocations}
-          setMessage={setMessage} />
-        <Snackbar message={message} setMessage={setMessage} />
+          setSelectedLocation={setSelectedLocation} />
       </div>
     </div>
   );

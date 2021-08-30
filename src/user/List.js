@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import client from '../client';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import Table from '@material-ui/core/Table';
@@ -14,18 +13,15 @@ import styles from '../styles/list';
 import SearchBox from '../common/SearchBox';
 import TableFooter from '@material-ui/core/TableFooter';
 import TablePagination from '@material-ui/core/TablePagination';
-import useFetchMany from '../hooks/useFetchMany';
+import useFetch from '../hooks/useFetch';
 import Progress from '../common/Progress';
 import { Link as RouterLink } from 'react-router-dom';
 import TableFilterCell from '../common/TableFilterCell';
 import RoleChip from '../common/RoleChip';
 import MorePopover from '../common/MorePopover';
-import useMessage from '../hooks/useMessage';
 import Button from '@material-ui/core/Button';
 import Chip from '@material-ui/core/Chip';
 import Avatar from '../common/Avatar';
-import useScrollRestore from '../hooks/useScrollRestore';
-import cache from '../cache';
 import useParamState from '../hooks/useParamState';
 import useSyncParams from '../hooks/useSyncParams';
 
@@ -44,7 +40,6 @@ const useStyles = makeStyles((theme) => ({
 
 function List() {
   const [users, setUsers] = useState(null);
-  const [message, setMessage] = useMessage();
   const [loading, setLoading] = useState(true);
   const [roles, setRoles] = useState([]);
   const [areas, setAreas] = useState([]);
@@ -71,22 +66,16 @@ function List() {
     hideDefault: true
   });
   const [count, setCount] = useState(null);
-  const [activeDate, setActiveDate] = useState(null);
-  const [activeState, setActiveState] = useState('All');
 
   const query = {
     searchTerm,
     roleId,
     areaId,
     page,
-    activeDate,
-    activeState,
     count
   };
 
   const classes = useStyles();
-
-  useScrollRestore();
 
   const usersHandler = (users) => {
     setUsers(users);
@@ -129,7 +118,7 @@ function List() {
   const rolesHandler = (roles) => setRoles(roles);
   const areasHandler = (areas) => setAreas(areas);
 
-  useFetchMany(setLoading, [
+  useFetch(setLoading, [
     { url: '/users/find', handler: usersHandler, data: query },
     { url: '/roles/getSelectListItems', handler: rolesHandler, once: true },
     { url: '/areas/getSelectListItems', handler: areasHandler, once: true }],
@@ -237,7 +226,6 @@ function List() {
             </TableFooter>
           </Table>
         </TableContainer>
-        <Snackbar message={message} setMessage={setMessage} />
       </div>
     </div>
   );

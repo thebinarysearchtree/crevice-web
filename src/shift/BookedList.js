@@ -10,7 +10,8 @@ import Avatar from '../common/Avatar';
 import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
 import Button from '@material-ui/core/Button';
 import { makeStyles } from '@material-ui/core/styles';
-import client from '../client';
+import { useClient } from '../auth';
+import cache from '../cache';
 
 const useStyles = makeStyles((theme) => ({
   content: {
@@ -24,8 +25,11 @@ function BookedList(props) {
   const [inProgressUserIds, setInProgressUserIds] = useState([]);
 
   const classes = useStyles();
+  const client = useClient();
 
-  const { makeDays, open, setAnchorEl, bookedUsers } = props;
+  const { setMutationCount } = client;
+
+  const { open, setAnchorEl, bookedUsers } = props;
 
   const cancelBooking = async (userId, bookingId) => {
     setInProgressUserIds([...inProgressUserIds, userId]);
@@ -39,7 +43,8 @@ function BookedList(props) {
   const handleClose = () => {
     setAnchorEl(null);
     if (cancelledUserIds.length !== 0) {
-      makeDays();
+      cache.clear();
+      setMutationCount(count => count + 1);
     }
   }
 

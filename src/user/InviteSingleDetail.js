@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import client from '../client';
 import Typography from '@material-ui/core/Typography';
 import TextField from '@material-ui/core/TextField';
 import IconButton from '@material-ui/core/IconButton';
 import Button from '@material-ui/core/Button';
-import Snackbar from '../common/Snackbar';
 import { useHistory } from 'react-router-dom';
 import Avatar from '@material-ui/core/Avatar';
 import InviteSingleAreas from './InviteSingleAreas';
 import Tooltip from '@material-ui/core/Tooltip';
 import BackButton from '../common/BackButton';
-import useFetchMany from '../hooks/useFetchMany';
+import useFetch from '../hooks/useFetch';
 import Progress from '../common/Progress';
 import CustomField from '../field/CustomField';
 import { makeAreaDate, overlaps } from '../utils/date';
+import { useClient } from '../auth';
+import cache from '../cache';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -89,7 +89,6 @@ function InviteSingleDetail() {
   const [imageId, setImageId] = useState(null);
   const [showAreas, setShowAreas] = useState(false);
   const [userAreas, setUserAreas] = useState([]);
-  const [message, setMessage] = useState('');
   const [fields, setFields] = useState([]);
   const [loading, setLoading] = useState(true);
   const [roles, setRoles] = useState([]);
@@ -97,6 +96,9 @@ function InviteSingleDetail() {
 
   const history = useHistory();
   const classes = useStyles();
+  const client = useClient();
+
+  const { setMessage } = client;
 
   const isDisabled = !firstName || !lastName || !email || !email.includes('@');
   const photoSrc = imageId ? `/photos/${imageId}.jpg` : null;
@@ -120,7 +122,7 @@ function InviteSingleDetail() {
   const rolesHandler = (roles) => setRoles(roles);
   const locationsHandler = (locations) => setLocations(locations);
 
-  useFetchMany(setLoading, [
+  useFetch(setLoading, [
     { url: '/fields/getAllFields', handler: fieldsHandler },
     { url: '/roles/getSelectListItems', handler: rolesHandler },
     { url: '/areas/getWithLocation', handler: locationsHandler }]);
@@ -148,7 +150,9 @@ function InviteSingleDetail() {
       });
     const response = await client.postData('/users/inviteUsers', { users: [{ ...user, userAreas: areas, userFields }] });
     if (response.ok) {
-      history.push('/users', { message: 'Invitation sent' });
+      cache.clear();
+      history.push('/users');
+      setMessage('Invitation sent');
     }
     else {
       setMessage('Something went wrong');
@@ -299,7 +303,6 @@ function InviteSingleDetail() {
             type="submit"
             disabled={isDisabled}>Next</Button>
         </form>
-        <Snackbar message={message} setMessage={setMessage} />
       </div>
     </div>
   );
