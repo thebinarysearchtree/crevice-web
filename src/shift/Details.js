@@ -26,6 +26,7 @@ import Paper from '@material-ui/core/Paper';
 import ClickAwayListener from '@material-ui/core/ClickAwayListener';
 import BookedList from './BookedList';
 import { useClient } from '../auth';
+import EditDialog from './EditDialog';
 
 const useStyles = makeStyles((theme) => ({
   right: {
@@ -170,10 +171,11 @@ function Details(props) {
     setSearchTerm('');
     setPotentialUsers([]);
     const { id: userId, roleId } = user;
-    const shiftRoleId = shiftRoles.find(sr => sr.roleId === roleId).id;
+    const { shiftId, id: shiftRoleId } = shiftRoles.find(sr => sr.roleId === roleId);
+    const shift = { shiftId, shiftRoleId };
     await client.postMutation({
       url: '/bookings/insert',
-      data: { userId, shiftRoleIds: [shiftRoleId] },
+      data: { userId, shifts: [shift] },
       message: 'User booked'
     });
   }
@@ -269,7 +271,7 @@ function Details(props) {
   }
 
   const roleItems = shiftRoles.map(shiftRole => {
-    const { id, roleName, roleColour, capacity, bookedUsers } = shiftRole;
+    const { id, roleName, roleColour, capacity } = shiftRole;
     return (
       <ListItem key={id} disableGutters>
         <div className={classes.colour} style={{ backgroundColor: `#${roleColour}` }} />
@@ -278,13 +280,6 @@ function Details(props) {
       </ListItem>
     );
   });
-
-  const seriesElement = seriesId ? (
-    <div className={classes.detail}>
-      <LinearScaleIcon className={classes.icon} fontSize="small" color="action" />
-      <Typography variant="body1">Part of a series</Typography>
-    </div>
-  ) : null;
 
   const notesElement = notes ? (
     <div className={classes.detail}>
@@ -343,32 +338,19 @@ function Details(props) {
 
   const leftPopover = startTime.getDay() > 3;
 
-  return (
+  const content = edit ? <EditDialog {...props} /> : (
     <React.Fragment>
-    <Popover 
-      className={leftPopover ? classes.left : classes.right}
-      open={open}
-      anchorEl={anchorEl}
-      anchorOrigin={{
-        vertical: 'center',
-        horizontal: leftPopover ? 'left' : 'right'
-      }}
-      transformOrigin={{
-        vertical: 'center',
-        horizontal: leftPopover ? 'right' : 'left'
-      }}
-      onClose={handleClose}
-      disableRestoreFocus>
       <PopoverToolbar 
+        onEdit={() => setEdit(true)}
         onDelete={() => setDialogOpen(true)} 
         onClose={handleClose}
+        editText="Edit shift"
         deleteText="Delete shift" />
       <DialogContent className={classes.content}>
         <div className={classes.detail}>
           <ScheduleIcon className={classes.icon} fontSize="small" color="action" />
           <Typography variant="body1">{time}</Typography>
         </div>
-        {seriesElement}
         {notesElement}
         <Divider />
         <List>{roleItems}</List>
@@ -395,16 +377,36 @@ function Details(props) {
         open={dialogOpen} 
         setOpen={setDialogOpen} 
         onDelete={removeShift} />
-    </Popover>
-    {potentialUsers.length === 0 ? null : (
-      <ClickAwayListener onClickAway={handleClickAway}>
-        <Paper 
-          className={classes.searchResults} 
-          style={{ top: searchPosition ? searchPosition.bottom : 0, left: searchPosition ? searchPosition.left : 0 }}>
-            <List className={classes.list} style={{ maxHeight: searchPosition ? (window.innerHeight + window.scrollY) - searchPosition.bottom : null }}>{userItems}</List>
-        </Paper>
-      </ClickAwayListener>
-    )}
+    </React.Fragment>
+  );
+
+  return (
+    <React.Fragment>
+      <Popover 
+        className={leftPopover ? classes.left : classes.right}
+        open={open}
+        anchorEl={anchorEl}
+        anchorOrigin={{
+          vertical: 'center',
+          horizontal: leftPopover ? 'left' : 'right'
+        }}
+        transformOrigin={{
+          vertical: 'center',
+          horizontal: leftPopover ? 'right' : 'left'
+        }}
+        onClose={handleClose}
+        disableRestoreFocus>
+          {content}
+      </Popover>
+      {potentialUsers.length === 0 || edit ? null : (
+        <ClickAwayListener onClickAway={handleClickAway}>
+          <Paper 
+            className={classes.searchResults} 
+            style={{ top: searchPosition ? searchPosition.bottom : 0, left: searchPosition ? searchPosition.left : 0 }}>
+              <List className={classes.list} style={{ maxHeight: searchPosition ? (window.innerHeight + window.scrollY) - searchPosition.bottom : null }}>{userItems}</List>
+          </Paper>
+        </ClickAwayListener>
+      )}
     </React.Fragment>
   );
 }

@@ -264,6 +264,7 @@ function List() {
       area={area}
       selectedShift={selectedShift}
       setSelectedShift={setSelectedShift}
+      roles={roles}
       anchorEl={detailsAnchorEl}
       setAnchorEl={setDetailsAnchorEl}
       open={detailsOpen} />

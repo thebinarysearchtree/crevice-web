@@ -10,7 +10,7 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import TextField from '@material-ui/core/TextField';
-import { makePgDate, addDays } from '../utils/date';
+import { makePgDate, addDays, getTimeString } from '../utils/date';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import IconButton from '@material-ui/core/IconButton';
 import DeleteIcon from '@material-ui/icons/Delete';
@@ -161,7 +161,6 @@ function EditDialog(props) {
   const [roleIndex, setRoleIndex] = useState(-1);
   const [capacity, setCapacity] = useState(1);
   const [settings, setSettings] = useState(defaultSettings);
-  const [loading, setLoading] = useState(false);
   const [shiftRoles, setShiftRoles] = useState([]);
   const [breakMinutes, setBreakMinutes] = useState(0);
   const [notes, setNotes] = useState('');
@@ -177,11 +176,11 @@ function EditDialog(props) {
   const classes = useStyles();
   const client = useClient();
 
-  const { handleClose, area, selectedShift, selectedDay, setSelectedDay, roles, open } = props;
+  const { handleClose, area, selectedShift, selectedDay, roles, open } = props;
   
-  const { date } = selectedDay;
+  const date = selectedDay?.date || selectedShift?.startTime;
 
-  const isDisabled = loading || !startTime || !endTime || shiftRoles.length === 0 || breakMinutes === '' || breakMinutesError || (Boolean(repeatWeeks) && (!repeatUntil || Number.isNaN(repeatUntil.getTime()))) || editError;
+  const isDisabled = !startTime || !endTime || shiftRoles.length === 0 || breakMinutes === '' || breakMinutesError || (Boolean(repeatWeeks) && (!repeatUntil || Number.isNaN(repeatUntil.getTime()))) || editError;
   const addRoleIsDisabled = capacity === '' || capacityError || roleIndex === -1;
 
   const clearRoleFields = () => {
@@ -194,11 +193,22 @@ function EditDialog(props) {
     if (open) {
       if (selectedShift) {
         const { startTime, endTime, breakMinutes, notes, shiftRoles } = selectedShift;
-        setStartTime(startTime);
-        setEndTime(endTime);
+        setStartTime(getTimeString(startTime));
+        setEndTime(getTimeString(endTime));
         setBreakMinutes(breakMinutes);
         setNotes(notes);
-        setShiftRoles(shiftRoles);
+        setShiftRoles(shiftRoles.map(sr => {
+          return {
+            ...sr,
+            role: {
+              id: sr.roleId,
+              name: sr.roleName,
+              colour: sr.roleColour
+            },
+            bookBeforeHours: sr.bookBeforeMinutes / 60, 
+            cancelBeforeHours: sr.cancelBeforeMinutes / 60
+          }
+        }));
       }
       else {
         setStartTime('09:00');
@@ -289,31 +299,27 @@ function EditDialog(props) {
         times.push({ startTime: pgStartTime, endTime: pgEndTime });
       }
     }
+    const series = {
+      intervalWeeks: repeatWeeks,
+      endDate: makePgDate(repeatUntil, area.timeZone),
+      notes
+    };
     const shift = {
       areaId: area.id,
       times,
-      breakMinutes,
-      notes
+      breakMinutes
     };
     const adjustedShiftRoles = shiftRoles.map(sr => {
       const cancelBeforeMinutes = parseInt(sr.cancelBeforeHours * 60, 10);
       const bookBeforeMinutes = parseInt(sr.bookBeforeHours * 60, 10);
       return {...sr, cancelBeforeMinutes, bookBeforeMinutes };
     });
+    handleClose();
     await client.postMutation({
       url: '/shifts/insert',
-      data: { shift, shiftRoles: adjustedShiftRoles },
+      data: { series, shift, shiftRoles: adjustedShiftRoles },
       message: times.length === 1 ? 'Shift added' : `${times.length} shifts added`
     });
-    handleClose();
-  }
-
-  let buttonText;
-  if (loading) {
-    buttonText = 'Saving...';
-  }
-  else {
-    buttonText = 'Add shift';
   }
 
   const roleItems = roles.map((r, i) => <MenuItem key={r.id} value={i} disabled={shiftRoles.some(sr => sr.roleId === r.id)}>{r.name}</MenuItem>);
@@ -454,7 +460,7 @@ function EditDialog(props) {
           variant="contained"
           color="primary"
           disabled={isDisabled}
-          onClick={saveShift}>{buttonText}</Button>
+          onClick={saveShift}>{selectedShift ? 'Update' : 'Add shift'}</Button>
       </DialogActions>
     </React.Fragment>
   );

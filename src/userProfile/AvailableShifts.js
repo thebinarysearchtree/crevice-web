@@ -81,11 +81,14 @@ function AvailableShifts(props) {
 
   const handleBookClick = async () => {
     handleClose();
-    const shiftRoleIds = selectedShifts.map(s => s.shiftRoleId);
+    const shifts = selectedShifts.map(s => ({
+      shiftId: s.id,
+      shiftRoleId: s.shiftRoleId
+    }));
     await client.postMutation({
       url: '/bookings/insert',
-      data: { userId, shiftRoleIds },
-      message: shiftRoleIds.length === 1 ? 'Shift booked' : 'Shifts booked'
+      data: { userId, shifts },
+      message: shifts.length === 1 ? 'Shift booked' : 'Shifts booked'
     });
   }
 
