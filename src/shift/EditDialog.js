@@ -21,6 +21,7 @@ import RepeatSelector from './RepeatSelector';
 import NotesChip from './NotesChip';
 import SettingsButton from './SettingsButton';
 import { useClient } from '../auth';
+import { compare } from '../utils/data';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -176,7 +177,7 @@ function EditDialog(props) {
   const classes = useStyles();
   const client = useClient();
 
-  const { handleClose, area, selectedShift, selectedDay, roles, open } = props;
+  const { handleClose, detach, area, selectedShift, selectedDay, roles, open } = props;
   
   const date = selectedDay?.date || selectedShift?.startTime;
 
@@ -300,8 +301,6 @@ function EditDialog(props) {
       }
     }
     const series = {
-      intervalWeeks: repeatWeeks,
-      endDate: makePgDate(repeatUntil, area.timeZone),
       notes
     };
     const shift = {
@@ -315,11 +314,51 @@ function EditDialog(props) {
       return {...sr, cancelBeforeMinutes, bookBeforeMinutes };
     });
     handleClose();
-    await client.postMutation({
-      url: '/shifts/insert',
-      data: { series, shift, shiftRoles: adjustedShiftRoles },
-      message: times.length === 1 ? 'Shift added' : `${times.length} shifts added`
-    });
+    if (selectedShift) {
+      const initialSeries = {
+        id: selectedShift.seriesId,
+        notes: selectedShift.notes
+      }
+      const updatedSeries = {
+        id: selectedShift.seriesId,
+        notes
+      };
+      const initialShift = {
+        id: selectedShift.id,
+        startTime: makePgDate(new Date(selectedShift.startTime), area.timeZone),
+        endTime: makePgDate(new Date(selectedShift.endTime), area.timeZone),
+        breakMinutes: selectedShift.breakMinutes,
+      }
+      const updatedShift = {
+        id: selectedShift.id,
+        startTime: pgStartTime,
+        endTime: pgEndTime,
+        breakMinutes
+      };
+      const { remove, add, update } = compare(selectedShift.shiftRoles, adjustedShiftRoles);
+      const message = detach || selectedShift.isSingle ? 'Shift updated' : 'Series updated';
+      await client.postMutation({
+        url: '/shifts/update',
+        data: { 
+          initialSeries, 
+          updatedSeries, 
+          initialShift, 
+          updatedShift, 
+          remove, 
+          add, 
+          update, 
+          detach 
+        },
+        message
+      });
+    }
+    else {
+      await client.postMutation({
+        url: '/shifts/insert',
+        data: { series, shift, shiftRoles: adjustedShiftRoles },
+        message: times.length === 1 ? 'Shift added' : `${times.length} shifts added`
+      });
+    }
   }
 
   const roleItems = roles.map((r, i) => <MenuItem key={r.id} value={i} disabled={shiftRoles.some(sr => sr.roleId === r.id)}>{r.name}</MenuItem>);
@@ -392,9 +431,31 @@ function EditDialog(props) {
       onClick={() => setEditBreakMinutes(true)}>{breakMinutes} minutes break</Typography>
   );
 
+  const repeatSelector = selectedShift ? null : (
+    <RepeatSelector
+      date={date}
+      weeks={repeatWeeks} 
+      setWeeks={setRepeatWeeks} 
+      until={repeatUntil} 
+      setUntil={setRepeatUntil} />
+  );
+
+  let title;
+  if (selectedShift) {
+    if (selectedShift.isSingle || detach) {
+      title = 'Edit shift';
+    }
+    else {
+      title = 'Edit series';
+    }
+  }
+  else {
+    title = 'Create shift';
+  }
+
   return (
     <React.Fragment>
-      <DialogTitle>Create shift</DialogTitle>
+      <DialogTitle>{title}</DialogTitle>
       <DialogContent className={classes.root}>
         <div className={`${classes.container} ${classes.spacing}`}>
           <TextField 
@@ -447,12 +508,7 @@ function EditDialog(props) {
         </form>
         <FormHelperText className={classes.errorMessage} error={true}>{capacityError ? 'Must be a non-negative integer' : ''}</FormHelperText>
         {list}
-        <RepeatSelector
-          date={date}
-          weeks={repeatWeeks} 
-          setWeeks={setRepeatWeeks} 
-          until={repeatUntil} 
-          setUntil={setRepeatUntil} />
+        {repeatSelector}
       </DialogContent>
       <DialogActions>
         <Button color="primary" onClick={handleClose}>Cancel</Button>

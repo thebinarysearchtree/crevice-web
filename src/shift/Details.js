@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import Popover from '@material-ui/core/Popover';
@@ -128,6 +128,7 @@ function Details(props) {
   const [searchAnchorEl, setSearchAnchorEl] = useState(null);
   const [selectedUserIndex, setSelectedUserIndex] = useState(-1);
   const [bookedAnchorEl, setBookedAnchorEl] = useState(null);
+  const [detach, setDetach] = useState(false);
 
   const bookedOpen = Boolean(bookedAnchorEl);
 
@@ -136,7 +137,7 @@ function Details(props) {
 
   const { area, selectedShift, setSelectedShift, anchorEl, setAnchorEl, open } = props;
 
-  const { id: shiftId, seriesId, startTime, endTime, breakMinutes, notes, shiftRoles } = selectedShift;
+  const { id: shiftId, seriesId, isSingle, startTime, endTime, breakMinutes, notes, shiftRoles } = selectedShift;
 
   const { id: areaId, timeZone } = area;
 
@@ -153,6 +154,16 @@ function Details(props) {
   const handleClose = () => {
     setSelectedShift(null);
     setAnchorEl(null);
+  }
+
+  const handleSeries = () => {
+    setDetach(false);
+    setEdit(true);
+  }
+
+  const handleEdit = () => {
+    setDetach(true);
+    setEdit(true);
   }
 
   const handleClickBookedUsers = (e) => {
@@ -252,13 +263,14 @@ function Details(props) {
     }
   }
 
-  const removeShift = async () => {
+  const removeShift = async (type) => {
     setDialogOpen(false);
     setAnchorEl(null);
+    const message = type === 'shift' ? 'Shift deleted' : 'Series deleted';
     await client.postMutation({
       url: '/shifts/remove',
-      data: { shiftId },
-      message: 'Shift deleted'
+      data: { shiftId, seriesId, type },
+      message
     });
   }
 
@@ -338,12 +350,16 @@ function Details(props) {
 
   const leftPopover = startTime.getDay() > 3;
 
-  const content = edit ? <EditDialog {...props} /> : (
+  const dialogProps = {...props, handleClose, detach };
+
+  const content = edit ? <EditDialog {...dialogProps} /> : (
     <React.Fragment>
       <PopoverToolbar 
-        onEdit={() => setEdit(true)}
+        onSeries={isSingle ? null : handleSeries}
+        onEdit={handleEdit}
         onDelete={() => setDialogOpen(true)} 
         onClose={handleClose}
+        seriesText="Edit series"
         editText="Edit shift"
         deleteText="Delete shift" />
       <DialogContent className={classes.content}>
@@ -376,7 +392,8 @@ function Details(props) {
       <DeleteDialog 
         open={dialogOpen} 
         setOpen={setDialogOpen} 
-        onDelete={removeShift} />
+        onDelete={removeShift}
+        isSingle={isSingle} />
     </React.Fragment>
   );
 

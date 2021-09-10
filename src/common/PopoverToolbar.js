@@ -5,6 +5,7 @@ import EditIcon from '@material-ui/icons/Edit';
 import DeleteIcon from '@material-ui/icons/Delete';
 import CloseIcon from '@material-ui/icons/Close';
 import IconButton from '@material-ui/core/IconButton';
+import SeriesIcon from '@material-ui/icons/LinearScale';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -29,7 +30,15 @@ const useStyles = makeStyles((theme) => ({
 function PopoverToolbar(props) {
   const classes = useStyles();
   
-  const { onEdit, onDelete, onClose, editText, deleteText } = props;
+  const { onSeries, onEdit, onDelete, onClose, seriesText, editText, deleteText } = props;
+
+  const seriesButton = onSeries ? (
+    <Tooltip title={seriesText}>
+      <IconButton className={classes.button} size="small" onClick={onSeries}>
+        <SeriesIcon fontSize="small" color="action" />
+      </IconButton>
+    </Tooltip>
+  ) : null;
 
   const editButton = onEdit ? (
     <Tooltip title={editText}>
@@ -50,6 +59,7 @@ function PopoverToolbar(props) {
   return (
     <div className={classes.root}>
       <div className={classes.grow} />
+      {seriesButton}
       {editButton}
       {deleteButton}
       <Tooltip title="Close">

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Chip from '@material-ui/core/Chip';
 import Popover from '@material-ui/core/Popover';
@@ -36,14 +36,20 @@ function NotesChip(props) {
 
   const { notes, setNotes } = props;
 
+  useEffect(() => {
+    if (open) {
+      setNotesDraft(notes);
+    }
+  }, [open]);
+
   const handleSave = () => {
     setNotes(notesDraft);
     setAnchorEl(null);
   }
 
   const handleClose = () => {
+    setNotes(notesDraft);
     setAnchorEl(null);
-    setNotesDraft(notes);
   }
 
   return (
@@ -77,11 +83,7 @@ function NotesChip(props) {
             autoFocus />
         </DialogContent>
         <DialogActions>
-          <Button color="primary" onClick={handleClose}>Cancel</Button>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleSave}>Save</Button>
+          <Button color="primary" onClick={handleClose}>Close</Button>
         </DialogActions>
       </Popover>
     </React.Fragment>

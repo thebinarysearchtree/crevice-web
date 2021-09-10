@@ -43,7 +43,7 @@ function SettingsPopover(props) {
     }
   }, [open]);
 
-  const handleSave = () => {
+  const handleClose = () => {
     const settings = {
       cancelBeforeHours,
       bookBeforeHours,
@@ -66,7 +66,7 @@ function SettingsPopover(props) {
         vertical: 'top',
         horizontal: 'right'
       }}
-      onClose={() => setAnchorEl(null)}
+      onClose={handleClose}
       disableRestoreFocus>
       <DialogContent className={classes.content}>
         <FormControlLabel
@@ -97,12 +97,7 @@ function SettingsPopover(props) {
           onChange={(e) => setBookBeforeHours(e.target.value)} />
       </DialogContent>
       <DialogActions>
-        <Button color="primary" onClick={() => setAnchorEl(null)}>Cancel</Button>
-        <Button
-          variant="contained"
-          color="primary"
-          disabled={isDisabled}
-          onClick={handleSave}>Save</Button>
+        <Button color="primary" onClick={handleClose}>Close</Button>
       </DialogActions>
     </Popover>
   );

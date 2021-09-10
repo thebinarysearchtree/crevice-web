@@ -33,8 +33,42 @@ const parse = async (response, reviver = defaultReviver) => {
   return JSON.parse(text, reviver);
 }
 
+const compare = (existingItems, updatedItems) => {
+  const existingIds = existingItems.map(e => e.id);
+  const updatedIds = updatedItems.map(u => u.id);
+  const remove = existingItems.filter(e => !updatedIds.includes(e.id));
+  const add = updatedItems.filter(u => !existingIds.includes(u.id));
+  const update = [];
+  for (const existingItem of existingItems) {
+    let updated = false;
+    const updatedItem = updatedItems.find(u => u.id == existingItem.id);
+    if (!updatedItem) {
+      continue;
+    }
+    const keys = Object.keys(existingItem);
+    for (const key of keys) {
+      if (existingItem[key] === undefined || updatedItem[key] === undefined) {
+        continue;
+      }
+      if (existingItem[key] !== updatedItem[key]) {
+        updated = true;
+        break;
+      }
+    }
+    if (updated) {
+      update.push(updatedItem);
+    }
+  }
+  return {
+    remove,
+    add,
+    update
+  };
+}
+
 export {
   makeReviver,
   dateParser,
-  parse
+  parse,
+  compare
 };
