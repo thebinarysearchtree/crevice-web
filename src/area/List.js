@@ -118,10 +118,7 @@ function List() {
       id: -1,
       name: '',
       locationId: -1,
-      locationName: '',
-      notes: '',
-      createdAt: new Date().toISOString(),
-      activeUserCount: 0
+      notes: ''
     });
     setAnchorEl(e.currentTarget);
   }

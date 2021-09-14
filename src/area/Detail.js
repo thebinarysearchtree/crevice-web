@@ -12,6 +12,7 @@ import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import styles from '../styles/dialog';
 import { useClient } from '../auth';
+import useChanged from '../hooks/useChanged';
 
 const useStyles = makeStyles(styles);
 
@@ -19,8 +20,9 @@ function Detail(props) {
   const [name, setName] = useState('');
   const [locationId, setLocationId] = useState(-1);
   const [notes, setNotes] = useState('');
+  const hasChanged = useChanged(props.open, [name, locationId, notes]);
 
-  const isDisabled = !name || locationId === -1;
+  const isDisabled = !name || locationId === -1 || !hasChanged;
 
   const classes = useStyles();
   const client = useClient();
@@ -35,7 +37,7 @@ function Detail(props) {
       setLocationId(locationId);
       setNotes(notes);
     }
-  }, [selectedArea]);
+  }, [open]);
 
   const handleClose = () => {
     setSelectedArea(null);
@@ -48,10 +50,12 @@ function Detail(props) {
 
   const area = { ...selectedArea, name, locationId, notes };
 
+  const isUpdate = area.id !== -1;
+
   const saveArea = async (e) => {
     e.preventDefault();
     setAnchorEl(null);
-    if (area.id !== -1) {
+    if (isUpdate) {
       await client.postMutation({
         url: '/areas/update',
         data: area,
@@ -68,7 +72,7 @@ function Detail(props) {
     setSelectedArea(null);
   }
 
-  const title = area.id !== -1 ? 'Edit area' : 'Create a new area';
+  const title = isUpdate ? 'Edit area' : 'Create a new area';
 
   const menuItems = props
     .locations
@@ -81,11 +85,11 @@ function Detail(props) {
       anchorEl={anchorEl}
       anchorOrigin={{
         vertical: 'bottom',
-        horizontal: area.id === -1 ? 'right' : 'left'
+        horizontal: isUpdate ? 'left' : 'right'
       }}
       transformOrigin={{
         vertical: 'top',
-        horizontal: area.id === -1 ? 'right' : 'left'
+        horizontal: isUpdate ? 'left' : 'right'
       }}
       onClose={handleClose}
       disableRestoreFocus>
@@ -122,7 +126,7 @@ function Detail(props) {
           onClick={saveArea} 
           variant="contained" 
           color="primary"
-          disabled={isDisabled}>Save</Button>
+          disabled={isDisabled}>{isUpdate ? 'Update' : 'Save'}</Button>
       </DialogActions>
     </Popover>
   );

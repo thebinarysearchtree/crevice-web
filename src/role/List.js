@@ -54,9 +54,7 @@ function List() {
     setSelectedRole({
       id: -1,
       name: '',
-      colour: '',
-      createdAt: new Date().toISOString(),
-      userCount: 0
+      colour: ''
     });
     setAnchorEl(e.currentTarget);
   }

@@ -22,6 +22,7 @@ import NotesChip from './NotesChip';
 import SettingsButton from './SettingsButton';
 import { useClient } from '../auth';
 import { compare } from '../utils/data';
+import useChanged from '../hooks/useChanged';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -169,6 +170,14 @@ function EditDialog(props) {
   const [repeatWeeks, setRepeatWeeks] = useState(0);
   const [repeatUntil, setRepeatUntil] = useState(new Date());
   const [editIndex, setEditIndex] = useState(-1);
+  const hasChanged = useChanged(props.open, [
+    startTime,
+    endTime,
+    breakMinutes,
+    notes,
+    shiftRoles
+  ]);
+  const [isCopied, setIsCopied] = useState(false);
 
   const capacityError = capacity < 0 || !Number.isInteger(Number(capacity));
   const breakMinutesError = breakMinutes < 0 || !Number.isInteger(Number(breakMinutes));
@@ -177,11 +186,11 @@ function EditDialog(props) {
   const classes = useStyles();
   const client = useClient();
 
-  const { handleClose, detach, area, selectedShift, selectedDay, roles, open } = props;
+  const { handleClose, detach, copiedShift, setCopiedShift, area, selectedShift, selectedDay, roles, open } = props;
   
   const date = selectedDay?.date || selectedShift?.startTime;
 
-  const isDisabled = !startTime || !endTime || shiftRoles.length === 0 || breakMinutes === '' || breakMinutesError || (Boolean(repeatWeeks) && (!repeatUntil || Number.isNaN(repeatUntil.getTime()))) || editError;
+  const isDisabled = !startTime || !endTime || shiftRoles.length === 0 || breakMinutes === '' || breakMinutesError || (Boolean(repeatWeeks) && (!repeatUntil || Number.isNaN(repeatUntil.getTime()))) || editError || (!hasChanged && !isCopied);
   const addRoleIsDisabled = capacity === '' || capacityError || roleIndex === -1;
 
   const clearRoleFields = () => {
@@ -192,8 +201,9 @@ function EditDialog(props) {
 
   useEffect(() => {
     if (open) {
-      if (selectedShift) {
-        const { startTime, endTime, breakMinutes, notes, shiftRoles } = selectedShift;
+      const shift = selectedShift || copiedShift;
+      if (shift) {
+        const { startTime, endTime, breakMinutes, notes, shiftRoles } = shift;
         setStartTime(getTimeString(startTime));
         setEndTime(getTimeString(endTime));
         setBreakMinutes(breakMinutes);
@@ -210,6 +220,13 @@ function EditDialog(props) {
             cancelBeforeHours: sr.cancelBeforeMinutes / 60
           }
         }));
+        if (copiedShift && !selectedShift) {
+          setIsCopied(true);
+          setCopiedShift(null);
+        }
+        if (!copiedShift) {
+          setIsCopied(false);
+        }
       }
       else {
         setStartTime('09:00');

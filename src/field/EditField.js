@@ -19,6 +19,7 @@ import ListItemText from '@material-ui/core/ListItemText';
 import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
 import Tooltip from '@material-ui/core/Tooltip';
 import { useClient } from '../auth';
+import useChanged from '../hooks/useChanged';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -73,8 +74,9 @@ function Detail(props) {
   const [optionName, setOptionName] = useState('');
   const [editIndex, setEditIndex] = useState(-1);
   const [nextId, setNextId] = useState(-1);
+  const hasChanged = useChanged(props.open, [fieldName, fieldType, selectItems]);
 
-  const isDisabled = !fieldName || !fieldType || (fieldType === 'Select' && selectItems.length < 2);
+  const isDisabled = !fieldName || !fieldType || (fieldType === 'Select' && selectItems.length < 2) || !hasChanged;
 
   const error = optionName !== '' && selectItems.some(i => i.name === optionName);
 
@@ -138,11 +140,13 @@ function Detail(props) {
 
   const field = { ...selectedField, name: fieldName, fieldType };
 
+  const isUpdate = field.id !== -1;
+
   const saveField = async (e) => {
     e.preventDefault();
     setSelectedField(null);
     setAnchorEl(null);
-    if (field.id !== -1) {
+    if (isUpdate) {
       const selectItemIds = selectItems.map(i => i.id);
       const itemsToDelete = existingSelectItems
         .filter(item => !selectItemIds.includes(item.id));
@@ -177,9 +181,7 @@ function Detail(props) {
     }
   }
 
-  const title = field.id !== -1 ? 'Update field' : 'Create a field';
-
-  const buttonText = field.id !== -1 ? 'Update' : 'Save';
+  const title = isUpdate ? 'Update field' : 'Create a field';
 
   const items = selectItems.map((item, i) => {
     const error = item.name === '';
@@ -248,7 +250,7 @@ function Detail(props) {
     </form>
   ) : null;
 
-  const fieldTypeSelect = field.id === -1 ? (
+  const fieldTypeSelect = !isUpdate ? (
     <FormControl className={classes.spacing}>
       <InputLabel id="field-type">Field type</InputLabel>
       <Select
@@ -272,11 +274,11 @@ function Detail(props) {
       anchorEl={anchorEl}
       anchorOrigin={{
         vertical: 'bottom',
-        horizontal: field.id === -1 ? 'right' : 'left'
+        horizontal: isUpdate ? 'left' : 'right'
       }}
       transformOrigin={{
         vertical: 'top',
-        horizontal: field.id === -1 ? 'right' : 'left'
+        horizontal: isUpdate ? 'left' : 'right'
       }}
       onClose={handleClose}
       disableRestoreFocus>
@@ -299,7 +301,7 @@ function Detail(props) {
           onClick={saveField} 
           variant="contained" 
           color="primary"
-          disabled={isDisabled}>{buttonText}</Button>
+          disabled={isDisabled}>{isUpdate ? 'Update' : 'Save'}</Button>
       </DialogActions>
     </Popover>
   );

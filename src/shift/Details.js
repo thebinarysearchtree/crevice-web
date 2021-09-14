@@ -135,7 +135,9 @@ function Details(props) {
   const classes = useStyles();
   const client = useClient();
 
-  const { area, selectedShift, setSelectedShift, anchorEl, setAnchorEl, open } = props;
+  const { setMessage } = client;
+
+  const { area, selectedShift, setSelectedShift, setCopiedShift, anchorEl, setAnchorEl, open } = props;
 
   const { id: shiftId, seriesId, isSingle, startTime, endTime, breakMinutes, notes, shiftRoles } = selectedShift;
 
@@ -154,6 +156,12 @@ function Details(props) {
   const handleClose = () => {
     setSelectedShift(null);
     setAnchorEl(null);
+  }
+
+  const handleCopy = () => {
+    setCopiedShift(selectedShift);
+    setMessage('Shift copied');
+    handleClose();
   }
 
   const handleSeries = () => {
@@ -355,10 +363,12 @@ function Details(props) {
   const content = edit ? <EditDialog {...dialogProps} /> : (
     <React.Fragment>
       <PopoverToolbar 
+        onCopy={handleCopy}
         onSeries={isSingle ? null : handleSeries}
         onEdit={handleEdit}
         onDelete={() => setDialogOpen(true)} 
         onClose={handleClose}
+        copyText="Copy shift"
         seriesText="Edit series"
         editText="Edit shift"
         deleteText="Delete shift" />

@@ -12,6 +12,7 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import styles from '../styles/dialog';
 import { useClient } from '../auth';
+import useChanged from '../hooks/useChanged';
 
 const useStyles = makeStyles(styles);
 
@@ -19,8 +20,9 @@ function Detail(props) {
   const [name, setName] = useState('');
   const [timeZone, setTimeZone] = useState('');
   const [address, setAddress] = useState('');
+  const hasChanged = useChanged(props.open, [name, timeZone, address]);
 
-  const isDisabled = !name || !timeZone;
+  const isDisabled = !name || !timeZone || !hasChanged;
 
   const classes = useStyles();
   const client = useClient();
@@ -48,10 +50,12 @@ function Detail(props) {
 
   const location = { ...selectedLocation, name, timeZone, address };
 
+  const isUpdate = location.id !== -1;
+
   const saveLocation = async (e) => {
     e.preventDefault();
     handleClose();
-    if (location.id !== -1) {
+    if (isUpdate) {
       await client.postMutation({
         url: '/locations/update',
         data: location,
@@ -67,7 +71,7 @@ function Detail(props) {
     }
   }
 
-  const title = location.id !== -1 ? 'Edit location' : 'Create a new location';
+  const title = isUpdate ? 'Edit location' : 'Create a new location';
 
   return (
     <Popover 
@@ -76,11 +80,11 @@ function Detail(props) {
       anchorEl={anchorEl}
       anchorOrigin={{
         vertical: 'bottom',
-        horizontal: location.id === -1 ? 'right' : 'left'
+        horizontal: isUpdate ? 'left' : 'right'
       }}
       transformOrigin={{
         vertical: 'top',
-        horizontal: location.id === -1 ? 'right' : 'left'
+        horizontal: isUpdate ? 'left' : 'right'
       }}
       onClose={handleClose}
       disableRestoreFocus>
@@ -127,7 +131,7 @@ function Detail(props) {
           onClick={saveLocation} 
           variant="contained" 
           color="primary"
-          disabled={isDisabled}>Save</Button>
+          disabled={isDisabled}>{isUpdate ? 'Update' : 'Save'}</Button>
       </DialogActions>
     </Popover>
   );

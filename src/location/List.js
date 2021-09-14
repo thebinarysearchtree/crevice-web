@@ -49,9 +49,7 @@ function List() {
       id: -1,
       name: '',
       timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      address: '',
-      createdAt: new Date().toISOString(),
-      areaCount: 0
+      address: ''
     });
     setAnchorEl(e.currentTarget);
   }

@@ -6,17 +6,14 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import CloseIcon from '@material-ui/icons/Close';
 import IconButton from '@material-ui/core/IconButton';
 import SeriesIcon from '@material-ui/icons/LinearScale';
+import CopyIcon from '@material-ui/icons/FileCopy';
 
 const useStyles = makeStyles((theme) => ({
   root: {
     display: 'flex',
-    paddingTop: theme.spacing(1),
-    paddingBottom: theme.spacing(1),
-    paddingLeft: theme.spacing(3),
-    paddingRight: theme.spacing(1),
-    justifyContent: 'space-between',
+    padding: theme.spacing(1),
     alignItems: 'center',
-    backgroundColor: theme.palette.grey[300],
+    backgroundColor: '#e1bee7',
     marginBottom: theme.spacing(1)
   },
   grow: {
@@ -30,7 +27,15 @@ const useStyles = makeStyles((theme) => ({
 function PopoverToolbar(props) {
   const classes = useStyles();
   
-  const { onSeries, onEdit, onDelete, onClose, seriesText, editText, deleteText } = props;
+  const { onCopy, onSeries, onEdit, onDelete, onClose, copyText, seriesText, editText, deleteText } = props;
+
+  const copyButton = onCopy ? (
+    <Tooltip title={copyText}>
+      <IconButton className={classes.button} size="small" onClick={onCopy}>
+        <CopyIcon fontSize="small" color="action" />
+      </IconButton>
+    </Tooltip>
+  ) : null;
 
   const seriesButton = onSeries ? (
     <Tooltip title={seriesText}>
@@ -58,6 +63,7 @@ function PopoverToolbar(props) {
 
   return (
     <div className={classes.root}>
+      {copyButton}
       <div className={classes.grow} />
       {seriesButton}
       {editButton}

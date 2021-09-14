@@ -129,6 +129,7 @@ function List() {
   const [anchorEl, setAnchorEl] = useState(null);
   const [roles, setRoles] = useState([]);
   const [selectedShift, setSelectedShift] = useState(null);
+  const [copiedShift, setCopiedShift] = useState(null);
   const [detailsAnchorEl, setDetailsAnchorEl] = useState(null);
 
   const areaId = selectedArea?.id || initialAreaId || areaIdParam;
@@ -252,6 +253,8 @@ function List() {
   
   const addShift = selectedDay ? (
     <EditPopover
+      copiedShift={copiedShift}
+      setCopiedShift={setCopiedShift}
       area={area}
       selectedDay={selectedDay}
       setSelectedDay={setSelectedDay}
@@ -264,6 +267,7 @@ function List() {
       area={area}
       selectedShift={selectedShift}
       setSelectedShift={setSelectedShift}
+      setCopiedShift={setCopiedShift}
       roles={roles}
       anchorEl={detailsAnchorEl}
       setAnchorEl={setDetailsAnchorEl}

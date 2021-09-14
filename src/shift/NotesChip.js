@@ -48,7 +48,6 @@ function NotesChip(props) {
   }
 
   const handleClose = () => {
-    setNotes(notesDraft);
     setAnchorEl(null);
   }
 
@@ -56,7 +55,7 @@ function NotesChip(props) {
     <React.Fragment>
       <Chip 
         className={notes ? `${classes.chip} ${classes.activeChip}` : classes.chip}
-        label={notes ? 'Notes' : 'No notes'}
+        label={notes ? notes.substring(0, 10).trim() + '...' : 'No notes'}
         onClick={(e) => setAnchorEl(e.currentTarget)} />
       <Popover
         className={classes.popover}
@@ -83,7 +82,10 @@ function NotesChip(props) {
             autoFocus />
         </DialogContent>
         <DialogActions>
-          <Button color="primary" onClick={handleClose}>Close</Button>
+          <Button color="primary" onClick={handleClose}>Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={handleSave}>Done</Button>
         </DialogActions>
       </Popover>
     </React.Fragment>
