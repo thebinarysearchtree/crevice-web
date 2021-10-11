@@ -1,4 +1,4 @@
-import React, { useContext, createContext, useState } from 'react';
+import React, { useContext, createContext, useState, useRef } from 'react';
 import cache from './cache';
 
 const authContext = createContext();
@@ -19,6 +19,8 @@ function useProvideAuth() {
   const [mutationCount, setMutationCount] = useState(0);
   const [message, setMessage] = useState('');
   const [processing, setProcessing] = useState(false);
+
+  const ref = useRef(null);
 
   const tokenHasExpired = () => {
     if (Date.now() < (user.expiry - (1000 * 60 * 5))) {
@@ -153,6 +155,7 @@ function useProvideAuth() {
     message,
     setMessage,
     processing,
+    ref,
     getToken,
     postData,
     postMutation,

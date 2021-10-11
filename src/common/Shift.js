@@ -9,12 +9,14 @@ const useStyles = makeStyles((theme) => ({
     padding: '4px',
     marginBottom: theme.spacing(1),
     borderRadius: '5px',
-    cursor: 'pointer',
     textAlign: 'center',
     backgroundColor: '#90caf9',
     '&$selected': {
       border: '2px solid #0d47a1'
     }
+  },
+  clickable: {
+    cursor: 'pointer'
   },
   empty: {
     backgroundColor: '#ffcdd2',
@@ -61,6 +63,12 @@ function Shift(props) {
   }
   if (selected) {
     className += ` ${classes.selected}`;
+  }
+  if (props.className) {
+    className += ` ${props.className}`;
+  }
+  if (onClick) {
+    className += ` ${classes.clickable}`;
   }
 
   return (

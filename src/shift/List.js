@@ -59,7 +59,7 @@ const useStyles = makeStyles((theme) => ({
     padding: '5px',
     borderTop: '1px solid #ddd',
     borderLeft: '1px solid #ddd',
-    overflowY: 'scroll'
+    overflow: 'auto'
   },
   dayNumber: {
     display: 'flex',

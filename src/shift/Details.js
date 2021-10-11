@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import Popover from '@material-ui/core/Popover';
@@ -14,19 +14,14 @@ import ListItemText from '@material-ui/core/ListItemText';
 import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
 import PopoverToolbar from '../common/PopoverToolbar';
 import DeleteDialog from './DeleteDialog';
-import LinearScaleIcon from '@material-ui/icons/LinearScale';
 import Fab from '@material-ui/core/Fab';
 import AddIcon from '@material-ui/icons/Add';
 import UserTooltip from './UserTooltip';
-import TextField from '@material-ui/core/TextField';
 import { makeReviver } from '../utils/data';
-import ListItemAvatar from '@material-ui/core/ListItemAvatar';
-import MenuItem from '@material-ui/core/MenuItem';
-import Paper from '@material-ui/core/Paper';
-import ClickAwayListener from '@material-ui/core/ClickAwayListener';
 import BookedList from './BookedList';
 import { useClient } from '../auth';
 import EditDialog from './EditDialog';
+import UserSearch from '../common/UserSearch';
 
 const useStyles = makeStyles((theme) => ({
   right: {
@@ -108,7 +103,7 @@ const useStyles = makeStyles((theme) => ({
     paddingBottom: '0px'
   },
   list: {
-    overflow: 'scroll'
+    overflow: 'auto'
   }
 }));
 
@@ -121,12 +116,6 @@ function Details(props) {
   const [edit, setEdit] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [potentialUsers, setPotentialUsers] = useState([]);
-  const [searchPosition, setSearchPosition] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchTimeout, setSearchTimeout] = useState(0);
-  const [searchAnchorEl, setSearchAnchorEl] = useState(null);
-  const [selectedUserIndex, setSelectedUserIndex] = useState(-1);
   const [bookedAnchorEl, setBookedAnchorEl] = useState(null);
   const [detach, setDetach] = useState(false);
 
@@ -187,8 +176,6 @@ function Details(props) {
   }
 
   const handleUserClick = async (user) => {
-    setSearchTerm('');
-    setPotentialUsers([]);
     const { id: userId, roleId } = user;
     const { shiftId, id: shiftRoleId } = shiftRoles.find(sr => sr.roleId === roleId);
     const shift = { shiftId, shiftRoleId };
@@ -210,65 +197,9 @@ function Details(props) {
     const response = await client.postData('/users/findPotentialBookings', query);
     if (response.ok) {
       const text = await response.text();
-      const users = JSON.parse(text, reviver);
-      setPotentialUsers(users);
+      return JSON.parse(text, reviver);
     }
-  }
-
-  const handleSearchChange = async (e) => {
-    clearTimeout(searchTimeout);
-    setSelectedUserIndex(-1);
-    const latestSearchTerm = e.target.value;
-    setSearchTerm(latestSearchTerm);
-    if (latestSearchTerm === '') {
-      setPotentialUsers([]);
-      return;
-    }
-    if (!searchPosition) {
-      const rect = e.currentTarget.getBoundingClientRect();
-      const position = { 
-        bottom: rect.bottom + window.scrollY, 
-        left: rect.left 
-      };
-      setSearchPosition(position);
-      setSearchAnchorEl(e.currentTarget);
-    }
-    const timeout = latestSearchTerm.length < searchTerm.length ? 500 : 200;
-    setSearchTimeout(setTimeout(() => search(latestSearchTerm), timeout));
-  }
-
-  const handleKeyUp = (e) => {
-    const length = potentialUsers.length;
-    if (length) {
-      if (e.code === 'ArrowDown') {
-        setSelectedUserIndex(i => {
-          if (i === length - 1) {
-            return -1;
-          }
-          if (i === -1) {
-            return 0;
-          }
-          return i + 1;
-        });
-      }
-      if (e.code === 'ArrowUp') {
-        setSelectedUserIndex(i => i < 0 ? -1 : i - 1);
-      }
-      if (e.code === 'Enter') {
-        if (selectedUserIndex !== -1) {
-          const selectedUser = potentialUsers[selectedUserIndex];
-          if (selectedUser) {
-            handleUserClick(selectedUser);
-          }
-        }
-      }
-    }
-  }
-
-  const handleClickAway = (e) => {
-    if (e.target !== searchAnchorEl) {
-      setPotentialUsers([]);
-    }
+    return [];
   }
 
   const removeShift = async (type) => {
@@ -329,31 +260,11 @@ function Details(props) {
     });
   }
 
-  const userItems = potentialUsers.map((user, i) => {
-    const { id, name, roleName } = user;
-    return (
-      <MenuItem
-        key={id}
-        className={classes.menuItem}
-        value={id}
-        selected={i === selectedUserIndex}
-        onClick={() => handleUserClick(user)}>
-          <ListItemAvatar>
-            <Avatar user={user} noLink />
-          </ListItemAvatar>
-          <ListItemText primary={name} secondary={roleName} />
-      </MenuItem>
-    )
-  });
-
   const searchInput = searchOpen ? (
-    <TextField 
-      className={classes.search} 
+    <UserSearch
       placeholder="Find users..."
-      value={searchTerm}
-      onChange={handleSearchChange}
-      onKeyUp={handleKeyUp}
-      autoFocus />
+      onClick={handleUserClick}
+      onSearch={search} />
   ) : null;
 
   const leftPopover = startTime.getDay() > 3;
@@ -425,15 +336,6 @@ function Details(props) {
         disableRestoreFocus>
           {content}
       </Popover>
-      {potentialUsers.length === 0 || edit ? null : (
-        <ClickAwayListener onClickAway={handleClickAway}>
-          <Paper 
-            className={classes.searchResults} 
-            style={{ top: searchPosition ? searchPosition.bottom : 0, left: searchPosition ? searchPosition.left : 0 }}>
-              <List className={classes.list} style={{ maxHeight: searchPosition ? (window.innerHeight + window.scrollY) - searchPosition.bottom : null }}>{userItems}</List>
-          </Paper>
-        </ClickAwayListener>
-      )}
     </React.Fragment>
   );
 }

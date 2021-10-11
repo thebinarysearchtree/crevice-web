@@ -23,19 +23,19 @@ function Nav(props) {
   const classes = useStyles();
   const client = useClient();
 
-  const { message, setMessage } = client;
+  const { message, setMessage, ref } = client;
 
   const { drawer } = props;
   
   return (
-    <div className={classes.root}>
+    <div className={classes.root} ref={ref}>
       <AppBar />
       {drawer}
       <main className={classes.content}>
         <div className={classes.toolbar} />
         {props.children}
-        <Snackbar message={message} setMessage={setMessage} />
       </main>
+      <Snackbar message={message} setMessage={setMessage} />
     </div>
   );
 }

@@ -13,6 +13,7 @@ import Shifts from './Shifts';
 import useParamState from '../hooks/useParamState';
 import useSyncParams from '../hooks/useSyncParams';
 import useFetch from '../hooks/useFetch';
+import Following from './Following';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -172,6 +173,7 @@ function UserDetails() {
         <Tabs className={classes.tabs} value={activeTab} onChange={handleChangeTab}>
           <Tab label="Shifts" />
           <Tab label="Areas" />
+          <Tab label="Following" />
         </Tabs>
         <Divider />
         <div hidden={activeTab !== 0}>
@@ -179,6 +181,9 @@ function UserDetails() {
         </div>
         <div hidden={activeTab !== 1}>
           <Areas userId={userId} />
+        </div>
+        <div hidden={activeTab !== 2}>
+          <Following userId={userId} />
         </div>
       </div>
     </div>

@@ -8,7 +8,6 @@ import TableCell from '@material-ui/core/TableCell';
 import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
-import Snackbar from '../common/Snackbar';
 import styles from '../styles/list';
 import SearchBox from '../common/SearchBox';
 import TableFooter from '@material-ui/core/TableFooter';
@@ -31,10 +30,14 @@ const useStyles = makeStyles((theme) => ({
     marginRight: theme.spacing(1)
   },
   nameCell: {
-    paddingLeft: '0px'
+    paddingLeft: '0px',
+    width: '160px'
   },
   buttonMargin: {
     marginRight: theme.spacing(1)
+  },
+  avatarCell: {
+    width: '64px'
   }
 }));
 
@@ -193,7 +196,7 @@ function List() {
           <Table className={classes.table} aria-label="areas table">
             <TableHead>
               <TableRow>
-                <TableCell></TableCell>
+                <TableCell className={classes.avatarCell}></TableCell>
                 <TableCell className={classes.nameCell}>Name</TableCell>
                 <TableFilterCell
                   menuId="role-menu"

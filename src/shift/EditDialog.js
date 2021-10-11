@@ -122,7 +122,7 @@ const useStyles = makeStyles((theme) => ({
     display: 'flex',
     flexDirection: 'column',
     height: '200px',
-    overflowY: 'scroll'
+    overflowY: 'auto'
   },
   addedRole: {
     display: 'flex',
