@@ -10,7 +10,8 @@ const useStyles = makeStyles((theme) => ({
   },
   colour: {
     width: '20px',
-    height: '20px'
+    height: '20px',
+    cursor: 'pointer'
   },
   active: {
     border: '2px solid #000'
@@ -41,6 +42,12 @@ function ColourGrid(props) {
     setSelectedColour(colour);
     props.onClick(colour);
   }
+
+  const handleKeyPress = (e, colour) => {
+    if (e.code === 'Enter') {
+      handleClick(colour);
+    }
+  }
   
   const cells = colours.map(colour => {
     const className = selectedColour === colour ? `${classes.colour} ${classes.active}` : classes.colour;
@@ -49,7 +56,9 @@ function ColourGrid(props) {
       <span
         key={colour}
         className={className}
+        tabIndex="0"
         onClick={() => handleClick(colour)}
+        onKeyPress={(e) => handleKeyPress(e, colour)}
         style={{ backgroundColor: `#${colour}` }} />
     );
   });

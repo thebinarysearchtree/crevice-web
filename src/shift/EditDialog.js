@@ -151,18 +151,11 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-const defaultSettings = {
-  cancelBeforeHours: 1,
-  bookBeforeHours: 1,
-  canBookAndCancel: true
-};
-
 function EditDialog(props) {
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('17:00');
   const [roleIndex, setRoleIndex] = useState(-1);
   const [capacity, setCapacity] = useState(1);
-  const [settings, setSettings] = useState(defaultSettings);
   const [shiftRoles, setShiftRoles] = useState([]);
   const [breakMinutes, setBreakMinutes] = useState(0);
   const [notes, setNotes] = useState('');
@@ -196,7 +189,6 @@ function EditDialog(props) {
   const clearRoleFields = () => {
     setRoleIndex(-1);
     setCapacity(1);
-    setSettings(defaultSettings);
   }
 
   useEffect(() => {
@@ -215,9 +207,7 @@ function EditDialog(props) {
               id: sr.roleId,
               name: sr.roleName,
               colour: sr.roleColour
-            },
-            bookBeforeHours: sr.bookBeforeMinutes / 60, 
-            cancelBeforeHours: sr.cancelBeforeMinutes / 60
+            }
           }
         }));
         if (copiedShift && !selectedShift) {
@@ -286,8 +276,7 @@ function EditDialog(props) {
       const shiftRole = {
         roleId: role.id,
         role,
-        capacity,
-        ...settings
+        capacity
       };
       return [...shiftRoles, shiftRole];
     });
@@ -325,11 +314,6 @@ function EditDialog(props) {
       times,
       breakMinutes
     };
-    const adjustedShiftRoles = shiftRoles.map(sr => {
-      const cancelBeforeMinutes = parseInt(sr.cancelBeforeHours * 60, 10);
-      const bookBeforeMinutes = parseInt(sr.bookBeforeHours * 60, 10);
-      return {...sr, cancelBeforeMinutes, bookBeforeMinutes };
-    });
     handleClose();
     if (selectedShift) {
       const initialSeries = {
@@ -352,7 +336,7 @@ function EditDialog(props) {
         endTime: pgEndTime,
         breakMinutes
       };
-      const { remove, add, update } = compare(selectedShift.shiftRoles, adjustedShiftRoles);
+      const { remove, add, update } = compare(selectedShift.shiftRoles, shiftRoles);
       const message = detach || selectedShift.isSingle ? 'Shift updated' : 'Series updated';
       await client.postMutation({
         url: '/shifts/update',
@@ -372,7 +356,7 @@ function EditDialog(props) {
     else {
       await client.postMutation({
         url: '/shifts/insert',
-        data: { series, shift, shiftRoles: adjustedShiftRoles },
+        data: { series, shift, shiftRoles },
         message: times.length === 1 ? 'Shift added' : `${times.length} shifts added`
       });
     }
@@ -381,16 +365,8 @@ function EditDialog(props) {
   const roleItems = roles.map((r, i) => <MenuItem key={r.id} value={i} disabled={shiftRoles.some(sr => sr.roleId === r.id)}>{r.name}</MenuItem>);
 
   const addedRoles = shiftRoles.map((shiftRole, i) => {
-    const { roleId, role, capacity, ...settings } = shiftRole;
+    const { roleId, role, capacity } = shiftRole;
     const error = capacity < 0 || !Number.isInteger(Number(capacity));
-    const setSettings = (settings) => {
-      setShiftRoles(shiftRoles => shiftRoles.map(sr => {
-        if (sr.roleId !== roleId) {
-          return sr;
-        }
-        return {...sr, ...settings };
-      }));
-    }
     const capacityElement = editIndex === i ? (
       <TextField
         className={classes.editCapacity}
@@ -411,7 +387,6 @@ function EditDialog(props) {
           <div className={classes.addedChip}><RoleChip label={role.name} colour={role.colour} /></div>
           {capacityElement}
           <div>
-            <SettingsButton settings={settings} setSettings={setSettings} iconOnly />
             <Tooltip title="Delete">
               <IconButton onClick={() => removeRole(role.id)}>
                 <DeleteIcon fontSize="small" />
@@ -521,7 +496,6 @@ function EditDialog(props) {
             variant="contained" 
             onClick={addShiftRole}
             disabled={addRoleIsDisabled}>Add</Button>
-          <SettingsButton settings={settings} setSettings={setSettings} disabled={addRoleIsDisabled} />
         </form>
         <FormHelperText className={classes.errorMessage} error={true}>{capacityError ? 'Must be a non-negative integer' : ''}</FormHelperText>
         {list}

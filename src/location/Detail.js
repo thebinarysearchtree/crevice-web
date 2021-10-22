@@ -6,28 +6,45 @@ import MenuItem from '@material-ui/core/MenuItem';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import Button from '@material-ui/core/Button';
-import Popover from '@material-ui/core/Popover';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import styles from '../styles/dialog';
+import Dialog from '@material-ui/core/Dialog';
 import { useClient } from '../auth';
 import useChanged from '../hooks/useChanged';
+import FormLayout from '../FormLayout';
 
-const useStyles = makeStyles(styles);
+const useStyles = makeStyles((theme) => ({
+  root: {
+    display: 'flex',
+    flexDirection: 'column',
+    width: '330px'
+  },
+  spacing: {
+    marginBottom: theme.spacing(2)
+  },
+  input: {
+    backgroundColor: 'white'
+  },
+  buttons: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    marginTop: theme.spacing(2)
+  },
+  cancel: {
+    marginRight: theme.spacing(1)
+  }
+}));
 
 function Detail(props) {
   const [name, setName] = useState('');
   const [timeZone, setTimeZone] = useState('');
   const [address, setAddress] = useState('');
-  const hasChanged = useChanged(props.open, [name, timeZone, address]);
+  const hasChanged = useChanged(props.selectedLocation, [name, timeZone, address]);
 
   const isDisabled = !name || !timeZone || !hasChanged;
 
   const classes = useStyles();
   const client = useClient();
 
-  const { selectedLocation, setSelectedLocation, open, anchorEl, setAnchorEl } = props;
+  const { selectedLocation, setSelectedLocation } = props;
 
   useEffect(() => {
     if (selectedLocation) {
@@ -41,7 +58,6 @@ function Detail(props) {
 
   const handleClose = () => {
     setSelectedLocation(null);
-    setAnchorEl(null);
   }
 
   if (!selectedLocation) {
@@ -74,66 +90,65 @@ function Detail(props) {
   const title = isUpdate ? 'Edit location' : 'Create a new location';
 
   return (
-    <Popover 
-      className={classes.popover}
-      open={open}
-      anchorEl={anchorEl}
-      anchorOrigin={{
-        vertical: 'bottom',
-        horizontal: isUpdate ? 'left' : 'right'
-      }}
-      transformOrigin={{
-        vertical: 'top',
-        horizontal: isUpdate ? 'left' : 'right'
-      }}
+    <Dialog 
+      open={Boolean(selectedLocation)}
       onClose={handleClose}
-      disableRestoreFocus>
-      <DialogTitle>{title}</DialogTitle>
-      <DialogContent className={classes.root}>
-        <TextField
-          className={classes.spacing}
-          label="Location name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          autoComplete="off" />
-        <FormControl className={classes.spacing}>
-          <InputLabel id="time-zone">Time zone</InputLabel>
-          <Select
-            labelId="time-zone"
-            value={timeZone}
-            onChange={(e) => setTimeZone(e.target.value)}>
-              <MenuItem value="Australia/Adelaide">Adelaide</MenuItem>
-              <MenuItem value="Australia/Brisbane">Brisbane</MenuItem>
-              <MenuItem value="Australia/Broken_Hill">Broken Hill</MenuItem>
-              <MenuItem value="Australia/Darwin">Darwin</MenuItem>
-              <MenuItem value="Australia/Eucla">Eucla</MenuItem>
-              <MenuItem value="Australia/Hobart">Hobart</MenuItem>
-              <MenuItem value="Australia/Lindeman">Lindeman</MenuItem>
-              <MenuItem value="Australia/Lord_Howe">Lord Howe Island</MenuItem>
-              <MenuItem value="Australia/Melbourne">Melbourne</MenuItem>
-              <MenuItem value="Australia/Perth">Perth</MenuItem>
-              <MenuItem value="Australia/Sydney">Sydney</MenuItem>
-          </Select>
-        </FormControl>
-        <TextField
-          className={classes.spacing}
-          label="Address (optional)"
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-          multiline
-          rows={4} />
-      </DialogContent>
-      <DialogActions>
-        <Button 
-          onClick={handleClose} 
-          color="primary">Cancel</Button>
-        <Button 
-          onClick={saveLocation} 
-          variant="contained" 
-          color="primary"
-          disabled={isDisabled}>{isUpdate ? 'Update' : 'Save'}</Button>
-      </DialogActions>
-    </Popover>
+      fullScreen
+      transitionDuration={0}>
+        <FormLayout title={title} onClose={handleClose}>
+          <div className={classes.root}>
+            <TextField
+              InputProps={{ className: classes.input }}
+              className={classes.spacing}
+              variant="outlined"
+              size="small"
+              label="Location name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              autoComplete="off" />
+            <FormControl className={`${classes.input} ${classes.spacing}`} variant="outlined" size="small">
+              <InputLabel id="time-zone">Time zone</InputLabel>
+              <Select
+                labelId="time-zone"
+                label="Time zone"
+                value={timeZone}
+                onChange={(e) => setTimeZone(e.target.value)}>
+                  <MenuItem value="Australia/Adelaide">Adelaide</MenuItem>
+                  <MenuItem value="Australia/Brisbane">Brisbane</MenuItem>
+                  <MenuItem value="Australia/Broken_Hill">Broken Hill</MenuItem>
+                  <MenuItem value="Australia/Darwin">Darwin</MenuItem>
+                  <MenuItem value="Australia/Eucla">Eucla</MenuItem>
+                  <MenuItem value="Australia/Hobart">Hobart</MenuItem>
+                  <MenuItem value="Australia/Lindeman">Lindeman</MenuItem>
+                  <MenuItem value="Australia/Lord_Howe">Lord Howe Island</MenuItem>
+                  <MenuItem value="Australia/Melbourne">Melbourne</MenuItem>
+                  <MenuItem value="Australia/Perth">Perth</MenuItem>
+                  <MenuItem value="Australia/Sydney">Sydney</MenuItem>
+              </Select>
+            </FormControl>
+            <TextField
+              InputProps={{ className: classes.input }}
+              variant="outlined"
+              size="small"
+              label="Address (optional)"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              multiline
+              rows={4} />
+            <div className={classes.buttons}>
+              <Button 
+                className={classes.cancel}
+                onClick={handleClose} 
+                color="primary">Cancel</Button>
+              <Button 
+                onClick={saveLocation} 
+                variant="contained" 
+                color="primary"
+                disabled={isDisabled}>{isUpdate ? 'Update' : 'Save'}</Button>
+            </div>
+          </div>
+        </FormLayout>
+    </Dialog>
   );
 }
 

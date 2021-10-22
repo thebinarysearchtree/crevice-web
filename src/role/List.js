@@ -19,6 +19,9 @@ import Link from '@material-ui/core/Link';
 import { Link as RouterLink } from 'react-router-dom';
 import useFetch from '../hooks/useFetch';
 import { useClient } from '../auth';
+import EditIcon from '@material-ui/icons/Edit';
+import IconButton from '@material-ui/core/IconButton';
+import Tooltip from '@material-ui/core/Tooltip';
 
 const useStyles = makeStyles((theme) => ({
   ...styles(theme),
@@ -33,9 +36,6 @@ function List() {
   const [selectedRole, setSelectedRole] = useState(null);
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [anchorEl, setAnchorEl] = useState(null);
-
-  const open = Boolean(anchorEl);
 
   const classes = useStyles();
   const client = useClient();
@@ -45,18 +45,15 @@ function List() {
   const sliceStart = page * rowsPerPage;
   const sliceEnd = sliceStart + rowsPerPage;
 
-  const handleNameClick = (e, role) => {
-    setSelectedRole({ ...role });
-    setAnchorEl(e.currentTarget.closest('th'));
-  }
-
-  const handleNewClick = (e) => {
+  const handleNewClick = () => {
     setSelectedRole({
       id: -1,
       name: '',
-      colour: ''
+      colour: '',
+      cancelBeforeMinutes: 60,
+      bookBeforeMinutes: 60,
+      canBookAndCancel: true
     });
-    setAnchorEl(e.currentTarget);
   }
 
   const handleChangePage = (e, newPage) => {
@@ -81,26 +78,27 @@ function List() {
   }
 
   const tableRows = roles.slice(sliceStart, sliceEnd).map(r => {
-    const rowClassName = selectedRole && selectedRole.id === r.id ? classes.selectedRow : '';
-    const cellClassName = selectedRole && selectedRole.id !== r.id ? classes.disabledRow : '';
     const userCount = r.userCount === 0 ? (
-      <span className={cellClassName}>{r.userCount}</span>
+      <span>{r.userCount}</span>
     ) : (
-      <Link className={cellClassName} to={`/users?roleId=${r.id}`} component={RouterLink}>{r.userCount}</Link>
+      <Link to={`/users?roleId=${r.id}`} component={RouterLink}>{r.userCount}</Link>
     );
     return (
-      <TableRow key={r.id} className={rowClassName}>
+      <TableRow key={r.id}>
         <TableCell style={{ backgroundColor: `#${r.colour}`, padding: '0px' }}></TableCell>
         <TableCell component="th" scope="row">
-          <span 
-            className={`${classes.locationName} ${cellClassName}`}
-            onClick={(e) => handleNameClick(e, r)}>{r.name}</span>
+          <span className={classes.name}>{r.name}</span>
         </TableCell>
-        <TableCell className={cellClassName} align="right">{new Date(r.createdAt).toLocaleDateString()}</TableCell>
+        <TableCell align="right">{new Date(r.createdAt).toLocaleDateString()}</TableCell>
         <TableCell align="right">
           {userCount}
         </TableCell>
         <TableCell align="right" className={classes.iconCell}>
+          <Tooltip title="Edit">
+            <IconButton onClick={() => setSelectedRole({...r})}>
+              <EditIcon color="action" fontSize="small" />
+            </IconButton>
+          </Tooltip>
           <ConfirmButton
             title={`Delete the ${r.name} role?`}
             content="Make sure there are no users with this role before deleting it."
@@ -148,9 +146,6 @@ function List() {
           </Table>
         </TableContainer>
         <Detail 
-          open={open}
-          anchorEl={anchorEl}
-          setAnchorEl={setAnchorEl}
           selectedRole={selectedRole}
           setSelectedRole={setSelectedRole} />
       </div>

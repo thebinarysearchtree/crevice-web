@@ -23,32 +23,11 @@ import Paper from '@material-ui/core/Paper';
 import { makeAreaDate, overlaps } from '../utils/date';
 import { useClient } from '../auth';
 import cache from '../cache';
+import FormLayout from '../FormLayout';
 
 const useStyles = makeStyles((theme) => ({
   root: {
-    display: 'flex',
-    flexDirection: 'column',
-    width: '100%',
-    paddingLeft: theme.spacing(7),
-    paddingRight: theme.spacing(7),
-    paddingTop: theme.spacing(3),
-    paddingBottom: theme.spacing(3),
-    marginBottom: theme.spacing(40),
-    alignItems: 'center'
-  },
-  content: {
-    maxWidth: '700px',
-    width: '100%',
-    flexDirection: 'column'
-  },
-  heading: {
-    display: 'flex',
-    marginBottom: theme.spacing(3),
-    justifyContent: 'space-between'
-  },
-  header: {
-    display: 'flex',
-    alignItems: 'center'
+    maxWidth: '700px'
   },
   paper: {
     display: 'flex',
@@ -223,14 +202,8 @@ function InviteMany() {
   });
 
   return (
-    <div className={classes.root}>
-      <div className={classes.content}>
-        <div className={classes.heading}>
-          <div className={classes.header}>
-            <BackButton to="/users" />
-            <Typography variant="h4">Invite users</Typography>
-          </div>
-        </div>
+    <FormLayout title="Invite users" backTo="/users">
+      <div className={classes.root}>
         <Paper className={classes.paper}>
           <Typography className={classes.guideHeading} variant="h5">Guidelines</Typography>
           <Typography className={classes.guideBody} variant="body1">
@@ -311,7 +284,7 @@ function InviteMany() {
           </DialogActions>
         </Dialog>
       </div>
-    </div>
+    </FormLayout>
   );
 }
 

@@ -95,19 +95,13 @@ function App() {
               </Nav>
             </Route>
             <Route exact path="/users/inviteSingle">
-              <Nav>
-                <InviteSingleDetail />
-              </Nav>
+              <InviteSingleDetail />
             </Route>
             <Route exact path="/users/inviteMany">
-              <Nav>
-                <InviteMany />
-              </Nav>
+              <InviteMany />
             </Route>
             <Route exact path="/users/uploadPhotos">
-              <Nav>
-                <UploadPhotos />
-              </Nav>
+              <UploadPhotos />
             </Route>
             <Route path="/users/:userId">
               <Nav>

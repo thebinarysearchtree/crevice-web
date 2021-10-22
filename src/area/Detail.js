@@ -2,32 +2,49 @@ import React, { useState, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
-import Popover from '@material-ui/core/Popover';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogTitle from '@material-ui/core/DialogTitle';
+import Dialog from '@material-ui/core/Dialog';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
-import styles from '../styles/dialog';
 import { useClient } from '../auth';
 import useChanged from '../hooks/useChanged';
+import FormLayout from '../FormLayout';
 
-const useStyles = makeStyles(styles);
+const useStyles = makeStyles((theme) => ({
+  root: {
+    display: 'flex',
+    flexDirection: 'column',
+    width: '330px'
+  },
+  spacing: {
+    marginBottom: theme.spacing(2)
+  },
+  input: {
+    backgroundColor: 'white'
+  },
+  buttons: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    marginTop: theme.spacing(2)
+  },
+  cancel: {
+    marginRight: theme.spacing(1)
+  }
+}));
 
 function Detail(props) {
   const [name, setName] = useState('');
   const [locationId, setLocationId] = useState(-1);
   const [notes, setNotes] = useState('');
-  const hasChanged = useChanged(props.open, [name, locationId, notes]);
+  const hasChanged = useChanged(props.selectedArea, [name, locationId, notes]);
 
   const isDisabled = !name || locationId === -1 || !hasChanged;
 
   const classes = useStyles();
   const client = useClient();
 
-  const { selectedArea, setSelectedArea, open, anchorEl, setAnchorEl } = props;
+  const { selectedArea, setSelectedArea } = props;
 
   useEffect(() => {
     if (selectedArea) {
@@ -37,11 +54,10 @@ function Detail(props) {
       setLocationId(locationId);
       setNotes(notes);
     }
-  }, [open]);
+  }, [selectedArea]);
 
   const handleClose = () => {
     setSelectedArea(null);
-    setAnchorEl(null);
   }
 
   if (!selectedArea) {
@@ -54,7 +70,6 @@ function Detail(props) {
 
   const saveArea = async (e) => {
     e.preventDefault();
-    setAnchorEl(null);
     if (isUpdate) {
       await client.postMutation({
         url: '/areas/update',
@@ -79,56 +94,55 @@ function Detail(props) {
     .map(l => <MenuItem key={l.id} value={l.id}>{l.name}</MenuItem>);
 
   return (
-    <Popover 
-      className={classes.popover}
-      open={open}
-      anchorEl={anchorEl}
-      anchorOrigin={{
-        vertical: 'bottom',
-        horizontal: isUpdate ? 'left' : 'right'
-      }}
-      transformOrigin={{
-        vertical: 'top',
-        horizontal: isUpdate ? 'left' : 'right'
-      }}
+    <Dialog 
+      open={Boolean(selectedArea)}
       onClose={handleClose}
-      disableRestoreFocus>
-      <DialogTitle>{title}</DialogTitle>
-      <DialogContent className={classes.root}>
-        <TextField
-          className={classes.spacing}
-          label="Area name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          autoComplete="off" />
-        <FormControl className={classes.spacing}>
-          <InputLabel id="location">Location</InputLabel>
-          <Select
-            labelId="location"
-            value={locationId === -1 ? '' : locationId}
-            onChange={(e) => setLocationId(e.target.value)}>
-              {menuItems}
-          </Select>
-        </FormControl>
-        <TextField
-          className={classes.spacing}
-          label="Notes (optional)"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          multiline
-          rows={4} />
-      </DialogContent>
-      <DialogActions>
-        <Button 
-          onClick={handleClose} 
-          color="primary">Cancel</Button>
-        <Button 
-          onClick={saveArea} 
-          variant="contained" 
-          color="primary"
-          disabled={isDisabled}>{isUpdate ? 'Update' : 'Save'}</Button>
-      </DialogActions>
-    </Popover>
+      fullScreen
+      transitionDuration={0}>
+        <FormLayout title={title} onClose={handleClose}>
+          <div className={classes.root}>
+            <TextField
+              InputProps={{ className: classes.input }}
+              className={classes.spacing}
+              label="Area name"
+              variant="outlined"
+              size="small"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              autoComplete="off" />
+            <FormControl className={`${classes.input} ${classes.spacing}`} variant="outlined" size="small">
+              <InputLabel id="location">Location</InputLabel>
+              <Select
+                labelId="location"
+                label="Location"
+                value={locationId === -1 ? '' : locationId}
+                onChange={(e) => setLocationId(e.target.value)}>
+                  {menuItems}
+              </Select>
+            </FormControl>
+            <TextField
+              InputProps={{ className: classes.input }}
+              label="Notes (optional)"
+              variant="outlined"
+              size="small"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              multiline
+              rows={4} />
+            <div className={classes.buttons}>
+              <Button 
+                className={classes.cancel}
+                onClick={handleClose} 
+                color="primary">Cancel</Button>
+              <Button 
+                onClick={saveArea} 
+                variant="contained" 
+                color="primary"
+                disabled={isDisabled}>{isUpdate ? 'Update' : 'Save'}</Button>
+            </div>
+          </div>
+        </FormLayout>
+    </Dialog>
   );
 }
 

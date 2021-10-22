@@ -15,6 +15,7 @@ import CustomField from '../field/CustomField';
 import { makeAreaDate, overlaps } from '../utils/date';
 import { useClient } from '../auth';
 import cache from '../cache';
+import FormLayout from '../FormLayout';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -25,8 +26,7 @@ const useStyles = makeStyles((theme) => ({
     paddingRight: theme.spacing(7),
     paddingTop: theme.spacing(3),
     paddingBottom: theme.spacing(3),
-    marginBottom: theme.spacing(40),
-    alignItems: 'center'
+    marginBottom: theme.spacing(40)
   },
   content: {
     flexDirection: 'column'
@@ -226,85 +226,77 @@ function InviteSingleDetail() {
   }
 
   return (
-    <div className={classes.root}>
-      <div className={classes.content}>
-        <div className={classes.heading}>
-          <div className={classes.header}>
-            <BackButton to="/users" />
-            <Typography variant="h4">Invite users</Typography>
-          </div>
+    <FormLayout title="Invite users" backTo="/users">
+      <input
+        className={classes.upload}
+        accept="image/jpeg, image/png"
+        id="upload-photo"
+        type="file"
+        onChange={handleUpload} />
+      <label htmlFor="upload-photo">
+        <Tooltip placement="right" title="Add a profile photo">
+          <IconButton 
+            className={classes.spacing}
+            aria-label="upload photo" 
+            component="span"
+            onDrop={handleDrop}
+            onDragOver={(e) => e.preventDefault()}>
+              <Avatar className={classes.avatar} src={photoSrc} />
+          </IconButton>
+        </Tooltip>
+      </label>
+      <form className={classes.form} onSubmit={() => setShowAreas(true)} noValidate>
+        <div className={`${classes.container} ${classes.spacing}`}>
+          <TextField
+            InputProps={{ className: classes.input }}
+            className={`${classes.short} ${classes.mr}`}
+            variant="outlined"
+            size="small"
+            label="First name"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)} />
+          <TextField
+            InputProps={{ className: classes.input }}
+            className={classes.short}
+            variant="outlined"
+            size="small"
+            label="Last name"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)} />
         </div>
-        <input
-          className={classes.upload}
-          accept="image/jpeg, image/png"
-          id="upload-photo"
-          type="file"
-          onChange={handleUpload} />
-        <label htmlFor="upload-photo">
-          <Tooltip placement="right" title="Add a profile photo">
-            <IconButton 
-              className={classes.spacing}
-              aria-label="upload photo" 
-              component="span"
-              onDrop={handleDrop}
-              onDragOver={(e) => e.preventDefault()}>
-                <Avatar className={classes.avatar} src={photoSrc} />
-            </IconButton>
-          </Tooltip>
-        </label>
-        <form className={classes.form} onSubmit={() => setShowAreas(true)} noValidate>
-          <div className={`${classes.container} ${classes.spacing}`}>
-            <TextField
-              InputProps={{ className: classes.input }}
-              className={`${classes.short} ${classes.mr}`}
-              variant="outlined"
-              size="small"
-              label="First name"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)} />
-            <TextField
-              InputProps={{ className: classes.input }}
-              className={classes.short}
-              variant="outlined"
-              size="small"
-              label="Last name"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)} />
-          </div>
-          <TextField
-            InputProps={{ className: classes.input }}
-            className={`${classes.email} ${classes.spacing}`}
-            variant="outlined"
-            size="small"
-            label="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)} />
-          <TextField
-            InputProps={{ className: classes.input }}
-            className={`${classes.short} ${classes.spacing}`}
-            variant="outlined"
-            size="small"
-            label="Phone (optional)"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)} />
-          <TextField
-            InputProps={{ className: classes.input }}
-            className={`${classes.short} ${classes.spacing}`}
-            variant="outlined"
-            size="small"
-            label="Pager (optional)"
-            value={pager}
-            onChange={(e) => setPager(e.target.value)} />
-          {additionalFields}
-          <Button
-            className={classes.button}
-            variant="contained"
-            color="primary"
-            type="submit"
-            disabled={isDisabled}>Next</Button>
-        </form>
-      </div>
-    </div>
+        <TextField
+          InputProps={{ className: classes.input }}
+          className={`${classes.email} ${classes.spacing}`}
+          variant="outlined"
+          size="small"
+          label="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)} />
+        <TextField
+          InputProps={{ className: classes.input }}
+          className={`${classes.short} ${classes.spacing}`}
+          variant="outlined"
+          size="small"
+          label="Phone (optional)"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)} />
+        <TextField
+          InputProps={{ className: classes.input }}
+          className={`${classes.short} ${classes.spacing}`}
+          variant="outlined"
+          size="small"
+          label="Pager (optional)"
+          value={pager}
+          onChange={(e) => setPager(e.target.value)} />
+        {additionalFields}
+        <Button
+          className={classes.button}
+          variant="contained"
+          color="primary"
+          type="submit"
+          disabled={isDisabled}>Next</Button>
+      </form>
+    </FormLayout>
   );
 }
 

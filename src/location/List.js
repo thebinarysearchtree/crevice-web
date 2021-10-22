@@ -19,6 +19,9 @@ import Link from '@material-ui/core/Link';
 import { Link as RouterLink } from 'react-router-dom';
 import useFetch from '../hooks/useFetch';
 import { useClient } from '../auth';
+import EditIcon from '@material-ui/icons/Edit';
+import IconButton from '@material-ui/core/IconButton';
+import Tooltip from '@material-ui/core/Tooltip';
 
 const useStyles = makeStyles(styles);
 
@@ -27,9 +30,6 @@ function List() {
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [anchorEl, setAnchorEl] = useState(null);
-
-  const open = Boolean(anchorEl);
 
   const classes = useStyles();
   const client = useClient();
@@ -39,19 +39,13 @@ function List() {
   const sliceStart = page * rowsPerPage;
   const sliceEnd = sliceStart + rowsPerPage;
 
-  const handleNameClick = (e, location) => {
-    setSelectedLocation({ ...location });
-    setAnchorEl(e.currentTarget.closest('th'));
-  }
-
-  const handleNewClick = (e) => {
+  const handleNewClick = () => {
     setSelectedLocation({
       id: -1,
       name: '',
       timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       address: ''
     });
-    setAnchorEl(e.currentTarget);
   }
 
   const handleChangePage = (e, newPage) => {
@@ -76,25 +70,26 @@ function List() {
   }
 
   const tableRows = locations.slice(sliceStart, sliceEnd).map(l => {
-    const rowClassName = selectedLocation && selectedLocation.id === l.id ? classes.selectedRow : '';
-    const cellClassName = selectedLocation && selectedLocation.id !== l.id ? classes.disabledRow : '';
     const areaCount = l.areaCount === 0 ? (
-      <span className={cellClassName}>{l.areaCount}</span>
+      <span>{l.areaCount}</span>
     ) : (
-      <Link className={cellClassName} to={`/areas?locationId=${l.id}`} component={RouterLink}>{l.areaCount}</Link>
+      <Link to={`/areas?locationId=${l.id}`} component={RouterLink}>{l.areaCount}</Link>
     );
     return (
-      <TableRow key={l.id} className={rowClassName}>
+      <TableRow key={l.id}>
           <TableCell component="th" scope="row">
-            <span 
-              className={`${classes.locationName} ${cellClassName}`}
-              onClick={(e) => handleNameClick(e, l)}>{l.name}</span>
+            <span className={classes.clickableName}>{l.name}</span>
           </TableCell>
-          <TableCell align="left" className={cellClassName}>{l.timeZone.split('/')[1].replace('_', ' ')}</TableCell>
+          <TableCell align="left">{l.timeZone.split('/')[1].replace('_', ' ')}</TableCell>
           <TableCell align="right">
             {areaCount}
           </TableCell>
           <TableCell align="right" className={classes.iconCell}>
+            <Tooltip title="Edit">
+              <IconButton onClick={() => setSelectedLocation({...l})}>
+                <EditIcon color="action" fontSize="small" />
+              </IconButton>
+            </Tooltip>
             <ConfirmButton
               title={`Delete ${l.name}?`}
               content="Make sure this location has no areas before deleting it."
@@ -141,9 +136,6 @@ function List() {
           </Table>
         </TableContainer>
         <Detail 
-          open={open}
-          anchorEl={anchorEl}
-          setAnchorEl={setAnchorEl}
           selectedLocation={selectedLocation}
           setSelectedLocation={setSelectedLocation} />
       </div>

@@ -2,10 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
-import Popover from '@material-ui/core/Popover';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogTitle from '@material-ui/core/DialogTitle';
+import Dialog from '@material-ui/core/Dialog';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import FormControl from '@material-ui/core/FormControl';
@@ -20,18 +17,14 @@ import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
 import Tooltip from '@material-ui/core/Tooltip';
 import { useClient } from '../auth';
 import useChanged from '../hooks/useChanged';
+import FormLayout from '../FormLayout';
+import Paper from '@material-ui/core/Paper';
 
 const useStyles = makeStyles((theme) => ({
   root: {
     display: 'flex',
     flexDirection: 'column',
     width: '330px'
-  },
-  spacing: {
-    marginBottom: '10px'
-  },
-  popover: {
-    marginTop: theme.spacing(1)
   },
   actions: {
     visibility: 'hidden',
@@ -59,10 +52,35 @@ const useStyles = makeStyles((theme) => ({
     width: '100%'
   },
   optionButton: {
-    marginLeft: theme.spacing(2)
+    marginLeft: theme.spacing(1)
   },
   secondaryAction: {
     paddingRight: '0px'
+  },
+  spacing: {
+    marginBottom: theme.spacing(2)
+  },
+  input: {
+    backgroundColor: 'white'
+  },
+  buttons: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    marginTop: theme.spacing(2)
+  },
+  cancel: {
+    marginRight: theme.spacing(1)
+  },
+  options: {
+    marginTop: theme.spacing(1)
+  },
+  form: {
+    marginTop: theme.spacing(3)
+  },
+  iconButton: {
+    width: '40px',
+    height: '40px',
+    marginRight: '4px'
   }
 }));
 
@@ -74,13 +92,13 @@ function Detail(props) {
   const [optionName, setOptionName] = useState('');
   const [editIndex, setEditIndex] = useState(-1);
   const [nextId, setNextId] = useState(-1);
-  const hasChanged = useChanged(props.open, [fieldName, fieldType, selectItems]);
+  const hasChanged = useChanged(props.selectedField, [fieldName, fieldType, selectItems]);
 
   const isDisabled = !fieldName || !fieldType || (fieldType === 'Select' && selectItems.length < 2) || !hasChanged;
 
   const error = optionName !== '' && selectItems.some(i => i.name === optionName);
 
-  const { selectedField, setSelectedField, open, anchorEl, setAnchorEl } = props;
+  const { selectedField, setSelectedField } = props;
   const classes = useStyles();
   const client = useClient();
 
@@ -97,7 +115,6 @@ function Detail(props) {
 
   const handleClose = () => {
     setSelectedField(null);
-    setAnchorEl(null);
   }
 
   const addItem = (e) => {
@@ -145,7 +162,6 @@ function Detail(props) {
   const saveField = async (e) => {
     e.preventDefault();
     setSelectedField(null);
-    setAnchorEl(null);
     if (isUpdate) {
       const selectItemIds = selectItems.map(i => i.id);
       const itemsToDelete = existingSelectItems
@@ -207,16 +223,16 @@ function Detail(props) {
       );
     }
     return (
-      <ListItem key={item.id} classes={{ secondaryAction: classes.secondaryAction }} ContainerProps={{ className: classes.item }} disableGutters>
+      <ListItem key={item.id} classes={{ secondaryAction: classes.secondaryAction }} ContainerProps={{ className: classes.item }}>
         {itemText}
         <ListItemSecondaryAction className={classes.actions}>
           <Tooltip title="Move up">
-            <IconButton onClick={() => moveUp(i)}>
+            <IconButton className={classes.iconButton} onClick={() => moveUp(i)}>
               <ArrowUpwardIcon fontSize="small" />
             </IconButton>
           </Tooltip>
           <Tooltip title="Delete">
-            <IconButton onClick={() => removeItem(i)}>
+            <IconButton className={classes.iconButton} onClick={() => removeItem(i)}>
               <DeleteIcon fontSize="small" />
             </IconButton>
           </Tooltip>
@@ -226,15 +242,18 @@ function Detail(props) {
   });
 
   const list = selectItems.length === 0 ? null : (
-    <List>{items}</List>
+    <List className={classes.options} component={Paper}>{items}</List>
   );
 
   const selectForm = fieldType === 'Select' ? (
     <form className={classes.form} onSubmit={addItem} noValidate>
       <div className={classes.container}>
         <TextField
+          InputProps={{ className: classes.input }}
           className={classes.option}
           label="Option"
+          variant="outlined"
+          size="small"
           error={error}
           helperText={error ? 'This option already exists' : ''}
           value={optionName}
@@ -250,60 +269,57 @@ function Detail(props) {
     </form>
   ) : null;
 
-  const fieldTypeSelect = !isUpdate ? (
-    <FormControl className={classes.spacing}>
-      <InputLabel id="field-type">Field type</InputLabel>
-      <Select
-        labelId="field-type"
-        value={fieldType}
-        onChange={(e) => setFieldType(e.target.value)}>
-          <MenuItem value="Short">Short</MenuItem>
-          <MenuItem value="Standard">Standard</MenuItem>
-          <MenuItem value="Comment">Comment</MenuItem>
-          <MenuItem value="Select">Select</MenuItem>
-          <MenuItem value="Date">Date</MenuItem>
-          <MenuItem value="Number">Number</MenuItem>
-      </Select>
-    </FormControl>
-  ) : null;
-
   return (
-    <Popover 
-      className={classes.popover}
-      open={open}
-      anchorEl={anchorEl}
-      anchorOrigin={{
-        vertical: 'bottom',
-        horizontal: isUpdate ? 'left' : 'right'
-      }}
-      transformOrigin={{
-        vertical: 'top',
-        horizontal: isUpdate ? 'left' : 'right'
-      }}
+    <Dialog 
+      open={Boolean(selectedField)}
       onClose={handleClose}
-      disableRestoreFocus>
-      <DialogTitle>{title}</DialogTitle>
-      <DialogContent className={classes.root}>
-        <TextField
-          className={classes.spacing}
-          label="Field name"
-          value={fieldName}
-          onChange={(e) => setFieldName(e.target.value)}
-          autoComplete="off" />
-        {fieldTypeSelect}
-        {selectForm}
-      </DialogContent>
-      <DialogActions>
-        <Button 
-          onClick={handleClose} 
-          color="primary">Cancel</Button>
-        <Button 
-          onClick={saveField} 
-          variant="contained" 
-          color="primary"
-          disabled={isDisabled}>{isUpdate ? 'Update' : 'Save'}</Button>
-      </DialogActions>
-    </Popover>
+      fullScreen
+      transitionDuration={0}>
+        <FormLayout title={title} onClose={handleClose}>
+          <div className={classes.root}>
+            <TextField
+              InputProps={{ className: classes.input }}
+              className={classes.spacing}
+              label="Field name"
+              variant="outlined"
+              size="small"
+              value={fieldName}
+              onChange={(e) => setFieldName(e.target.value)}
+              autoComplete="off" />
+            <FormControl 
+              className={classes.input} 
+              variant="outlined" 
+              size="small"
+              disabled={isUpdate}>
+                <InputLabel id="field-type">Field type</InputLabel>
+                <Select
+                  labelId="field-type"
+                  label="Field type"
+                  value={fieldType}
+                  onChange={(e) => setFieldType(e.target.value)}>
+                    <MenuItem value="Short">Short</MenuItem>
+                    <MenuItem value="Standard">Standard</MenuItem>
+                    <MenuItem value="Comment">Comment</MenuItem>
+                    <MenuItem value="Select">Select</MenuItem>
+                    <MenuItem value="Date">Date</MenuItem>
+                    <MenuItem value="Number">Number</MenuItem>
+                </Select>
+            </FormControl>
+            {selectForm}
+            <div className={classes.buttons}>
+              <Button 
+                className={classes.cancel}
+                onClick={handleClose} 
+                color="primary">Cancel</Button>
+              <Button 
+                onClick={saveField} 
+                variant="contained" 
+                color="primary"
+                disabled={isDisabled}>{isUpdate ? 'Update' : 'Save'}</Button>
+            </div>
+          </div>
+        </FormLayout>
+    </Dialog>
   );
 }
 

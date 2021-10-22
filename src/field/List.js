@@ -9,7 +9,6 @@ import TableCell from '@material-ui/core/TableCell';
 import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
-import Snackbar from '../common/Snackbar';
 import styles from '../styles/list';
 import ConfirmButton from '../common/ConfirmButton';
 import Progress from '../common/Progress';
@@ -21,6 +20,7 @@ import Tooltip from '@material-ui/core/Tooltip';
 import EditField from './EditField';
 import { useClient } from '../auth';
 import useFetch from '../hooks/useFetch';
+import EditIcon from '@material-ui/icons/Edit';
 
 const useStyles = makeStyles(styles);
 
@@ -29,9 +29,6 @@ function List() {
   const [selectedField, setSelectedField] = useState(null);
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [anchorEl, setAnchorEl] = useState(null);
-
-  const open = Boolean(anchorEl);
 
   const classes = useStyles();
   const client = useClient();
@@ -45,7 +42,6 @@ function List() {
 
   const handleNameClick = (e, field) => {
     setSelectedField({ ...field });
-    setAnchorEl(e.currentTarget.closest('th'));
   }
 
   const handleNewClick = (e) => {
@@ -57,7 +53,6 @@ function List() {
       createdAt: new Date().toISOString(),
       userCount: 0
     });
-    setAnchorEl(e.currentTarget);
   }
 
   const handleChangePage = (e, newPage) => {
@@ -92,23 +87,24 @@ function List() {
   }
 
   const tableRows = fields.slice(sliceStart, sliceEnd).map((f, i) => {
-    const rowClassName = selectedField && selectedField.id === f.id ? classes.selectedRow : '';
-    const cellClassName = selectedField && selectedField.id !== f.id ? classes.disabledRow : '';
     return (
-      <TableRow key={f.id} className={rowClassName}>
+      <TableRow key={f.id}>
         <TableCell component="th" scope="row">
-          <span 
-            className={`${classes.locationName} ${cellClassName}`}
-            onClick={(e) => handleNameClick(e, f)}>{f.name}</span>
+          <span className={classes.name}>{f.name}</span>
         </TableCell>
-        <TableCell align="right" className={cellClassName}>{f.fieldType}</TableCell>
-        <TableCell align="right" className={cellClassName}>{f.userCount}</TableCell>
+        <TableCell align="right">{f.fieldType}</TableCell>
+        <TableCell align="right">{f.userCount}</TableCell>
         <TableCell align="right" className={classes.iconCell}>
           <Tooltip title="Move up">
             <IconButton
               onClick={() => moveUp(i + sliceStart)}
               disabled={processing}>
                 <ArrowUpwardIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Edit">
+            <IconButton onClick={() => setSelectedField({...f})}>
+              <EditIcon color="action" fontSize="small" />
             </IconButton>
           </Tooltip>
           <ConfirmButton
@@ -157,9 +153,6 @@ function List() {
           </Table>
         </TableContainer>
         <EditField 
-          open={open}
-          anchorEl={anchorEl}
-          setAnchorEl={setAnchorEl}
           selectedField={selectedField}
           setSelectedField={setSelectedField} />
       </div>

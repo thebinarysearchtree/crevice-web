@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
@@ -27,6 +27,10 @@ import CalendarButtons from '../common/CalendarButtons';
 import { useClient } from '../auth';
 import { makeReviver, dateParser } from '../utils/data';
 import UserSearch from '../common/UserSearch';
+import EditIcon from '@material-ui/icons/Edit';
+import IconButton from '@material-ui/core/IconButton';
+import Tooltip from '@material-ui/core/Tooltip';
+import Notes from './Notes';
 
 const useStyles = makeStyles((theme) => ({
   ...styles(theme),
@@ -60,6 +64,10 @@ const useStyles = makeStyles((theme) => ({
   },
   buttonCell: {
     width: '107px'
+  },
+  notes: {
+    display: 'flex',
+    alignItems: 'center'
   }
 }));
 
@@ -107,6 +115,15 @@ function Following(props) {
     });
   }
 
+  const handleSaveNotes = async (user, notes) => {
+    const bookingId = user.shift.bookingId;
+    const url = user.notes ? '/followerNotes/update' : '/followerNotes/insert';
+    await client.postMutation({
+      url,
+      data: { bookingId, notes }
+    });
+  }
+
   const search = async (searchTerm) => {
     const response = await client.postData('/users/findByName', { searchTerm });
     if (response.ok) {
@@ -139,8 +156,8 @@ function Following(props) {
     return <Progress loading={loading} />;
   }
 
-  const tableRows = users.map(user => {
-    const { id, name, shift, notes } = user;
+  const tableRows = users.map((user, i) => {
+    const { id, name, shift } = user;
     const url = `/users/${id}`;
 
     let shiftElement;
@@ -153,6 +170,7 @@ function Following(props) {
         </div>
       );
     }
+
     return (
       <TableRow key={id}>
           <TableCell className={classes.iconCell}>
@@ -164,7 +182,9 @@ function Following(props) {
               to={url}>{name}</RouterLink>
           </TableCell>
           <TableCell align="right">{shiftElement}</TableCell>
-          <TableCell align="left">{notes}</TableCell>
+          <TableCell className={classes.iconCell} align="left">
+            <Notes user={user} onSave={handleSaveNotes} />
+          </TableCell>
           <TableCell align="right">
             <Button 
               variant="contained" 

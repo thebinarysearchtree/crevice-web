@@ -8,18 +8,11 @@ import Avatar from '@material-ui/core/Avatar';
 import BackButton from '../common/BackButton';
 import AreasTable from './AreasTable';
 import AddArea from './AddArea';
+import FormLayout from '../FormLayout';
 
 const useStyles = makeStyles((theme) => ({
   root: {
-    display: 'flex',
-    flexDirection: 'column',
-    width: '100%',
-    paddingLeft: theme.spacing(7),
-    paddingRight: theme.spacing(7),
-    paddingTop: theme.spacing(3),
-    paddingBottom: theme.spacing(3),
-    marginBottom: theme.spacing(40),
-    alignItems: 'center'
+    maxWidth: '700px'
   },
   content: {
     maxWidth: '700px',
@@ -61,7 +54,7 @@ const useStyles = makeStyles((theme) => ({
   avatar: {
     width: '70px',
     height: '70px',
-    marginRight: theme.spacing(1)
+    marginRight: theme.spacing(2)
   },
   mr: {
     marginRight: theme.spacing(2)
@@ -101,14 +94,8 @@ function InviteSingleAreas(props) {
   }
 
   return (
-    <div className={classes.root}>
-      <div className={classes.content}>
-        <div className={classes.heading}>
-          <div className={classes.header}>
-            <BackButton onClick={() => props.setShowAreas(false)} />
-            <Typography variant="h4">Invite users</Typography>
-          </div>
-        </div>
+    <FormLayout title="Invite users" backTo="/users">
+      <div className={classes.root}>
         <Paper className={classes.paper}>
           <Avatar className={classes.avatar} src={user.imageId ? `/photos/${user.imageId}.jpg` : null} />
           <div className={classes.container}>
@@ -144,9 +131,8 @@ function InviteSingleAreas(props) {
           open={open}
           anchorEl={anchorEl}
           setAnchorEl={setAnchorEl} />
-        <Snackbar message={message} setMessage={setMessage} />
       </div>
-    </div>
+    </FormLayout>
   );
 }
 

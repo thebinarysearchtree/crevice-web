@@ -101,7 +101,7 @@ function Areas(props) {
 
   const daysBetween = (start, end) => Math.round((end - start) / dayMs);
 
-  const { userId } = props;
+  const userId = parseInt(props.userId, 10);
 
   useEffect(() => {
     const months = [];

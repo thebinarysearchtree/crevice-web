@@ -44,7 +44,11 @@ const styles = (theme) => ({
     color: 'inherit',
     fontWeight: 600
   },
-  locationName: {
+  name: {
+    color: 'inherit',
+    fontWeight: 600
+  },
+  clickableName: {
     color: 'inherit',
     fontWeight: 600,
     cursor: 'pointer'

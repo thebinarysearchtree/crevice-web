@@ -58,7 +58,6 @@ function List() {
   });
   const [loading, setLoading] = useState(true);
   const [locations, setLocations] = useState([]);
-  const [anchorEl, setAnchorEl] = useState(null);
   const [locationId, setLocationId, locationTranslator] = useParamState({
     name: 'locationId',
     defaultValue: -1,
@@ -66,8 +65,6 @@ function List() {
   });
   const [count, setCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
-
-  const open = Boolean(anchorEl);
 
   const classes = useStyles();
   const client = useClient();
@@ -108,19 +105,13 @@ function List() {
     setFilteredAreas(filteredAreas);
   }, [areas, page, order, orderBy, locationId, searchTerm]);
 
-  const handleNameClick = (e, area) => {
-    setSelectedArea({ ...area });
-    setAnchorEl(e.currentTarget.closest('th'));
-  }
-
-  const handleNewClick = (e) => {
+  const handleNewClick = () => {
     setSelectedArea({
       id: -1,
       name: '',
       locationId: -1,
       notes: ''
     });
-    setAnchorEl(e.currentTarget);
   }
 
   const makeSortHandler = (orderName) => {
@@ -165,22 +156,18 @@ function List() {
           tooltip />
       );
     });
-    const rowClassName = selectedArea && selectedArea.id === a.id ? classes.selectedRow : '';
-    const cellClassName = selectedArea && selectedArea.id !== a.id ? classes.disabledRow : '';
     const activeUserCount = a.userCount === 0 ? (
-      <span className={cellClassName}>{a.activeUserCount}</span>
+      <span>{a.activeUserCount}</span>
     ) : (
-      <Link className={cellClassName} to={`/users?areaId=${a.id}`} component={RouterLink}>{a.activeUserCount}</Link>
+      <Link to={`/users?areaId=${a.id}`} component={RouterLink}>{a.activeUserCount}</Link>
     );
     return (
-      <TableRow key={a.id} className={rowClassName}>
+      <TableRow key={a.id}>
           <TableCell component="th" scope="row">
-            <span 
-              className={`${classes.locationName} ${cellClassName}`}
-              onClick={(e) => handleNameClick(e, a)}>{a.name}</span>
+            <span className={classes.name}>{a.name}</span>
           </TableCell>
-          <TableCell align="left" className={cellClassName}>{a.locationName}</TableCell>
-          <TableCell align="left" className={`${cellClassName} ${classes.iconCell}`}>{administrators}</TableCell>
+          <TableCell align="left">{a.locationName}</TableCell>
+          <TableCell align="left" className={classes.iconCell}>{administrators}</TableCell>
           <TableCell align="right">
             {activeUserCount}
           </TableCell>
@@ -251,9 +238,6 @@ function List() {
           </Table>
         </TableContainer>
         <Detail 
-          open={open}
-          anchorEl={anchorEl}
-          setAnchorEl={setAnchorEl}
           selectedArea={selectedArea}
           setSelectedArea={setSelectedArea}
           locations={locations} />
