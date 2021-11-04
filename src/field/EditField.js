@@ -16,7 +16,6 @@ import ListItemText from '@material-ui/core/ListItemText';
 import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
 import Tooltip from '@material-ui/core/Tooltip';
 import { useClient } from '../auth';
-import useChanged from '../hooks/useChanged';
 import FormLayout from '../FormLayout';
 import Paper from '@material-ui/core/Paper';
 
@@ -92,7 +91,9 @@ function Detail(props) {
   const [optionName, setOptionName] = useState('');
   const [editIndex, setEditIndex] = useState(-1);
   const [nextId, setNextId] = useState(-1);
-  const hasChanged = useChanged(props.selectedField, [fieldName, fieldType, selectItems]);
+  const [changedCount, setChangedCount] = useState(0);
+
+  const hasChanged = changedCount > 1;
 
   const isDisabled = !fieldName || !fieldType || (fieldType === 'Select' && selectItems.length < 2) || !hasChanged;
 
@@ -110,8 +111,13 @@ function Detail(props) {
       setFieldType(fieldType);
       setExistingSelectItems(selectItems);
       setSelectItems(selectItems);
+      setChangedCount(0);
     }
   }, [selectedField]);
+
+  useEffect(() => {
+    setChangedCount(count => count + 1);
+  }, [fieldName, fieldType, selectItems]);
 
   const handleClose = () => {
     setSelectedField(null);

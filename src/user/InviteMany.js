@@ -3,7 +3,6 @@ import { makeStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import { useHistory } from 'react-router-dom';
-import BackButton from '../common/BackButton';
 import useFetch from '../hooks/useFetch';
 import Progress from '../common/Progress';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
@@ -88,7 +87,6 @@ function InviteMany() {
   const [updateUsers, setUpdateUsers] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [errors, setErrors] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [showErrors, setShowErrors] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [userAreas, setUserAreas] = useState([]);
@@ -165,7 +163,7 @@ function InviteMany() {
   const rolesHandler = (roles) => setRoles(roles);
   const locationsHandler = (locations) => setLocations(locations);
 
-  useFetch(setLoading, [
+  const loading = useFetch([
     { url: '/fields/getCsvFields', handler: fieldsHandler },
     { url: '/roles/getSelectListItems', handler: rolesHandler },
     { url: '/areas/getWithLocation', handler: locationsHandler }]);
@@ -174,7 +172,7 @@ function InviteMany() {
     return <Progress loading={loading} />;
   }
 
-  const selectedFilename = selectedFiles.length == 0 ? null : (
+  const selectedFilename = selectedFiles.length === 0 ? null : (
     <Typography className={classes.selectedFilename} variant="body1">{selectedFiles[0].name}</Typography>
   );
 

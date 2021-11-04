@@ -19,10 +19,8 @@ import Typography from '@material-ui/core/Typography';
 import RoleChip from '../common/RoleChip';
 import RepeatSelector from './RepeatSelector';
 import NotesChip from './NotesChip';
-import SettingsButton from './SettingsButton';
 import { useClient } from '../auth';
 import { compare } from '../utils/data';
-import useChanged from '../hooks/useChanged';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -163,14 +161,10 @@ function EditDialog(props) {
   const [repeatWeeks, setRepeatWeeks] = useState(0);
   const [repeatUntil, setRepeatUntil] = useState(new Date());
   const [editIndex, setEditIndex] = useState(-1);
-  const hasChanged = useChanged(props.open, [
-    startTime,
-    endTime,
-    breakMinutes,
-    notes,
-    shiftRoles
-  ]);
   const [isCopied, setIsCopied] = useState(false);
+  const [changedCount, setChangedCount] = useState(0);
+
+  const hasChanged = changedCount > 2;
 
   const capacityError = capacity < 0 || !Number.isInteger(Number(capacity));
   const breakMinutesError = breakMinutes < 0 || !Number.isInteger(Number(breakMinutes));
@@ -229,8 +223,13 @@ function EditDialog(props) {
         setRepeatUntil(date);
       }
       clearRoleFields();
+      setChangedCount(0);
     }
-  }, [open]);
+  }, [open, date, copiedShift, setCopiedShift, selectedShift]);
+
+  useEffect(() => {
+    setChangedCount(count => count + 1);
+  }, [startTime, endTime, breakMinutes, notes, shiftRoles]);
 
   const removeRole = (roleId) => {
     setShiftRoles(shiftRoles => shiftRoles.filter(sr => sr.role.id !== roleId));
@@ -253,7 +252,6 @@ function EditDialog(props) {
     return fullDate;
   }
 
-  let overnight = false;
   let breakMinutesErrorText = '';
   let startDateTime = startTime ? makeFullDate(date, startTime) : null;
   let endDateTime = endTime ? makeFullDate(date, endTime) : null;
@@ -261,7 +259,6 @@ function EditDialog(props) {
   if (startDateTime && endDateTime) {
     if (startDateTime.getTime() >= endDateTime.getTime()) {
       endDateTime = addDays(endDateTime, 1);
-      overnight = true;
     }
     const shiftMinutes = Math.floor((endDateTime.getTime() - startDateTime.getTime()) / 60000);
     if (breakMinutes >= shiftMinutes) {
@@ -286,7 +283,7 @@ function EditDialog(props) {
   const saveShift = async (e) => {
     e.preventDefault();
     const start = makeFullDate(date, startTime);
-    const end = makeFullDate(date, endTime);
+    let end = makeFullDate(date, endTime);
     let overnight = false;
     if (end.getTime() <= start.getTime()) {
       end = addDays(end, 1);
@@ -365,7 +362,7 @@ function EditDialog(props) {
   const roleItems = roles.map((r, i) => <MenuItem key={r.id} value={i} disabled={shiftRoles.some(sr => sr.roleId === r.id)}>{r.name}</MenuItem>);
 
   const addedRoles = shiftRoles.map((shiftRole, i) => {
-    const { roleId, role, capacity } = shiftRole;
+    const { role, capacity } = shiftRole;
     const error = capacity < 0 || !Number.isInteger(Number(capacity));
     const capacityElement = editIndex === i ? (
       <TextField

@@ -103,7 +103,6 @@ const today = new Date();
 today.setHours(0, 0, 0, 0);
 
 function Shifts(props) {
-  const [loading, setLoading] = useState(false);
   const [days, setDays] = useState([]);
   const [selectedDay, setSelectedDay] = useState(null);
   const [anchorEl, setAnchorEl] = useAnchorState(null);
@@ -181,12 +180,12 @@ function Shifts(props) {
     setDays(days);
   }
 
-  useFetch(setLoading, [{
+  const loading = useFetch([{
     url: '/shifts/getAvailableShifts',
     data: query,
     handler: makeDays,
     reviver
-  }], [date, userId]);
+  }]);
 
   if (loading) {
     return <Progress loading={loading} />;

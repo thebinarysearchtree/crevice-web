@@ -40,7 +40,7 @@ function NotesChip(props) {
     if (open) {
       setNotesDraft(notes);
     }
-  }, [open]);
+  }, [open, notes]);
 
   const handleSave = () => {
     setNotes(notesDraft);

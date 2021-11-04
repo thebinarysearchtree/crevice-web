@@ -41,7 +41,7 @@ const compare = (existingItems, updatedItems) => {
   const update = [];
   for (const existingItem of existingItems) {
     let updated = false;
-    const updatedItem = updatedItems.find(u => u.id == existingItem.id);
+    const updatedItem = updatedItems.find(u => u.id === existingItem.id);
     if (!updatedItem) {
       continue;
     }
@@ -66,9 +66,31 @@ const compare = (existingItems, updatedItems) => {
   };
 }
 
+const paramsHaveChanged = (params, previousParams) => {
+  let hasChanged = false;
+  for (let i = 0; i < params.length; i++) {
+    const param = params[i];
+    const previousParam = previousParams[i];
+    if (param instanceof Date) {
+      if (param.getTime() !== previousParam.getTime()) {
+        hasChanged = true;
+        break;
+      }
+    }
+    else {
+      if (param !== previousParam) {
+        hasChanged = true;
+        break;
+      }
+    }
+  }
+  return hasChanged;
+}
+
 export {
   makeReviver,
   dateParser,
   parse,
-  compare
+  compare,
+  paramsHaveChanged
 };

@@ -43,7 +43,6 @@ const useStyles = makeStyles((theme) => ({
 
 function List() {
   const [users, setUsers] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [roles, setRoles] = useState([]);
   const [areas, setAreas] = useState([]);
   const [searchTerm, setSearchTerm, searchTermTranslator, searchTermParam] = useParamState({
@@ -102,7 +101,7 @@ function List() {
     setPage(0);
   }
 
-  const handleChangePage = (e, page) => {
+  const handlePageChange = (e, page) => {
     setPage(page);
   }
 
@@ -121,11 +120,10 @@ function List() {
   const rolesHandler = (roles) => setRoles(roles);
   const areasHandler = (areas) => setAreas(areas);
 
-  useFetch(setLoading, [
-    { url: '/users/find', handler: usersHandler, data: query },
-    { url: '/roles/getSelectListItems', handler: rolesHandler, once: true },
-    { url: '/areas/getSelectListItems', handler: areasHandler, once: true }],
-    [areaId, roleId, page, searchTerm]);
+  const loading = useFetch([
+    { url: '/users/find', handler: usersHandler, data: query, unstable: count === null },
+    { url: '/roles/getSelectListItems', handler: rolesHandler },
+    { url: '/areas/getSelectListItems', handler: areasHandler }]);
 
   if (loading) {
     return <Progress loading={loading} />;
@@ -224,7 +222,7 @@ function List() {
                   count={count ? count : 0}
                   rowsPerPage={10}
                   page={page}
-                  onChangePage={handleChangePage} />
+                  onPageChange={handlePageChange} />
               </TableRow>
             </TableFooter>
           </Table>

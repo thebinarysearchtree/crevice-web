@@ -2,8 +2,7 @@ import React from 'react';
 import {
   BrowserRouter as Router,
   Switch,
-  Route,
-  Redirect
+  Route
 } from 'react-router-dom';
 import { ThemeProvider } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -23,31 +22,9 @@ import InviteSingleDetail from './user/InviteSingleDetail';
 import InviteMany from './user/InviteMany';
 import UploadPhotos from './user/UploadPhotos';
 import UserDetails from './userProfile/UserDetails';
-import { useClient, ProvideAuth } from './auth';
+import { ProvideAuth } from './auth';
 import MainDrawer from './MainDrawer';
 import ScrollRestore from './ScrollRestore';
-
-function PrivateRoute({ children, ...rest }) {
-  const client = useClient();
-  
-  return (
-    <Route
-      {...rest}
-      render={({ location }) =>
-        client.user ? (
-          children
-        ) : (
-          <Redirect
-            to={{
-              pathname: "/login",
-              state: { from: location }
-            }}
-          />
-        )
-      }
-    />
-  );
-}
 
 const drawer = <MainDrawer />;
 

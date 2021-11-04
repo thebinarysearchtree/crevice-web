@@ -8,7 +8,6 @@ import MenuItem from '@material-ui/core/MenuItem';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import { useClient } from '../auth';
-import useChanged from '../hooks/useChanged';
 import FormLayout from '../FormLayout';
 
 const useStyles = makeStyles((theme) => ({
@@ -37,7 +36,9 @@ function Detail(props) {
   const [name, setName] = useState('');
   const [locationId, setLocationId] = useState(-1);
   const [notes, setNotes] = useState('');
-  const hasChanged = useChanged(props.selectedArea, [name, locationId, notes]);
+  const [changedCount, setChangedCount] = useState(0);
+
+  const hasChanged = changedCount > 1;
 
   const isDisabled = !name || locationId === -1 || !hasChanged;
 
@@ -53,8 +54,13 @@ function Detail(props) {
       setName(name);
       setLocationId(locationId);
       setNotes(notes);
+      setChangedCount(0);
     }
   }, [selectedArea]);
+
+  useEffect(() => {
+    setChangedCount(count => count + 1);
+  }, [name, locationId, notes]);
 
   const handleClose = () => {
     setSelectedArea(null);

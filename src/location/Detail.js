@@ -8,7 +8,6 @@ import Select from '@material-ui/core/Select';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import { useClient } from '../auth';
-import useChanged from '../hooks/useChanged';
 import FormLayout from '../FormLayout';
 
 const useStyles = makeStyles((theme) => ({
@@ -37,7 +36,9 @@ function Detail(props) {
   const [name, setName] = useState('');
   const [timeZone, setTimeZone] = useState('');
   const [address, setAddress] = useState('');
-  const hasChanged = useChanged(props.selectedLocation, [name, timeZone, address]);
+  const [changedCount, setChangedCount] = useState(0);
+
+  const hasChanged = changedCount > 1;
 
   const isDisabled = !name || !timeZone || !hasChanged;
 
@@ -53,8 +54,13 @@ function Detail(props) {
       setName(name);
       setTimeZone(timeZone);
       setAddress(address);
+      setChangedCount(0);
     }
   }, [selectedLocation]);
+
+  useEffect(() => {
+    setChangedCount(count => count + 1);
+  }, [name, timeZone, address]);
 
   const handleClose = () => {
     setSelectedLocation(null);

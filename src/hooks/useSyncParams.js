@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useHistory } from 'react-router-dom';
+import usePrevious from './usePrevious';
+import { paramsHaveChanged } from '../utils/data';
 
 function useSyncParams(ready, translators) {
   const [initialRun, setInitialRun] = useState(true);
@@ -7,12 +9,21 @@ function useSyncParams(ready, translators) {
 
   const location = useLocation();
   const history = useHistory();
+  const prevTranslators = usePrevious(translators);
 
   const currentUrl = `${location.pathname}${location.search}`;
 
   const states = translators.map(p => p.state);
+  let statesHaveChanged = true;
+  if (prevTranslators) {
+    const prevStates = prevTranslators.map(p => p.state);
+    statesHaveChanged = paramsHaveChanged(states, prevStates);
+  }
 
   useEffect(() => {
+    if (!statesHaveChanged) {
+      return;
+    }
     if (ready) {
       for (const translator of translators) {
         const { state, defaultValue, param, reviver } = translator;
@@ -26,9 +37,12 @@ function useSyncParams(ready, translators) {
         }
       }
     }
-  }, [location]);
+  }, [location, ready, translators, statesHaveChanged]);
 
   useEffect(() => {
+    if (!statesHaveChanged) {
+      return;
+    }
     if (ready && !initialRun && !syncFromParam) {
       const params = new URLSearchParams();
       for (const translator of translators) {
@@ -50,7 +64,7 @@ function useSyncParams(ready, translators) {
     if (ready) {
       setInitialRun(false);
     }
-  }, states);
+  }, [currentUrl, history, initialRun, location, ready, statesHaveChanged, syncFromParam, translators]);
 }
 
 export default useSyncParams;

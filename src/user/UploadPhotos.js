@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
 import Button from '@material-ui/core/Button';
 import { useHistory } from 'react-router-dom';
 import Avatar from '@material-ui/core/Avatar';
 import Tooltip from '@material-ui/core/Tooltip';
-import BackButton from '../common/BackButton';
 import Progress from '../common/Progress';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -102,7 +100,6 @@ function UploadPhotos() {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [errors, setErrors] = useState([]);
   const [fieldNames, setFieldNames] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [showErrors, setShowErrors] = useState(false);
   const [uploading, setUploading] = useState(false);
 
@@ -117,10 +114,9 @@ function UploadPhotos() {
   const fieldsHandler = (fields) => {
     const names = fields.map(f => f.name);
     setFieldNames(['Email', 'Phone', ...names]);
-    setLoading(false);
   }
 
-  useFetch(setLoading, [{
+  const loading = useFetch([{
     url: '/fields/getFilenameFields',
     handler: fieldsHandler
   }]);

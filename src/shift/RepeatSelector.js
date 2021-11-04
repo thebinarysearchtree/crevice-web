@@ -89,7 +89,7 @@ function RepeatSelector(props) {
       setWeeks(props.weeks === 0 ? 1 : props.weeks);
       setUntil(props.until.getTime() < earliestUntil.getTime() ? earliestUntil : props.until);
     }
-  }, [open]);
+  }, [open, props.weeks, props.until, earliestUntil]);
 
   const handleChangeWeeks = (e) => {
     const weeks = e.target.value;
@@ -145,7 +145,7 @@ function RepeatSelector(props) {
                 InputProps={{ classes: { input: classes.filled }}}
                 value={weeks}
                 onChange={handleChangeWeeks} />
-              <Typography variant="body1">{weeks == 1 ? 'week until' : 'weeks until'}</Typography>
+              <Typography variant="body1">{weeks === 1 ? 'week until' : 'weeks until'}</Typography>
               <MuiPickersUtilsProvider utils={DateFnsUtils}>
                 <KeyboardDatePicker
                   className={classes.until}

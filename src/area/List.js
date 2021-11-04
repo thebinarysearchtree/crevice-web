@@ -56,7 +56,6 @@ function List() {
     defaultValue: '',
     hideDefault: true
   });
-  const [loading, setLoading] = useState(true);
   const [locations, setLocations] = useState([]);
   const [locationId, setLocationId, locationTranslator] = useParamState({
     name: 'locationId',
@@ -137,9 +136,9 @@ function List() {
   const areasHandler = (areas) => setAreas(areas);
   const locationsHandler = (locations) => setLocations(locations);
 
-  useFetch(setLoading, [
+  const loading = useFetch([
     { url: '/areas/find', handler: areasHandler },
-    { url: '/locations/getSelectListItems', handler: locationsHandler, once: true }]);
+    { url: '/locations/getSelectListItems', handler: locationsHandler }]);
 
   if (loading) {
     return <Progress loading={loading} />;
@@ -232,7 +231,7 @@ function List() {
                   count={count}
                   rowsPerPage={rowsPerPage}
                   page={page}
-                  onChangePage={(e, page) => setPage(page)} />
+                  onPageChange={(e, page) => setPage(page)} />
               </TableRow>
             </TableFooter>
           </Table>

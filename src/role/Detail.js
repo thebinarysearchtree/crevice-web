@@ -6,7 +6,6 @@ import Dialog from '@material-ui/core/Dialog';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import ColourGrid from '../common/ColourGrid';
 import { useClient } from '../auth';
-import useChanged from '../hooks/useChanged';
 import FormLayout from '../FormLayout';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
@@ -52,7 +51,9 @@ function Detail(props) {
   const [cancelBeforeHours, setCancelBeforeHours] = useState(1);
   const [bookBeforeHours, setBookBeforeHours] = useState(1);
   const [canBookAndCancel, setCanBookAndCancel] = useState(true);
-  const hasChanged = useChanged(props.selectedRole, [name, colour, cancelBeforeHours, bookBeforeHours, canBookAndCancel]);
+  const [changedCount, setChangedCount] = useState(0);
+
+  const hasChanged = changedCount > 1;
 
   const error = colour && !hex.test(colour);
   const isDisabled = !name || !hex.test(colour) || !hasChanged;
@@ -71,14 +72,19 @@ function Detail(props) {
         bookBeforeMinutes, 
         canBookAndCancel 
       } = selectedRole;
-
+      
       setName(name);
       setColour(colour);
       setCancelBeforeHours(cancelBeforeMinutes / 60);
       setBookBeforeHours(bookBeforeMinutes / 60);
       setCanBookAndCancel(canBookAndCancel);
+      setChangedCount(0);
     }
   }, [selectedRole]);
+
+  useEffect(() => {
+    setChangedCount(count => count + 1);
+  }, [name, colour, cancelBeforeHours, bookBeforeHours, canBookAndCancel]);
 
   const handleClose = () => {
     setSelectedRole(null);
@@ -138,7 +144,6 @@ function Detail(props) {
               onChange={(e) => setName(e.target.value)}
               autoComplete="off" />
             <TextField
-              InputProps={{ className: classes.input }}
               className={classes.colour}
               variant="outlined"
               size="small"

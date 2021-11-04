@@ -28,7 +28,6 @@ function List() {
   const [fields, setFields] = useState(null);
   const [selectedField, setSelectedField] = useState(null);
   const [page, setPage] = useState(0);
-  const [loading, setLoading] = useState(true);
 
   const classes = useStyles();
   const client = useClient();
@@ -39,10 +38,6 @@ function List() {
 
   const sliceStart = page * rowsPerPage;
   const sliceEnd = sliceStart + rowsPerPage;
-
-  const handleNameClick = (e, field) => {
-    setSelectedField({ ...field });
-  }
 
   const handleNewClick = (e) => {
     setSelectedField({
@@ -55,7 +50,7 @@ function List() {
     });
   }
 
-  const handleChangePage = (e, newPage) => {
+  const handlePageChange = (e, newPage) => {
     setPage(newPage);
   }
 
@@ -77,7 +72,7 @@ function List() {
     });
   }
 
-  useFetch(setLoading, [{
+  const loading = useFetch([{
     url: '/fields/find',
     handler: (fields) => setFields(fields)
   }]);
@@ -147,7 +142,7 @@ function List() {
                   count={fields.length}
                   rowsPerPage={rowsPerPage}
                   page={page}
-                  onChangePage={handleChangePage} />
+                  onPageChange={handlePageChange} />
               </TableRow>
             </TableFooter>
           </Table>

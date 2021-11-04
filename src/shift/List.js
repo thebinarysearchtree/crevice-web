@@ -111,7 +111,6 @@ function List() {
   const [locations, setLocations] = useState([]);
   const getAreaById = (areaId) => locations.flatMap(l => l.areas).find(a => a.id === areaId);
   const [initialAreaId, setInitialAreaId] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [days, setDays] = useState([]);
 
   const [date, setDate, dateTranslator] = useParamState({ 
@@ -198,11 +197,10 @@ function List() {
   const locationsHandler = (locations) => setLocations(locations);
   const rolesHandler = (roles) => setRoles(roles);
 
-  useFetch(setLoading, [
-    { url: '/shifts/find', data: query, handler: makeDays, reviver },
-    { url: '/areas/getWithLocation', handler: locationsHandler, once: true },
-    { url: '/roles/getSelectListItems', handler: rolesHandler, once: true }
-  ], [date, selectedArea]);
+  const loading = useFetch([
+    { url: '/shifts/find', data: query, handler: makeDays, reviver, unstable: !Boolean(area) },
+    { url: '/areas/getWithLocation', handler: locationsHandler },
+    { url: '/roles/getSelectListItems', handler: rolesHandler }]);
 
   if (!area) {
     return <Progress loading={loading} />;

@@ -18,7 +18,6 @@ import Popover from '@material-ui/core/Popover';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
-import areIntervalsOverlapping from 'date-fns/areIntervalsOverlapping/index.js';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -88,7 +87,7 @@ function AddArea(props) {
 
   const classes = useStyles();
 
-  const { checkOverlapping, handleAddArea, roles, locations, open, anchorEl, setAnchorEl, setMessage } = props;
+  const { checkOverlapping, handleAddArea, roles, locations, open, anchorEl, setAnchorEl } = props;
 
   const isDisabled = !selectedRole || !selectedArea || !startTime || isNaN(startTime.getTime()) || (endTime && isNaN(endTime.getTime())) || startError;
 

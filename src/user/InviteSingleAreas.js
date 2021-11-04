@@ -3,9 +3,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
-import Snackbar from '../common/Snackbar';
 import Avatar from '@material-ui/core/Avatar';
-import BackButton from '../common/BackButton';
 import AreasTable from './AreasTable';
 import AddArea from './AddArea';
 import FormLayout from '../FormLayout';
@@ -73,8 +71,6 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function InviteSingleAreas(props) {
-  const [showAddArea, setShowAddArea] = useState(false);
-  const [message, setMessage] = useState('');
   const [anchorEl, setAnchorEl] = useState(null);
 
   const open = Boolean(anchorEl);

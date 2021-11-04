@@ -67,7 +67,6 @@ startDate.setHours(0, 0, 0, 0);
 
 function UserDetails() {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab, tabTranslator] = useParamState({
     name: 'tab',
     defaultValue: 0,
@@ -84,23 +83,23 @@ function UserDetails() {
 
   const { userId } = useParams();
 
-  useEffect(() => {
-    if (!loading) {
-      window.scrollTo(0, 0);
-    }
-  }, [userId]);
-
   useSyncParams(true, [tabTranslator, dateTranslator]);
 
   const handleChangeTab = (e, tabIndex) => {
     setActiveTab(tabIndex);
   }
 
-  useFetch(setLoading, [{
+  const loading = useFetch([{
     url: '/users/getUserDetails',
     data: { userId },
     handler: (users) => setUser(users[0])
-  }], [userId]);
+  }]);
+
+  useEffect(() => {
+    if (!loading) {
+      window.scrollTo(0, 0);
+    }
+  }, [userId, loading]);
 
   if (loading) {
     return <Progress loading={loading} />;

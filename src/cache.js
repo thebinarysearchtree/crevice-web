@@ -1,27 +1,29 @@
-const cache = new Map();
+const map = new Map();
 
 const makeKey = (url, data) => `${url} ${JSON.stringify(data)}`;
 
 const set = (url, data, response) => {
   const key = makeKey(url, data);
-  cache.set(key, response);
+  map.set(key, response);
 }
 
 const get = (url, data) => {
   const key = makeKey(url, data);
-  return cache.get(key);
+  return map.get(key);
 }
 
 const has = (url, data) => {
   const key = makeKey(url, data);
-  return cache.has(key);
+  return map.has(key);
 }
 
-const clear = () => cache.clear();
+const clear = () => map.clear();
 
-export default {
+const cache = {
   set,
   get,
   has,
   clear
 };
+
+export default cache;

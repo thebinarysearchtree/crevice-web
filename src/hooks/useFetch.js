@@ -3,23 +3,43 @@ import { useHistory } from 'react-router-dom';
 import { makeReviver } from '../utils/data';
 import cache from '../cache';
 import { useClient } from '../auth';
+import usePrevious from './usePrevious';
+import { paramsHaveChanged } from '../utils/data';
 
 const defaultReviver = makeReviver();
 
-function useFetch(setLoading, requests, params = []) {
-  const [ranOnce, setRanOnce] = useState(false);
+const hasChanged = (request, previousRequest) => {
+  if (!request.data) {
+    return false;
+  }
+  const params = Object.values(request.data);
+  const previousParams = Object.values(previousRequest.data);
 
-  let requestsToProcess = requests.filter(r => ranOnce ? !r.once : true);
+  return paramsHaveChanged(params, previousParams);
+}
+
+function useFetch(requests) {
+  const [loading, setLoading] = useState(true);
 
   const history = useHistory();
   const client = useClient();
+  const previousRequests = usePrevious(requests);
+  const previousCount = usePrevious(client.mutationCount);
 
-  params.push(client.mutationCount);
+  const hasMutated = client.mutationCount > previousCount;
+  const wasUnstable = previousRequests && previousRequests.some(r => r.unstable);
 
   useEffect(() => {
-    const getState = async () => {
+    if (wasUnstable) {
+      const index = previousRequests.findIndex(r => r.unstable);
+      const current = requests[index];
+      const previous = previousRequests[index];
+      cache.set(current.url, current.data, cache.get(previous.url, previous.data));
+      return;
+    }
+    const getState = async (requests) => {
       const token = await client.getToken();
-      const requestPromises = requestsToProcess.map(request => {
+      const requestPromises = requests.map(request => {
         const { url, data } = request;
         return client.postData(url, data, token);
       });
@@ -27,7 +47,7 @@ function useFetch(setLoading, requests, params = []) {
       const responsePromises = responses
         .filter(r => r.ok)
         .map(r => r.text());
-      if (responsePromises.length !== requestsToProcess.length) {
+      if (responsePromises.length !== requests.length) {
         if (responses.some(r => r.status === 401)) {
           history.push('/login');
         }
@@ -37,35 +57,36 @@ function useFetch(setLoading, requests, params = []) {
       }
       const states = await Promise.all(responsePromises);
       states.forEach((state, i) => {
-        const { url, data, handler, reviver } = requestsToProcess[i];
+        const { url, data, handler, reviver } = requests[i];
         const result = JSON.parse(state, reviver ? reviver : defaultReviver);
         cache.set(url, data, result);
         handler(result);
       });
-      if (setLoading) {
-        setLoading(false);
-      }
+      setLoading(false);
     };
-    requestsToProcess = requestsToProcess.reduce((a, c) => {
-      const { url, data, handler } = c;
-      const cachedResult = cache.get(url, data);
-      if (cachedResult) {
-        handler(cachedResult);
+    let fromCache = 0;
+    const requestsToProcess = requests
+      .filter((r, i) => previousRequests && !hasMutated ? hasChanged(r, previousRequests[i]) : true)
+      .reduce((a, c) => {
+        const { url, data, handler } = c;
+        const cachedResult = cache.get(url, data);
+        if (cachedResult) {
+          handler(cachedResult);
+          fromCache++;
+          return a;
+        }
+        a.push(c);
         return a;
-      }
-      a.push(c);
-      return a;
-    }, []);
-    if (requestsToProcess.length === 0) {
-      if (setLoading) {
-        setLoading(false);
-      }
+      }, []);
+    if (fromCache === requests.length) {
+      setLoading(false);
     }
-    else {
-      getState();
+    if (requestsToProcess.length > 0) {
+      getState(requestsToProcess);
     }
-    setRanOnce(true);
-  }, params);
+  }, [client, history, previousRequests, requests, hasMutated, wasUnstable]);
+
+  return loading;
 }
 
 export default useFetch;

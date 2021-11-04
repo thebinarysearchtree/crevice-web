@@ -35,7 +35,6 @@ function List() {
   const [roles, setRoles] = useState(null);
   const [selectedRole, setSelectedRole] = useState(null);
   const [page, setPage] = useState(0);
-  const [loading, setLoading] = useState(true);
 
   const classes = useStyles();
   const client = useClient();
@@ -56,7 +55,7 @@ function List() {
     });
   }
 
-  const handleChangePage = (e, newPage) => {
+  const handlePageChange = (e, newPage) => {
     setPage(newPage);
   }
 
@@ -68,7 +67,7 @@ function List() {
     });
   }
 
-  useFetch(setLoading, [{
+  const loading = useFetch([{
     url: '/roles/find',
     handler: (roles) => setRoles(roles)
   }]);
@@ -140,7 +139,7 @@ function List() {
                   count={roles.length}
                   rowsPerPage={rowsPerPage}
                   page={page}
-                  onChangePage={handleChangePage} />
+                  onPageChange={handlePageChange} />
               </TableRow>
             </TableFooter>
           </Table>

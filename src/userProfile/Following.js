@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
@@ -9,27 +9,17 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import styles from '../styles/list';
-import SearchBox from '../common/SearchBox';
-import TableFooter from '@material-ui/core/TableFooter';
-import TablePagination from '@material-ui/core/TablePagination';
 import useFetch from '../hooks/useFetch';
 import Progress from '../common/Progress';
 import { Link as RouterLink } from 'react-router-dom';
-import TableFilterCell from '../common/TableFilterCell';
-import RoleChip from '../common/RoleChip';
-import MorePopover from '../common/MorePopover';
 import Button from '@material-ui/core/Button';
-import Chip from '@material-ui/core/Chip';
 import Avatar from '../common/Avatar';
-import { makePgDate, addDays } from '../utils/date';
+import { addDays } from '../utils/date';
 import Shift from '../common/Shift';
 import CalendarButtons from '../common/CalendarButtons';
 import { useClient } from '../auth';
 import { makeReviver, dateParser } from '../utils/data';
 import UserSearch from '../common/UserSearch';
-import EditIcon from '@material-ui/icons/Edit';
-import IconButton from '@material-ui/core/IconButton';
-import Tooltip from '@material-ui/core/Tooltip';
 import Notes from './Notes';
 
 const useStyles = makeStyles((theme) => ({
@@ -79,7 +69,6 @@ const reviver = makeReviver(dateParser);
 
 function Following(props) {
   const [date, setDate] = useState(today);
-  const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState([]);
 
   const userId = parseInt(props.userId, 10);
@@ -148,9 +137,7 @@ function Following(props) {
     setUsers(Array.from(users.values()));
   }
 
-  useFetch(setLoading, [
-    { url: '/followers/find', handler, data: query, reviver }],
-    [date]);
+  const loading = useFetch([{ url: '/followers/find', handler, data: query, reviver }]);
 
   if (loading) {
     return <Progress loading={loading} />;

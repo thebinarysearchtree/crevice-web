@@ -29,7 +29,6 @@ function List() {
   const [locations, setLocations] = useState(null);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [page, setPage] = useState(0);
-  const [loading, setLoading] = useState(true);
 
   const classes = useStyles();
   const client = useClient();
@@ -48,7 +47,7 @@ function List() {
     });
   }
 
-  const handleChangePage = (e, newPage) => {
+  const handlePageChange = (e, newPage) => {
     setPage(newPage);
   }
 
@@ -60,7 +59,7 @@ function List() {
     });
   }
 
-  useFetch(setLoading, [{
+  const loading = useFetch([{
     url: '/locations/find',
     handler: (locations) => setLocations(locations)
   }]);
@@ -130,7 +129,7 @@ function List() {
                   count={locations.length}
                   rowsPerPage={rowsPerPage}
                   page={page}
-                  onChangePage={handleChangePage} />
+                  onPageChange={handlePageChange} />
               </TableRow>
             </TableFooter>
           </Table>

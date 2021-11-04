@@ -81,7 +81,6 @@ function Areas(props) {
   const [year, setYear] = useState(today.getFullYear());
   const [months, setMonths] = useState([]);
   const [areas, setAreas] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useAnchorState(null);
   const [periodEl, setPeriodEl] = useAnchorState(null);
   const [buttonEl, setButtonEl] = useAnchorState(null);
@@ -172,10 +171,10 @@ function Areas(props) {
   const rolesHandler = (roles) => setRoles(roles);
   const locationsHandler = (locations) => setLocations(locations);
 
-  useFetch(setLoading, [
+  const loading = useFetch([
     { url: '/userAreas/find', handler: areasHandler, data: { userId } },
     { url: '/roles/getSelectListItems', handler: rolesHandler },
-    { url: '/areas/getWithLocation', handler: locationsHandler }], [userId]);
+    { url: '/areas/getWithLocation', handler: locationsHandler }]);
 
   if (loading) {
     return <Progress loading={loading} />;
@@ -237,7 +236,7 @@ function Areas(props) {
       });
       start = period.endTime;
     }
-    if (sections.length == 0) {
+    if (sections.length === 0) {
       sections.push({
         type: 'empty',
         start: startOfYear,

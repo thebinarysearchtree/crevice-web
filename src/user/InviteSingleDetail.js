@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import Typography from '@material-ui/core/Typography';
 import TextField from '@material-ui/core/TextField';
 import IconButton from '@material-ui/core/IconButton';
 import Button from '@material-ui/core/Button';
@@ -8,7 +7,6 @@ import { useHistory } from 'react-router-dom';
 import Avatar from '@material-ui/core/Avatar';
 import InviteSingleAreas from './InviteSingleAreas';
 import Tooltip from '@material-ui/core/Tooltip';
-import BackButton from '../common/BackButton';
 import useFetch from '../hooks/useFetch';
 import Progress from '../common/Progress';
 import CustomField from '../field/CustomField';
@@ -90,7 +88,6 @@ function InviteSingleDetail() {
   const [showAreas, setShowAreas] = useState(false);
   const [userAreas, setUserAreas] = useState([]);
   const [fields, setFields] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [roles, setRoles] = useState([]);
   const [locations, setLocations] = useState([]);
 
@@ -122,7 +119,7 @@ function InviteSingleDetail() {
   const rolesHandler = (roles) => setRoles(roles);
   const locationsHandler = (locations) => setLocations(locations);
 
-  useFetch(setLoading, [
+  const loading = useFetch([
     { url: '/fields/getAllFields', handler: fieldsHandler },
     { url: '/roles/getSelectListItems', handler: rolesHandler },
     { url: '/areas/getWithLocation', handler: locationsHandler }]);
