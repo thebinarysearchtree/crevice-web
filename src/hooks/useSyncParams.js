@@ -10,6 +10,7 @@ function useSyncParams(ready, translators) {
   const location = useLocation();
   const history = useHistory();
   const prevTranslators = usePrevious(translators);
+  const prevLocation = usePrevious(location);
 
   const currentUrl = `${location.pathname}${location.search}`;
 
@@ -19,9 +20,10 @@ function useSyncParams(ready, translators) {
     const prevStates = prevTranslators.map(p => p.state);
     statesHaveChanged = paramsHaveChanged(states, prevStates);
   }
+  const locationHasChanged = prevLocation && prevLocation.key !== location.key;
 
   useEffect(() => {
-    if (!statesHaveChanged) {
+    if (!statesHaveChanged || !locationHasChanged) {
       return;
     }
     if (ready) {
@@ -37,7 +39,7 @@ function useSyncParams(ready, translators) {
         }
       }
     }
-  }, [location, ready, translators, statesHaveChanged]);
+  }, [location, ready, translators, statesHaveChanged, locationHasChanged]);
 
   useEffect(() => {
     if (!statesHaveChanged) {
