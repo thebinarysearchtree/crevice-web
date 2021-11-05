@@ -17,6 +17,7 @@ const useStyles = makeStyles((theme) => ({
     display: 'flex',
     flexDirection: 'column',
     padding: theme.spacing(7),
+    paddingTop: theme.spacing(3),
     paddingLeft: theme.spacing(3),
     paddingRight: theme.spacing(3)
   },
@@ -301,7 +302,7 @@ function Areas(props) {
           onForward={() => setYear(year => year + 1)} />
         <Button 
           variant="contained" 
-          color="primary"
+          color="secondary"
           onClick={(e) => setButtonEl(e.currentTarget)}>Add area</Button>
       </div>
       <div className={classes.months}>

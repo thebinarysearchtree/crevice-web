@@ -87,9 +87,9 @@ function RepeatSelector(props) {
   useEffect(() => {
     if (open) {
       setWeeks(props.weeks === 0 ? 1 : props.weeks);
-      setUntil(props.until.getTime() < earliestUntil.getTime() ? earliestUntil : props.until);
+      setUntil(props.until);
     }
-  }, [open, props.weeks, props.until, earliestUntil]);
+  }, [open, props.weeks, props.until]);
 
   const handleChangeWeeks = (e) => {
     const weeks = e.target.value;

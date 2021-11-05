@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
-import Typography from '@material-ui/core/Typography';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
@@ -162,9 +161,6 @@ function List() {
   return (
     <div className={classes.root}>
       <div className={classes.content}>
-        <div className={classes.heading}>
-          <Typography variant="h5">Users</Typography>
-        </div>
         <div className={classes.toolbar}>
           <SearchBox 
             variant="form"
@@ -186,7 +182,7 @@ function List() {
             to="/users/inviteMany">Invite many</Button>
           <Button
             variant="contained"
-            color="primary"
+            color="secondary"
             component={RouterLink} 
             to="/users/inviteSingle">Invite user</Button>
         </div>

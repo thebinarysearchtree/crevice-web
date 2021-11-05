@@ -220,7 +220,7 @@ function EditDialog(props) {
         setNotes('');
         setShiftRoles([]);
         setRepeatWeeks(0);
-        setRepeatUntil(date);
+        setRepeatUntil(addDays(date, 7));
       }
       clearRoleFields();
       setChangedCount(0);

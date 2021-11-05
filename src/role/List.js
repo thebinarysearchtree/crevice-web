@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
-import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
@@ -111,10 +110,10 @@ function List() {
     <div className={classes.root}>
       <div className={classes.content}>
         <div className={classes.heading}>
-          <Typography variant="h5">Roles</Typography>
+          <div />
           <Button 
             variant="contained"
-            color="primary"
+            color="secondary"
             onClick={handleNewClick}>New role</Button>
         </div>
         <TableContainer component={Paper}>

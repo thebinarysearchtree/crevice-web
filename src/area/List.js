@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
-import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
@@ -25,6 +24,9 @@ import Avatar from '../common/Avatar';
 import useParamState from '../hooks/useParamState';
 import useSyncParams from '../hooks/useSyncParams';
 import { useClient } from '../auth';
+import EditIcon from '@material-ui/icons/Edit';
+import IconButton from '@material-ui/core/IconButton';
+import Tooltip from '@material-ui/core/Tooltip';
 
 const useStyles = makeStyles((theme) => ({ 
   ...styles(theme),
@@ -171,6 +173,11 @@ function List() {
             {activeUserCount}
           </TableCell>
           <TableCell align="right" className={classes.iconCell}>
+            <Tooltip title="Edit">
+              <IconButton onClick={() => setSelectedArea({...a})}>
+                <EditIcon color="action" fontSize="small" />
+              </IconButton>
+            </Tooltip>
             <ConfirmButton
               title={`Delete ${a.name}?`}
               content="Make sure this areas has no users before deleting it."
@@ -183,9 +190,6 @@ function List() {
   return (
     <div className={classes.root}>
       <div className={classes.content}>
-        <div className={classes.heading}>
-          <Typography variant="h5">Areas</Typography>
-        </div>
         <div className={classes.toolbar}>
           <SearchBox 
             placeholder="Search..."
@@ -193,7 +197,7 @@ function List() {
           <div className={classes.grow} />
           <Button 
             variant="contained"
-            color="primary"
+            color="secondary"
             onClick={handleNewClick}>New area</Button>
         </div>
         <TableContainer component={Paper}>
