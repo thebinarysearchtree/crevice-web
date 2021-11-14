@@ -10,7 +10,7 @@ import Tooltip from '@material-ui/core/Tooltip';
 import useFetch from '../hooks/useFetch';
 import Progress from '../common/Progress';
 import CustomField from '../field/CustomField';
-import { makeAreaDate, overlaps } from '../utils/date';
+import { makeAreaDate } from '../utils/date';
 import { useClient } from '../auth';
 import cache from '../cache';
 import FormLayout from '../FormLayout';
@@ -156,13 +156,8 @@ function InviteSingleDetail() {
     }
   }
 
-  const checkOverlapping = (userArea) => {
-    const existing = userAreas.filter(ua => ua.area.id === userArea.area.id);
-    return overlaps(userArea, existing);
-  }
-
-  const handleAddArea = (userArea) => {
-    setUserAreas(areas => [...areas, userArea]);
+  const handleAddAreas = (userAreas) => {
+    setUserAreas(areas => [...areas, ...userAreas]);
   }
 
   const handleUpload = async (e) => {
@@ -217,8 +212,7 @@ function InviteSingleDetail() {
         inviteUser={inviteUser}
         roles={roles}
         locations={locations}
-        checkOverlapping={checkOverlapping}
-        handleAddArea={handleAddArea} />
+        handleAddAreas={handleAddAreas} />
     );
   }
 

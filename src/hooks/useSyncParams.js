@@ -23,7 +23,7 @@ function useSyncParams(ready, translators) {
   const locationHasChanged = prevLocation && prevLocation.key !== location.key;
 
   useEffect(() => {
-    if (!statesHaveChanged || !locationHasChanged) {
+    if (!locationHasChanged) {
       return;
     }
     if (ready) {

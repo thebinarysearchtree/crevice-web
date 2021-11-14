@@ -71,13 +71,11 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function InviteSingleAreas(props) {
-  const [anchorEl, setAnchorEl] = useState(null);
-
-  const open = Boolean(anchorEl);
+  const [open, setOpen] = useState(false);
 
   const classes = useStyles();
 
-  const { userAreas, setUserAreas, user, inviteUser, roles, locations, checkOverlapping, handleAddArea } = props;
+  const { userAreas, setUserAreas, user, inviteUser, roles, locations, handleAddAreas } = props;
 
   function DisplayField(props) {
     const { label, value } = props;
@@ -108,8 +106,8 @@ function InviteSingleAreas(props) {
         <AreasTable 
           userAreas={userAreas} 
           setUserAreas={setUserAreas}
-          open={open} 
-          setAnchorEl={setAnchorEl}  />
+          open={open}
+          setOpen={setOpen}  />
         <Button
           className={classes.backButton}
           onClick={() => props.setShowAreas(false)}
@@ -120,13 +118,12 @@ function InviteSingleAreas(props) {
           color="primary"
           disabled={userAreas.length === 0}>Invite user</Button>
         <AddArea
-          checkOverlapping={checkOverlapping}
-          handleAddArea={handleAddArea}
+          existingAreas={userAreas}
+          handleAddAreas={handleAddAreas}
           roles={roles}
           locations={locations}
           open={open}
-          anchorEl={anchorEl}
-          setAnchorEl={setAnchorEl} />
+          setOpen={setOpen} />
       </div>
     </FormLayout>
   );

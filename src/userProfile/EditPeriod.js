@@ -13,7 +13,6 @@ import {
   KeyboardDatePicker
 } from '@material-ui/pickers';
 import Typography from '@material-ui/core/Typography';
-import FormHelperText from '@material-ui/core/FormHelperText';
 import PeriodDetails from './PeriodDetails';
 import { useClient } from '../auth';
 
@@ -47,24 +46,39 @@ function EditPeriod(props) {
   const [startTime, setStartTime] = useState(null);
   const [endTime, setEndTime] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [overlappingError, setOverlappingError] = useState(false);
   const [edit, setEdit] = useState(false);
   const [hasChanged, setHasChanged] = useState(false);
 
-  const startError = startTime && endTime && startTime.getTime() > endTime.getTime();
+  const { otherPeriods, selectedPeriod, setSelectedPeriod, open, anchorEl, setAnchorEl } = props;
 
-  const isDisabled = !startTime || isNaN(startTime.getTime()) || (endTime && isNaN(endTime.getTime())) || startError || !hasChanged;
+  const minStartTime = otherPeriods
+    .filter(p => p.endTimeMs && p.endTimeMs < selectedPeriod.startTimeMs)
+    .map(p => p.endTimeMs)
+    .sort((p1, p2) => p1 - p2)
+    .pop();
+  const maxEndTime = selectedPeriod.endTimeMs ? otherPeriods
+    .filter(p => p.startTimeMs > selectedPeriod.endTimeMs)
+    .map(p => p.startTimeMs)
+    .sort((p1, p2) => p1 - p2)
+    .pop() : null;
+
+  const isDisabled = 
+    !startTime || 
+    isNaN(startTime.getTime()) || 
+    (endTime && isNaN(endTime.getTime())) || 
+    !hasChanged ||
+    (endTime && endTime.getTime() < startTime.getTime()) ||
+    (minStartTime && startTime.getTime() < minStartTime) ||
+    (maxEndTime && endTime && endTime.getTime() > maxEndTime);
 
   const classes = useStyles();
   const client = useClient();
 
-  const { checkOverlapping, selectedPeriod, setSelectedPeriod, open, anchorEl, setAnchorEl } = props;
-
   useEffect(() => {
-    const { start, end, isAdmin } = selectedPeriod;
+    const { startTimeMs, endTimeMs, isAdmin } = selectedPeriod;
 
-    const startTime = new Date(start);
-    const endTime = end ? addDays(new Date(end), -1) : null;
+    const startTime = new Date(startTimeMs);
+    const endTime = endTimeMs ? addDays(new Date(endTimeMs), -1) : null;
 
     setStartTime(startTime);
     setEndTime(endTime);
@@ -101,11 +115,6 @@ function EditPeriod(props) {
 
   const updatePeriod = async (e) => {
     e.preventDefault();
-    const overlapping = checkOverlapping({ id, areaId, startTime, endTime });
-    if (overlapping) {
-      setOverlappingError(true);
-      return;
-    }
     const userArea = {
       id,
       userId,
@@ -148,8 +157,8 @@ function EditPeriod(props) {
             margin="none"
             id="start-time"
             label="Start date"
-            error={startError}
-            helperText={startError ? 'Start date must be before end date' : ''}
+            minDate={minStartTime ? new Date(minStartTime) : undefined}
+            maxDate={endTime ? endTime : undefined}
             value={startTime}
             onChange={handleStartTimeChange}
             KeyboardButtonProps={{ 'aria-label': 'change date' }}
@@ -165,17 +174,17 @@ function EditPeriod(props) {
             margin="none"
             id="end-time"
             label="End date"
+            minDate={startTime ? startTime : undefined}
+            maxDate={maxEndTime ? new Date(maxEndTime) : undefined}
             value={endTime}
             onChange={handleEndTimeChange}
             KeyboardButtonProps={{ 'aria-label': 'change date' }}
             autoOk />
         </MuiPickersUtilsProvider>
-        <FormHelperText error={overlappingError}>{overlappingError ? 'Areas cannot have overlapping periods' : ''}</FormHelperText>
       </DialogContent>
       <DialogActions>
         <Button color="primary" onClick={handleClose}>Cancel</Button>
         <Button 
-          onBlur={() => setOverlappingError(false)}
           onClick={updatePeriod} 
           variant="contained" 
           color="primary"

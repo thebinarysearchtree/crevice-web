@@ -19,7 +19,7 @@ import TableRow from '@material-ui/core/TableRow';
 import AreasTable from './AreasTable';
 import AddArea from './AddArea';
 import Paper from '@material-ui/core/Paper';
-import { makeAreaDate, overlaps } from '../utils/date';
+import { makeAreaDate } from '../utils/date';
 import { useClient } from '../auth';
 import cache from '../cache';
 import FormLayout from '../FormLayout';
@@ -93,9 +93,7 @@ function InviteMany() {
   const [fields, setFields] = useState([]);
   const [roles, setRoles] = useState([]);
   const [locations, setLocations] = useState([]);
-  const [anchorEl, setAnchorEl] = useState(null);
-
-  const open = Boolean(anchorEl);
+  const [open, setOpen] = useState(false);
 
   const history = useHistory();
   const classes = useStyles();
@@ -105,13 +103,8 @@ function InviteMany() {
 
   const isDisabled = uploading || selectedFiles.length === 0 || userAreas.length === 0;
 
-  const checkOverlapping = (userArea) => {
-    const existing = userAreas.filter(ua => ua.area.id === userArea.area.id);
-    return overlaps(userArea, existing);
-  }
-
-  const handleAddArea = (userArea) => {
-    setUserAreas(areas => [...areas, userArea]);
+  const handleAddAreas = (userAreas) => {
+    setUserAreas(areas => [...areas, ...userAreas]);
     return false;
   }
 
@@ -234,7 +227,7 @@ function InviteMany() {
             userAreas={userAreas} 
             setUserAreas={setUserAreas}
             open={open}
-            setAnchorEl={setAnchorEl} />
+            setOpen={setOpen} />
           <div>
             <FormControlLabel
               className={classes.spacing}
@@ -249,13 +242,12 @@ function InviteMany() {
             disabled={isDisabled}>{uploading ? 'Uploading...' : 'Invite'}</Button>
         </form>
         <AddArea
-          checkOverlapping={checkOverlapping}
-          handleAddArea={handleAddArea}
+          existingAreas={userAreas}
+          handleAddAreas={handleAddAreas}
           roles={roles}
           locations={locations}
           open={open}
-          anchorEl={anchorEl}
-          setAnchorEl={setAnchorEl} />
+          setOpen={setOpen} />
         <Dialog 
           open={showErrors} 
           onClose={() => setShowErrors(false)} 

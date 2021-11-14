@@ -71,7 +71,7 @@ const useStyles = makeStyles((theme) => ({
     marginRight: theme.spacing(1)
   },
   selectedPeriod: {
-    border: `2px solid ${theme.palette.text.primary}`
+    filter: 'brightness(0.8)'
   }
 }));
 
@@ -84,22 +84,35 @@ function Areas(props) {
   const [areas, setAreas] = useState([]);
   const [selectedPeriod, setSelectedPeriod] = useAnchorState(null);
   const [periodEl, setPeriodEl] = useAnchorState(null);
-  const [buttonEl, setButtonEl] = useAnchorState(null);
+  const [buttonOpen, setButtonOpen] = useState(false);
   const [roles, setRoles] = useState([]);
   const [locations, setLocations] = useState([]);
 
   const periodOpen = Boolean(periodEl);
-  const buttonOpen = Boolean(buttonEl);
 
   const classes = useStyles();
   const client = useClient();
 
-  const startOfYear = new Date(year, 0, 1).getTime();
-  const endOfYear = new Date(year + 1, 0, 1).getTime();
+  const existingAreas = areas.flatMap(area => {
+    const { id: areaId, periods } = area;
+    return periods.map(period => {
+      const { startTimeMs, endTimeMs } = period;
+      return {
+        area: {
+          id: areaId
+        },
+        startTime: new Date(startTimeMs),
+        endTime: endTimeMs ? new Date(endTimeMs) : null
+      }
+    });
+  });
+
+  const startOfYearMs = new Date(year, 0, 1).getTime();
+  const endOfYearMs = new Date(year + 1, 0, 1).getTime();
 
   const dayMs = 24 * 60 * 60 * 1000;
 
-  const daysBetween = (start, end) => Math.round((end - start) / dayMs);
+  const daysBetween = (startTimeMs, endTimeMs) => Math.round((endTimeMs - startTimeMs) / dayMs);
 
   const userId = parseInt(props.userId, 10);
 
@@ -123,48 +136,33 @@ function Areas(props) {
     setPeriodEl(e.currentTarget);
   }
 
-  const checkOverlappingPeriod = (period) => {
-    const area = areas.find(a => a.id === period.areaId);
-    return area.periods.some(p => 
-      p.id !== period.id &&
-      (!period.endTime || p.startTime <= period.endTime) &&
-      (!p.endTime || p.endTime >= period.startTime));
-  }
-
-  const checkOverlapping = (userArea) => {
-    const area = areas.find(a => a.id === userArea.area.id);
-    if (area) {
-      return area.periods.some(p => 
-        (!userArea.endTime || p.startTime <= userArea.endTime.getTime()) &&
-        (!p.endTime || p.endTime >= userArea.startTime.getTime()));
-    }
-    return false;
-  }
-
-  const handleAddArea = async (suppliedUserArea) => {
-    const { role, area, startTime, endTime, isAdmin } = suppliedUserArea;
-    const timeZone = area.timeZone;
-    const userArea = {
-      userId,
-      roleId: role.id, 
-      areaId: area.id,
-      startTime: makeAreaDate(startTime, timeZone),
-      endTime: makeAreaDate(endTime, timeZone, 1),
-      isAdmin
-    }
+  const handleAddAreas = async (suppliedUserAreas) => {
+    const userAreas = suppliedUserAreas.map(userArea => {
+      const { role, area, startTime, endTime, isAdmin } = userArea;
+      const timeZone = area.timeZone;
+      return {
+        userId,
+        roleId: role.id, 
+        areaId: area.id,
+        startTime: makeAreaDate(startTime, timeZone),
+        endTime: makeAreaDate(endTime, timeZone, 1),
+        isAdmin
+      };
+    });
+    const message = userAreas.length === 1 ? 'Area added' : 'Areas added';
     await client.postMutation({
-      url: '/userAreas/insert',
-      data: userArea,
-      message: 'Area added'
+      url: '/userAreas/insertMany',
+      data: userAreas,
+      message
     });
   }
 
   const areasHandler = (areas) => {
     setAreas(areas.map(area => {
       area.periods = area.periods.map(period => {
-        const startTime = new Date(period.startTime).getTime();
-        const endTime = period.endTime ? new Date(period.endTime).getTime() : null;
-        return {...period, startTime, endTime };
+        const startTimeMs = new Date(period.startTime).getTime();
+        const endTimeMs = period.endTime ? new Date(period.endTime).getTime() : null;
+        return {...period, startTimeMs, endTimeMs };
       });
       return area;
     }));
@@ -190,36 +188,38 @@ function Areas(props) {
     const { name, timeZone, periods } = area;
     const periodsInYear = periods
       .filter(p => 
-        p.startTime < endOfYear &&
-        (!p.endTime || p.endTime > startOfYear));
+        p.startTimeMs < endOfYearMs &&
+        (!p.endTimeMs || p.endTimeMs > startOfYearMs));
     const sections = [];
-    let start = startOfYear;
+    let startTimeMs = startOfYearMs;
     for (const period of periodsInYear) {
-      if (period.startTime > start) {
-        const days = daysBetween(start, period.startTime);
+      if (period.startTimeMs > startTimeMs) {
+        const days = daysBetween(startTimeMs, period.startTimeMs);
         if (days > 0) {
           sections.push({
             type: 'empty',
-            start,
+            areaId: area.id,
+            startTimeMs,
+            endTimeMs: period.startTimeMs,
             days
           });
         }
       }
-      start = period.startTime;
-      if (period.startTime < startOfYear) {
-        start = startOfYear;
+      startTimeMs = period.startTimeMs;
+      if (period.startTimeMs < startOfYearMs) {
+        startTimeMs = startOfYearMs;
       }
-      let end;
-      if (!period.endTime) {
-        end = endOfYear;
+      let endTimeMs;
+      if (!period.endTimeMs) {
+        endTimeMs = endOfYearMs;
       }
-      else if (period.endTime > endOfYear) {
-        end = endOfYear;
+      else if (period.endTimeMs > endOfYearMs) {
+        endTimeMs = endOfYearMs;
       }
       else {
-        end = period.endTime;
+        endTimeMs = period.endTimeMs;
       }
-      const days = daysBetween(start, end);
+      const days = daysBetween(startTimeMs, endTimeMs);
       sections.push({
         id: period.id,
         type: 'filled',
@@ -229,43 +229,53 @@ function Areas(props) {
         roleId: period.roleId,
         roleName: period.roleName,
         roleColour: period.roleColour,
-        start: period.startTime,
-        end: period.endTime,
+        startTimeMs: period.startTimeMs,
+        endTimeMs: period.endTimeMs,
         days,
         isAdmin: period.isAdmin,
         timeZone
       });
-      start = period.endTime;
+      startTimeMs = period.endTimeMs;
     }
     if (sections.length === 0) {
       sections.push({
         type: 'empty',
-        start: startOfYear,
-        days: daysBetween(startOfYear, endOfYear)
+        areaId: area.id,
+        startTimeMs: startOfYearMs,
+        endTimeMs: endOfYearMs,
+        days: daysBetween(startOfYearMs, endOfYearMs)
       });
     }
     else {
       const lastSection = sections[sections.length - 1];
-      if (lastSection.end && lastSection.end !== endOfYear) {
-        const start = lastSection.end + dayMs;
-        const end = endOfYear;
+      if (lastSection.endTimeMs && lastSection.endTimeMs !== endOfYearMs) {
+        const startTimeMs = lastSection.endTimeMs + dayMs;
+        const endTimeMs = endOfYearMs;
         sections.push({
           type: 'empty',
-          days: daysBetween(start, end)
+          areaId: area.id,
+          startTimeMs,
+          endTimeMs,
+          days: daysBetween(startTimeMs, endTimeMs)
         });
       }
     }
     const sectionElements = sections.map(section => {
-      const { type, roleColour, start, days } = section;
+      const { type, roleColour, startTimeMs, days } = section;
 
       const width = `${days * 2}px`;
 
       if (type === 'empty') {
-        return <div key={start} className={classes.section} style={{ width }} />;
+        return (
+          <div 
+            key={startTimeMs} 
+            className={classes.section}
+            style={{ width }} />
+        );
       }
       return (
         <div 
-          key={start}
+          key={startTimeMs}
           className={`${classes.section} ${classes.filled} ${selectedPeriod && selectedPeriod.id === section.id ? classes.selectedPeriod : ''}`} 
           style={{ width, backgroundColor: `#${roleColour}` }}
           onClick={(e) => handlePeriodClick(e, section)} />
@@ -286,7 +296,7 @@ function Areas(props) {
       setAnchorEl={setPeriodEl}
       selectedPeriod={selectedPeriod}
       setSelectedPeriod={setSelectedPeriod}
-      checkOverlapping={checkOverlappingPeriod} />
+      otherPeriods={areas.find(a => a.id === selectedPeriod.areaId).periods.filter(p => p.id !== selectedPeriod.id)} />
   ) : null;
 
   return (
@@ -303,7 +313,7 @@ function Areas(props) {
         <Button 
           variant="contained" 
           color="secondary"
-          onClick={(e) => setButtonEl(e.currentTarget)}>Add area</Button>
+          onClick={() => setButtonOpen(true)}>Add areas</Button>
       </div>
       <div className={classes.months}>
         <div className={classes.areaName} />
@@ -311,13 +321,12 @@ function Areas(props) {
       </div>
       {areaBars}
       <AddArea
-        checkOverlapping={checkOverlapping}
-        handleAddArea={handleAddArea}
+        existingAreas={existingAreas}
+        handleAddAreas={handleAddAreas}
         roles={roles}
         locations={locations}
         open={buttonOpen}
-        anchorEl={buttonEl}
-        setAnchorEl={setButtonEl} />
+        setOpen={setButtonOpen} />
       {editPeriod}
     </div>
   );

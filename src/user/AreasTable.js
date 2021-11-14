@@ -45,7 +45,7 @@ const useStyles = makeStyles((theme) => ({
 function AreasTable(props) {
   const classes = useStyles();
 
-  const { userAreas, setUserAreas, open, setAnchorEl } = props;
+  const { userAreas, setUserAreas, open, setOpen } = props;
 
   const roleClass = open ? classes.disabledChip : '';
   const cellClass = open ? classes.disabledCell : '';
@@ -78,7 +78,7 @@ function AreasTable(props) {
         <Button 
           variant="contained"
           color="secondary"
-          onClick={(e) => setAnchorEl(e.currentTarget)}>Add areas</Button>
+          onClick={() => setOpen(true)}>Add areas</Button>
       </div>
       <TableContainer className={classes.table} component={Paper}>
         <Table aria-label="areas table">
