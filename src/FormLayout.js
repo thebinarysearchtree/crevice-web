@@ -60,9 +60,10 @@ const useStyles = makeStyles((theme) => ({
     backgroundColor: 'white'
   },
   appBar: {
-    backgroundColor: theme.palette.grey[600],
+    backgroundColor: 'white',
     boxShadow: 'none',
-    zIndex: theme.zIndex.drawer + 1
+    zIndex: theme.zIndex.drawer + 1,
+    borderBottom: `1px solid ${theme.palette.divider}`
   },
   titleContainer: {
     display: 'flex',
@@ -70,7 +71,7 @@ const useStyles = makeStyles((theme) => ({
   },
   title: {
     fontWeight: 600,
-    color: 'white',
+    color: 'black',
     marginBottom: '2px'
   },
   link: {
@@ -93,11 +94,11 @@ function FormLayout(props) {
 
   const backButton = backTo ? (
     <IconButton className={classes.backButton} component={RouterLink} to={backTo}>
-      <ClearIcon htmlColor="white" />
+      <ClearIcon color="action" />
     </IconButton>
   ) : (
     <IconButton className={classes.backButton} onClick={onClose}>
-      <ClearIcon htmlColor="white" />
+      <ClearIcon color="action" />
     </IconButton>
   );
 

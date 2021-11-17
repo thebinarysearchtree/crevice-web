@@ -15,9 +15,10 @@ const drawerWidth = 240;
 
 const useStyles = makeStyles((theme) => ({
   root: {
-    backgroundColor: theme.palette.grey[600],
+    backgroundColor: 'white',
     boxShadow: 'none',
-    zIndex: theme.zIndex.drawer + 1
+    zIndex: theme.zIndex.drawer + 1,
+    borderBottom: `1px solid ${theme.palette.divider}`
   },
   grow: {
     flexGrow: 1
@@ -30,7 +31,7 @@ const useStyles = makeStyles((theme) => ({
   },
   appName: {
     fontWeight: 600,
-    color: 'white'
+    color: 'black'
   },
   link: {
     textDecoration: 'none'
@@ -84,7 +85,7 @@ function AppBar() {
         <Toolbar>
           <div className={classes.logoSection}>
             <Link to="/" className={classes.link}>
-              <Typography variant="h5" className={classes.appName}>Crevice</Typography>
+              <Typography variant="h5" className={classes.appName}>Teamshift</Typography>
             </Link>
           </div>
           <div className={classes.grow} />
