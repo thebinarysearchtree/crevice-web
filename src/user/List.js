@@ -1,27 +1,19 @@
 import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableContainer from '@material-ui/core/TableContainer';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
 import styles from '../styles/list';
 import SearchBox from '../common/SearchBox';
-import TableFooter from '@material-ui/core/TableFooter';
-import TablePagination from '@material-ui/core/TablePagination';
 import useFetch from '../hooks/useFetch';
 import Progress from '../common/Progress';
 import { Link as RouterLink } from 'react-router-dom';
-import TableFilterCell from '../common/TableFilterCell';
 import RoleChip from '../common/RoleChip';
-import MorePopover from '../common/MorePopover';
 import Button from '@material-ui/core/Button';
 import Chip from '@material-ui/core/Chip';
 import Avatar from '../common/Avatar';
 import useParamState from '../hooks/useParamState';
 import useSyncParams from '../hooks/useSyncParams';
+import Typography from '@material-ui/core/Typography';
+import Divider from '@material-ui/core/Divider';
 
 const useStyles = makeStyles((theme) => ({
   ...styles(theme),
@@ -37,6 +29,34 @@ const useStyles = makeStyles((theme) => ({
   },
   avatarCell: {
     width: '64px'
+  },
+  users: {
+    display: 'flex',
+    flexDirection: 'column'
+  },
+  user: {
+    display: 'flex',
+    padding: theme.spacing(2)
+  },
+  avatar: {
+    marginRight: theme.spacing(1)
+  },
+  userDetails: {
+    display: 'flex',
+    flexDirection: 'column',
+    width: '200px'
+  },
+  role: {
+    marginRight: theme.spacing(1)
+  },
+  areas: {
+    color: theme.palette.text.secondary
+  },
+  booked: {
+    display: 'flex',
+    flex: 1,
+    justifyContent: 'flex-end',
+    color: theme.palette.text.secondary
   }
 }));
 
@@ -128,25 +148,26 @@ function List() {
     return <Progress loading={loading} />;
   }
   
-  const tableRows = users.map(u => {
-    const role = u.roles[0];
+  const tableRows = users.map((u, i) => {
     const url = `/users/${u.id}`;
+    const roles = u.roles.map(role => {
+      return <RoleChip className={classes.role} size="small" label={role.name} colour={role.colour} />;
+    });
     return (
-      <TableRow key={u.id}>
-          <TableCell className={classes.iconCell}>
-            <Avatar className={classes.avatar} user={u} size="medium" />
-          </TableCell>
-          <TableCell className={classes.nameCell} component="th" scope="row">
+      <React.Fragment>
+        <div key={u.id} className={classes.user}>
+          <Avatar className={classes.avatar} user={u} />
+          <div className={classes.userDetails}>
             <RouterLink 
               className={classes.link} 
               to={url}>{u.name}</RouterLink>
-          </TableCell>
-          <TableCell align="left" className={classes.iconCell}><RoleChip size="small" label={role.name} colour={role.colour} /></TableCell>
-          <TableCell align="left"><MorePopover items={u.areaNames} /></TableCell>
-          <TableCell align="right">{u.booked}</TableCell>
-          <TableCell align="right">{u.attended}</TableCell>
-          <TableCell align="right">{u.attendedTime}</TableCell>
-      </TableRow>
+            <span className={classes.areas}>{u.areaNames[0]}</span>
+          </div>
+          {roles}
+          <div className={classes.booked}>{`booked ${u.booked} attended ${u.attended} attended time ${u.attendedTime}`}</div>
+        </div>
+        {i === users.length - 1 ? null : <Divider />}
+      </React.Fragment>
     );
   });
 
@@ -186,43 +207,7 @@ function List() {
             component={RouterLink} 
             to="/users/inviteSingle">Invite user</Button>
         </div>
-        <TableContainer component={Paper}>
-          <Table className={classes.table} aria-label="areas table">
-            <TableHead>
-              <TableRow>
-                <TableCell className={classes.avatarCell}></TableCell>
-                <TableCell className={classes.nameCell}>Name</TableCell>
-                <TableFilterCell
-                  menuId="role-menu"
-                  items={roles}
-                  selectedItemId={roleId}
-                  filter={handleRoleChange}>Roles</TableFilterCell>
-                <TableFilterCell
-                  menuId="area-menu"
-                  items={areas}
-                  selectedItemId={areaId}
-                  filter={handleAreaChange}>Areas</TableFilterCell>
-                <TableCell align="right">Booked</TableCell>
-                <TableCell align="right">Attended</TableCell>
-                <TableCell align="right">Attended Time</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {tableRows}
-            </TableBody>
-            <TableFooter>
-              <TableRow>
-                <TablePagination
-                  rowsPerPageOptions={[]}
-                  colSpan={8}
-                  count={count ? count : 0}
-                  rowsPerPage={10}
-                  page={page}
-                  onPageChange={handlePageChange} />
-              </TableRow>
-            </TableFooter>
-          </Table>
-        </TableContainer>
+        <Paper className={classes.users}>{tableRows}</Paper>
       </div>
     </div>
   );

@@ -34,18 +34,18 @@ function MorePopover(props) {
 
   const open = Boolean(anchorEl);
 
-  const { items } = props;
+  const { className, items } = props;
 
   if (items.length === 0) {
     return null;
   }
   if (items.length === 1) {
-    return items[0];
+    return <span className={className}>{items[0]}</span>;
   }
   const listItems = items.slice(1).map(item => <li key={item} className={classes.item}>{item}</li>);
   return (
     <React.Fragment>
-      <span>{items[0]} and </span>
+      <span className={className}>{items[0]} and </span>
       <Link 
         className={classes.link} 
         to="#"
