@@ -7,8 +7,6 @@ import InputAdornment from '@material-ui/core/InputAdornment';
 import ColourGrid from '../common/ColourGrid';
 import { useClient } from '../auth';
 import FormLayout from '../FormLayout';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import Checkbox from '@material-ui/core/Checkbox';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -36,10 +34,6 @@ const useStyles = makeStyles((theme) => ({
   preview: {
     width: '15px',
     height: '15px'
-  },
-  settings: {
-    marginTop: theme.spacing(3),
-    marginBottom: theme.spacing(1)
   }
 }));
 
@@ -50,7 +44,6 @@ function Detail(props) {
   const [colour, setColour] = useState('');
   const [cancelBeforeHours, setCancelBeforeHours] = useState(1);
   const [bookBeforeHours, setBookBeforeHours] = useState(1);
-  const [canBookAndCancel, setCanBookAndCancel] = useState(true);
   const [changedCount, setChangedCount] = useState(0);
 
   const hasChanged = changedCount > 1;
@@ -69,22 +62,20 @@ function Detail(props) {
         name, 
         colour, 
         cancelBeforeMinutes, 
-        bookBeforeMinutes, 
-        canBookAndCancel 
+        bookBeforeMinutes
       } = selectedRole;
       
       setName(name);
       setColour(colour);
       setCancelBeforeHours(cancelBeforeMinutes / 60);
       setBookBeforeHours(bookBeforeMinutes / 60);
-      setCanBookAndCancel(canBookAndCancel);
       setChangedCount(0);
     }
   }, [selectedRole]);
 
   useEffect(() => {
     setChangedCount(count => count + 1);
-  }, [name, colour, cancelBeforeHours, bookBeforeHours, canBookAndCancel]);
+  }, [name, colour, cancelBeforeHours, bookBeforeHours]);
 
   const handleClose = () => {
     setSelectedRole(null);
@@ -99,8 +90,7 @@ function Detail(props) {
     name, 
     colour,
     cancelBeforeMinutes: cancelBeforeHours * 60,
-    bookBeforeMinutes: bookBeforeHours * 60,
-    canBookAndCancel
+    bookBeforeMinutes: bookBeforeHours * 60
   };
 
   const isUpdate = role.id !== -1;
@@ -159,10 +149,6 @@ function Detail(props) {
               error={Boolean(error)}
               helperText={error ? 'Invalid colour' : ''} />
             <ColourGrid selectedColour={colour} onClick={(c) => setColour(c)} />
-            <FormControlLabel
-              className={classes.settings}
-              control={<Checkbox checked={canBookAndCancel} onChange={(e) => setCanBookAndCancel(e.target.checked)} />}
-              label="Can book and cancel their own shifts?" />
             <TextField
               className={classes.spacing}
               variant="outlined"
@@ -173,7 +159,6 @@ function Detail(props) {
               InputProps={{ className: classes.input, endAdornment: <InputAdornment>hours</InputAdornment> }}
               error={cancelBeforeHours < 0}
               helperText={cancelBeforeHours < 0 ? 'Must be a non-negative number' : ''}
-              disabled={!canBookAndCancel}
               value={cancelBeforeHours}
               onChange={(e) => setCancelBeforeHours(e.target.value)} />
             <TextField
@@ -185,7 +170,6 @@ function Detail(props) {
               InputProps={{ className: classes.input, endAdornment: <InputAdornment>hours</InputAdornment> }}
               error={bookBeforeHours < 0}
               helperText={bookBeforeHours < 0 ? 'Must be a non-negative number' : ''}
-              disabled={!canBookAndCancel}
               value={bookBeforeHours}
               onChange={(e) => setBookBeforeHours(e.target.value)} />
             <div className={classes.buttons}>

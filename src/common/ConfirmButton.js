@@ -1,18 +1,24 @@
 import React, { useState } from 'react';
+import { makeStyles } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
-import IconButton from '@material-ui/core/IconButton';
-import DeleteIcon from '@material-ui/icons/Delete';
-import Tooltip from '@material-ui/core/Tooltip';
+
+const useStyles = makeStyles((theme) => ({
+  root: {
+    cursor: 'pointer'
+  }
+}));
 
 function ConfirmButton(props) {
   const [open, setOpen] = useState(false);
 
-  const { title, content, onClick, className } = props;
+  const classes = useStyles();
+
+  const { title, content, onClick } = props;
 
   const handleButtonClick = (e) => {
     setOpen(false);
@@ -21,11 +27,7 @@ function ConfirmButton(props) {
 
   return (
     <React.Fragment>
-      <Tooltip title="Delete">
-        <IconButton className={className} onClick={() => setOpen(true)}>
-          <DeleteIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
+      <span className={classes.root} onClick={() => setOpen(true)}>delete</span>
       <Dialog
         open={open}
         onClose={() => setOpen(false)}

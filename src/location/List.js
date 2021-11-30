@@ -2,30 +2,51 @@ import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableContainer from '@material-ui/core/TableContainer';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
 import styles from '../styles/list';
 import Detail from './Detail';
 import ConfirmButton from '../common/ConfirmButton';
 import Progress from '../common/Progress';
-import TableFooter from '@material-ui/core/TableFooter';
-import TablePagination from '@material-ui/core/TablePagination';
 import Link from '@material-ui/core/Link';
 import { Link as RouterLink } from 'react-router-dom';
 import useFetch from '../hooks/useFetch';
 import { useClient } from '../auth';
-import EditIcon from '@material-ui/icons/Edit';
-import IconButton from '@material-ui/core/IconButton';
-import Tooltip from '@material-ui/core/Tooltip';
+import PageButtons from '../common/PageButtons';
+import Divider from '@material-ui/core/Divider';
 
-const useStyles = makeStyles(styles);
+const useStyles = makeStyles((theme) => ({
+  ...styles(theme),
+  locations: {
+    display: 'flex',
+    flexDirection: 'column'
+  },
+  location: {
+    display: 'flex',
+    padding: theme.spacing(2),
+    justifyContent: 'space-between'
+  },
+  locationDetails: {
+    display: 'flex',
+    flexDirection: 'column',
+    flex: 1,
+    marginRight: theme.spacing(1),
+    alignItems: 'flex-start'
+  },
+  count: {
+    flex: 1,
+    marginRight: theme.spacing(1)
+  },
+  timeZone: {
+    color: theme.palette.text.secondary
+  },
+  address: {
+    flex: 2,
+    color: theme.palette.text.secondary,
+    marginRight: theme.spacing(1)
+  }
+}));
 
 function List() {
-  const [locations, setLocations] = useState(null);
+  const [locations, setLocations] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [page, setPage] = useState(0);
 
@@ -46,10 +67,6 @@ function List() {
     });
   }
 
-  const handlePageChange = (e, newPage) => {
-    setPage(newPage);
-  }
-
   const deleteLocation = async (locationId) => {
     await client.postMutation({
       url: '/locations/remove',
@@ -67,33 +84,31 @@ function List() {
     return <Progress loading={loading} />;
   }
 
-  const tableRows = locations.slice(sliceStart, sliceEnd).map(l => {
-    const areaCount = l.areaCount === 0 ? (
-      <span>{l.areaCount}</span>
+  const currentLocations = locations.slice(sliceStart, sliceEnd);
+
+  const locationItems = currentLocations.map((location, i) => {
+    const { id, name, timeZone, address, areaCount } = location;
+    const count = areaCount === 0 ? (
+      <span>{areaCount} areas</span>
     ) : (
-      <Link to={`/areas?locationId=${l.id}`} component={RouterLink}>{l.areaCount}</Link>
+      <Link to={`/areas?locationId=${id}`} component={RouterLink}>{areaCount} areas</Link>
     );
     return (
-      <TableRow key={l.id}>
-          <TableCell component="th" scope="row">
-            <span className={classes.clickableName}>{l.name}</span>
-          </TableCell>
-          <TableCell align="left">{l.timeZone.split('/')[1].replace('_', ' ')}</TableCell>
-          <TableCell align="right">
-            {areaCount}
-          </TableCell>
-          <TableCell align="right" className={classes.iconCell}>
-            <Tooltip title="Edit">
-              <IconButton onClick={() => setSelectedLocation({...l})}>
-                <EditIcon color="action" fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <ConfirmButton
-              title={`Delete ${l.name}?`}
+      <React.Fragment key={id}>
+        <div className={classes.location}>
+          <div className={classes.locationDetails}>
+            <span className={classes.name} onClick={() => setSelectedLocation({...location})}>{name}</span>
+            <span className={classes.timeZone}>{timeZone}</span>
+          </div>
+          <div className={classes.count}>{count}</div>
+          <div className={classes.address}>{address}</div>
+          <ConfirmButton
+              title={`Delete ${name}?`}
               content="Make sure this location has no areas before deleting it."
-              onClick={() => deleteLocation(l.id)} />
-          </TableCell>
-      </TableRow>
+              onClick={() => deleteLocation(id)} />
+        </div>
+        {i === currentLocations.length - 1 ? null : <Divider />}
+      </React.Fragment>
     );
   });
 
@@ -107,32 +122,16 @@ function List() {
             color="secondary"
             onClick={handleNewClick}>New location</Button>
         </div>
-        <TableContainer component={Paper}>
-          <Table className={classes.table} aria-label="locations table">
-            <TableHead>
-              <TableRow>
-                <TableCell>Name</TableCell>
-                <TableCell align="left">Time zone</TableCell>
-                <TableCell align="right">Areas</TableCell>
-                <TableCell align="right"></TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {tableRows}
-            </TableBody>
-            <TableFooter>
-              <TableRow>
-                <TablePagination
-                  rowsPerPageOptions={[]}
-                  colSpan={4}
-                  count={locations.length}
-                  rowsPerPage={rowsPerPage}
-                  page={page}
-                  onPageChange={handlePageChange} />
-              </TableRow>
-            </TableFooter>
-          </Table>
-        </TableContainer>
+        <Paper className={classes.locations}>
+          {locationItems}
+        </Paper>
+        <PageButtons 
+          onBack={() => setPage(page => page - 1)}
+          onForward={() => setPage(page => page + 1)}
+          onBackToStart={() => setPage(0)}
+          page={page}
+          count={locations.length}
+          itemsPerPage={10} />
         <Detail 
           selectedLocation={selectedLocation}
           setSelectedLocation={setSelectedLocation} />

@@ -6,7 +6,7 @@ const useStyles = makeStyles((theme) => ({
     display: 'flex',
     justifyContent: 'space-between',
     flexWrap: 'wrap',
-    marginBottom: '10px'
+    marginBottom: theme.spacing(3)
   },
   colour: {
     width: '20px',

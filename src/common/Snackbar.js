@@ -18,6 +18,7 @@ function Snackbar(props) {
       autoHideDuration={6000}
       onClose={handleClose}
       message={message}
+      disableWindowBlurListener
       action={
         <IconButton
           size="small"

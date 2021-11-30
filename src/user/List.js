@@ -14,6 +14,9 @@ import useParamState from '../hooks/useParamState';
 import useSyncParams from '../hooks/useSyncParams';
 import Typography from '@material-ui/core/Typography';
 import Divider from '@material-ui/core/Divider';
+import PageButtons from '../common/PageButtons';
+import ConfirmButton from '../common/ConfirmButton';
+import { useClient } from '../auth';
 
 const useStyles = makeStyles((theme) => ({
   ...styles(theme),
@@ -36,7 +39,8 @@ const useStyles = makeStyles((theme) => ({
   },
   user: {
     display: 'flex',
-    padding: theme.spacing(2)
+    padding: theme.spacing(2),
+    justifyContent: 'space-between'
   },
   avatar: {
     marginRight: theme.spacing(1)
@@ -44,19 +48,25 @@ const useStyles = makeStyles((theme) => ({
   userDetails: {
     display: 'flex',
     flexDirection: 'column',
-    width: '200px'
+    flex: 1,
+    marginRight: theme.spacing(1),
+    alignItems: 'flex-start'
   },
   role: {
+    marginRight: theme.spacing(1),
+    marginBottom: theme.spacing(1)
+  },
+  roles: {
+    flex: 1,
     marginRight: theme.spacing(1)
   },
   areas: {
     color: theme.palette.text.secondary
   },
   booked: {
-    display: 'flex',
-    flex: 1,
-    justifyContent: 'flex-end',
-    color: theme.palette.text.secondary
+    flex: 2,
+    color: theme.palette.text.secondary,
+    marginRight: theme.spacing(1)
   }
 }));
 
@@ -97,6 +107,7 @@ function List() {
   };
 
   const classes = useStyles();
+  const client = useClient();
 
   const usersHandler = (users) => {
     setUsers(users);
@@ -120,10 +131,6 @@ function List() {
     setPage(0);
   }
 
-  const handlePageChange = (e, page) => {
-    setPage(page);
-  }
-
   const handleRoleChange = (roleId) => {
     setRoleId(roleId);
     setPage(0);
@@ -132,6 +139,14 @@ function List() {
   const handleAreaChange = (areaId) => {
     setAreaId(areaId);
     setPage(0);
+  }
+
+  const deleteUser = async (userId) => {
+    await client.postMutation({
+      url: '/users/remove',
+      data: { userId },
+      message: 'User deleted'
+    });
   }
 
   useSyncParams(true, [searchTermTranslator, roleTranslator, areaTranslator, pageTranslator]);
@@ -148,23 +163,60 @@ function List() {
     return <Progress loading={loading} />;
   }
   
-  const tableRows = users.map((u, i) => {
-    const url = `/users/${u.id}`;
-    const roles = u.roles.map(role => {
-      return <RoleChip className={classes.role} size="small" label={role.name} colour={role.colour} />;
+  const userItems = users.map((user, i) => {
+    const { 
+      id, 
+      name, 
+      areaNames, 
+      roles, 
+      booked, 
+      attended, 
+      attendedTime 
+    } = user;
+    const url = `/users/${id}`;
+    const roleChips = roles.map(role => {
+      const { id, name, colour } = role;
+      return (
+        <RoleChip 
+          key={id} 
+          className={classes.role} 
+          size="small" 
+          label={name} 
+          colour={colour} />
+      );
     });
+    let bookedText;
+    if (booked === 0) {
+      bookedText = 'No shifts booked';
+    }
+    else if (booked === attended) {
+      if (booked === 1) {
+        bookedText = '1 shift booked and attended';
+      }
+      else {
+        bookedText = `${booked} shifts booked and attended`;
+      }
+    }
+    else {
+      const shiftName = booked === 1 ? 'shift' : 'shifts';
+      bookedText = `${booked} ${shiftName} booked and ${attended} attended`;
+    }
     return (
-      <React.Fragment>
-        <div key={u.id} className={classes.user}>
-          <Avatar className={classes.avatar} user={u} />
+      <React.Fragment key={id}>
+        <div className={classes.user}>
+          <Avatar className={classes.avatar} user={user} />
           <div className={classes.userDetails}>
             <RouterLink 
               className={classes.link} 
-              to={url}>{u.name}</RouterLink>
-            <span className={classes.areas}>{u.areaNames[0]}</span>
+              to={url}>{name}</RouterLink>
+            <span className={classes.areas}>{areaNames[0]}</span>
           </div>
-          {roles}
-          <div className={classes.booked}>{`booked ${u.booked} attended ${u.attended} attended time ${u.attendedTime}`}</div>
+          <div className={classes.roles}>{roleChips}</div>
+          <div className={classes.booked}>{bookedText}</div>
+          <ConfirmButton
+            title={`Delete ${name}?`}
+            content="All information related to this user will be deleted."
+            onClick={() => deleteUser(id)} />
         </div>
         {i === users.length - 1 ? null : <Divider />}
       </React.Fragment>
@@ -207,7 +259,16 @@ function List() {
             component={RouterLink} 
             to="/users/inviteSingle">Invite user</Button>
         </div>
-        <Paper className={classes.users}>{tableRows}</Paper>
+        <Paper className={classes.users}>
+          {userItems}
+        </Paper>
+        <PageButtons 
+          onBack={() => setPage(page => page - 1)}
+          onForward={() => setPage(page => page + 1)}
+          onBackToStart={() => setPage(0)}
+          page={page}
+          count={count}
+          itemsPerPage={10} />
       </div>
     </div>
   );

@@ -20,8 +20,43 @@ import EditField from './EditField';
 import { useClient } from '../auth';
 import useFetch from '../hooks/useFetch';
 import EditIcon from '@material-ui/icons/Edit';
+import PageButtons from '../common/PageButtons';
+import Divider from '@material-ui/core/Divider';
 
-const useStyles = makeStyles(styles);
+const useStyles = makeStyles((theme) => ({
+  ...styles(theme),
+  fields: {
+    display: 'flex',
+    flexDirection: 'column'
+  },
+  field: {
+    display: 'flex',
+    padding: theme.spacing(2),
+    justifyContent: 'space-between'
+  },
+  fieldDetails: {
+    display: 'flex',
+    flexDirection: 'column',
+    flex: 1,
+    marginRight: theme.spacing(1),
+    alignItems: 'flex-start'
+  },
+  count: {
+    flex: 1,
+    marginRight: theme.spacing(1)
+  },
+  fieldType: {
+    color: theme.palette.text.secondary
+  },
+  items: {
+    flex: 2,
+    color: theme.palette.text.secondary,
+    marginRight: theme.spacing(1)
+  },
+  iconButton: {
+    marginRight: theme.spacing(1)
+  }
+}));
 
 function List() {
   const [fields, setFields] = useState(null);
@@ -80,33 +115,43 @@ function List() {
     return <Progress loading={loading} />;
   }
 
-  const tableRows = fields.slice(sliceStart, sliceEnd).map((f, i) => {
+  const currentFields = fields.slice(sliceStart, sliceEnd);
+
+  const fieldItems = currentFields.map((field, i) => {
+    const { id, name, fieldType, selectItems, userCount } = field;
+    const items = selectItems.map(i => i.name).join(' / ');
+    let countText;
+    if (userCount === 0) {
+      countText = 'No users';
+    }
+    else if (userCount === 1) {
+      countText = '1 user';
+    }
+    else {
+      countText = `${userCount} users`;
+    }
     return (
-      <TableRow key={f.id}>
-        <TableCell component="th" scope="row">
-          <span className={classes.name}>{f.name}</span>
-        </TableCell>
-        <TableCell align="right">{f.fieldType}</TableCell>
-        <TableCell align="right">{f.userCount}</TableCell>
-        <TableCell align="right" className={classes.iconCell}>
-          <Tooltip title="Move up">
-            <IconButton
-              onClick={() => moveUp(i + sliceStart)}
-              disabled={processing}>
-                <ArrowUpwardIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Edit">
-            <IconButton onClick={() => setSelectedField({...f})}>
-              <EditIcon color="action" fontSize="small" />
-            </IconButton>
-          </Tooltip>
+      <React.Fragment key={id}>
+        <div className={classes.field}>
+          <IconButton
+            className={classes.iconButton}
+            onClick={() => moveUp(i + sliceStart)}
+            disabled={processing}>
+              <ArrowUpwardIcon fontSize="small" />
+          </IconButton>
+          <div className={classes.fieldDetails}>
+            <span className={classes.name} onClick={() => setSelectedField({...field})}>{name}</span>
+            <span className={classes.fieldType}>{fieldType}</span>
+          </div>
+          <div className={classes.count}>{countText}</div>
+          <div className={classes.items}>{items}</div>
           <ConfirmButton
-            title={`Delete the ${f.name} field?`}
+            title={`Delete the ${name} field?`}
             content="This field will no long be visible on user's profiles or when creating new users."
-            onClick={() => deleteField(f)} />
-        </TableCell>
-      </TableRow>
+            onClick={() => deleteField(field)} />
+        </div>
+        {i === currentFields.length - 1 ? null : <Divider />}
+      </React.Fragment>
     );
   });
 
@@ -120,32 +165,16 @@ function List() {
             color="secondary"
             onClick={handleNewClick}>New field</Button>
         </div>
-        <TableContainer component={Paper}>
-          <Table className={classes.table} aria-label="fields table">
-            <TableHead>
-              <TableRow>
-                <TableCell>Name</TableCell>
-                <TableCell align="right">Type</TableCell>
-                <TableCell align="right">Used by</TableCell>
-                <TableCell align="right"></TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {tableRows}
-            </TableBody>
-            <TableFooter>
-              <TableRow>
-                <TablePagination
-                  rowsPerPageOptions={[]}
-                  colSpan={5}
-                  count={fields.length}
-                  rowsPerPage={rowsPerPage}
-                  page={page}
-                  onPageChange={handlePageChange} />
-              </TableRow>
-            </TableFooter>
-          </Table>
-        </TableContainer>
+        <Paper className={classes.fields}>
+          {fieldItems}
+        </Paper>
+        <PageButtons 
+          onBack={() => setPage(page => page - 1)}
+          onForward={() => setPage(page => page + 1)}
+          onBackToStart={() => setPage(0)}
+          page={page}
+          count={currentFields.length}
+          itemsPerPage={10} />
         <EditField 
           selectedField={selectedField}
           setSelectedField={setSelectedField} />

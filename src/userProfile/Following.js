@@ -2,12 +2,6 @@ import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableContainer from '@material-ui/core/TableContainer';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
 import styles from '../styles/list';
 import useFetch from '../hooks/useFetch';
 import Progress from '../common/Progress';
@@ -21,6 +15,7 @@ import { useClient } from '../auth';
 import { makeReviver, dateParser } from '../utils/data';
 import UserSearch from '../common/UserSearch';
 import Notes from './Notes';
+import Divider from '@material-ui/core/Divider';
 
 const useStyles = makeStyles((theme) => ({
   ...styles(theme),
@@ -58,13 +53,60 @@ const useStyles = makeStyles((theme) => ({
   notes: {
     display: 'flex',
     alignItems: 'center'
+  },
+  noUsers: {
+    display: 'flex',
+    height: '75px',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  users: {
+    display: 'flex',
+    flexDirection: 'column'
+  },
+  user: {
+    display: 'flex',
+    paddingLeft: theme.spacing(2),
+    paddingRight: theme.spacing(2),
+    alignItems: 'center',
+    height: '75px'
+  },
+  avatar: {
+    marginRight: theme.spacing(1)
+  },
+  userDetails: {
+    display: 'flex',
+    flexDirection: 'column',
+    flex: 1,
+    marginRight: theme.spacing(1)
+  },
+  role: {
+    marginRight: theme.spacing(1),
+    marginBottom: theme.spacing(1)
+  },
+  roles: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    flex: 1,
+    marginRight: theme.spacing(1)
+  },
+  areas: {
+    color: theme.palette.text.secondary
+  },
+  booked: {
+    flex: 1.5,
+    color: theme.palette.text.secondary,
+    marginRight: theme.spacing(1)
+  },
+  title: {
+    marginLeft: theme.spacing(2)
   }
 }));
 
 const today = new Date();
 today.setHours(0, 0, 0, 0);
 
-const formatter = new Intl.DateTimeFormat('default', { weekday: 'long' });
+const formatter = new Intl.DateTimeFormat('default', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 const reviver = makeReviver(dateParser);
 
 function Following(props) {
@@ -143,7 +185,7 @@ function Following(props) {
     return <Progress loading={loading} />;
   }
 
-  const tableRows = users.map((user, i) => {
+  const userItems = users.map((user, i) => {
     const { id, name, shift } = user;
     const url = `/users/${id}`;
 
@@ -159,35 +201,46 @@ function Following(props) {
     }
 
     return (
-      <TableRow key={id}>
-          <TableCell className={classes.iconCell}>
-            <Avatar className={classes.avatar} user={user} size="medium" />
-          </TableCell>
-          <TableCell className={classes.nameCell} component="th" scope="row">
+      <React.Fragment key={id}>
+        <div className={classes.user}>
+          <Avatar className={classes.avatar} user={user} size="medium" />
+          <div className={classes.userDetails}>
             <RouterLink 
               className={classes.link} 
               to={url}>{name}</RouterLink>
-          </TableCell>
-          <TableCell align="right">{shiftElement}</TableCell>
-          <TableCell className={classes.iconCell} align="left">
-            <Notes user={user} onSave={handleSaveNotes} />
-          </TableCell>
-          <TableCell align="right">
-            <Button 
-              variant="contained" 
-              color="primary" 
-              size="small" 
-              onClick={() => handleUnfollow(id)}>Unfollow</Button>
-          </TableCell>
-      </TableRow>
+          </div>
+          <div className={classes.roles}>{shiftElement}</div>
+          <div className={classes.booked}><Notes user={user} onSave={handleSaveNotes} /></div>
+          <Button 
+            variant="contained" 
+            color="primary" 
+            size="small" 
+            onClick={() => handleUnfollow(id)}>Unfollow</Button>
+        </div>
+        {i === users.length - 1 ? null : <Divider />}
+      </React.Fragment>
     );
   });
+
+  const followersList = (
+    <Paper className={classes.users}>
+      {userItems}
+    </Paper>
+  );
+
+  const noUsers = (
+    <Paper className={classes.noUsers}>
+      <Typography variant="body1">No users</Typography>
+    </Paper>
+  );
+
+  const content = users.length === 0 ? noUsers : followersList;
 
   return (
     <div className={classes.root}>
       <div className={classes.content}>
         <div className={classes.toolbar}>
-          <Typography variant="h4">{title}</Typography>
+          <Typography className={classes.title} variant="body1">{title}</Typography>
           <div className={classes.grow} />
           <UserSearch
             className={classes.search}
@@ -199,22 +252,7 @@ function Following(props) {
             onToday={() => setDate(today)}
             onForward={() => setDate(date => addDays(date, 1))} />
         </div>
-        <TableContainer component={Paper}>
-          <Table className={classes.table} aria-label="areas table">
-            <TableHead>
-              <TableRow>
-                <TableCell className={classes.avatarCell}></TableCell>
-                <TableCell className={classes.nameCell}>Name</TableCell>
-                <TableCell className={classes.shiftCell} align="right">Shift</TableCell>
-                <TableCell align="left">Notes</TableCell>
-                <TableCell className={classes.buttonCell} align="right"></TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {tableRows}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        {content}
       </div>
     </div>
   );

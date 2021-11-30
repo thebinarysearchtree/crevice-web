@@ -2,37 +2,67 @@ import React, { useEffect, useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableContainer from '@material-ui/core/TableContainer';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
 import styles from '../styles/list';
 import Detail from './Detail';
 import ConfirmButton from '../common/ConfirmButton';
 import SearchBox from '../common/SearchBox';
-import TableFooter from '@material-ui/core/TableFooter';
-import TablePagination from '@material-ui/core/TablePagination';
 import useFetch from '../hooks/useFetch';
 import Progress from '../common/Progress';
-import TableSortCell from '../common/TableSortCell';
-import TableFilterCell from '../common/TableFilterCell';
 import Link from '@material-ui/core/Link';
 import { Link as RouterLink } from 'react-router-dom';
 import Avatar from '../common/Avatar';
 import useParamState from '../hooks/useParamState';
 import useSyncParams from '../hooks/useSyncParams';
 import { useClient } from '../auth';
-import EditIcon from '@material-ui/icons/Edit';
-import IconButton from '@material-ui/core/IconButton';
-import Tooltip from '@material-ui/core/Tooltip';
+import PageButtons from '../common/PageButtons';
+import Divider from '@material-ui/core/Divider';
+import InputLabel from '@material-ui/core/InputLabel';
+import MenuItem from '@material-ui/core/MenuItem';
+import FormControl from '@material-ui/core/FormControl';
+import Select from '@material-ui/core/Select';
 
 const useStyles = makeStyles((theme) => ({ 
   ...styles(theme),
   avatar: {
     marginRight: theme.spacing(1)
-  }
+  },
+  areas: {
+    display: 'flex',
+    flexDirection: 'column'
+  },
+  area: {
+    display: 'flex',
+    padding: theme.spacing(2),
+    justifyContent: 'space-between'
+  },
+  areaDetails: {
+    display: 'flex',
+    flexDirection: 'column',
+    flex: 1,
+    marginRight: theme.spacing(1),
+    alignItems: 'flex-start'
+  },
+  count: {
+    flex: 1,
+    marginRight: theme.spacing(1)
+  },
+  location: {
+    color: theme.palette.text.secondary
+  },
+  administrators: {
+    flex: 2,
+    marginRight: theme.spacing(1)
+  },
+  locationSelect: {
+    width: '200px',
+    marginRight: theme.spacing(2)
+  },
+  noAreas: {
+    display: 'flex',
+    height: '72px',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
 }));
 
 const rowsPerPage = 10;
@@ -146,8 +176,9 @@ function List() {
     return <Progress loading={loading} />;
   }
   
-  const tableRows = filteredAreas.map(a => {
-    const administrators = a.administrators.map(user => {
+  const areaItems = filteredAreas.map((area, i) => {
+    const { id, name, locationName, administrators, activeUserCount } = area;
+    const avatars = administrators.map(user => {
       return (
         <Avatar 
           key={user.id} 
@@ -157,35 +188,43 @@ function List() {
           tooltip />
       );
     });
-    const activeUserCount = a.userCount === 0 ? (
-      <span>{a.activeUserCount}</span>
+    const count = activeUserCount === 0 ? (
+      <span>{activeUserCount}</span>
     ) : (
-      <Link to={`/users?areaId=${a.id}`} component={RouterLink}>{a.activeUserCount}</Link>
+      <Link to={`/users?areaId=${id}`} component={RouterLink}>{activeUserCount} active users</Link>
     );
     return (
-      <TableRow key={a.id}>
-          <TableCell component="th" scope="row">
-            <span className={classes.name}>{a.name}</span>
-          </TableCell>
-          <TableCell align="left">{a.locationName}</TableCell>
-          <TableCell align="left" className={classes.iconCell}>{administrators}</TableCell>
-          <TableCell align="right">
-            {activeUserCount}
-          </TableCell>
-          <TableCell align="right" className={classes.iconCell}>
-            <Tooltip title="Edit">
-              <IconButton onClick={() => setSelectedArea({...a})}>
-                <EditIcon color="action" fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <ConfirmButton
-              title={`Delete ${a.name}?`}
+      <React.Fragment key={id}>
+        <div className={classes.area}>
+          <div className={classes.areaDetails}>
+            <span className={classes.name} onClick={() => setSelectedArea({...area})}>{name}</span>
+            <span className={classes.location}>{locationName}</span>
+          </div>
+          <div className={classes.count}>{count}</div>
+          <div className={classes.administrators}>{avatars}</div>
+          <ConfirmButton
+              title={`Delete ${name}?`}
               content="Make sure this areas has no users before deleting it."
-              onClick={() => deleteArea(a.id)} />
-          </TableCell>
-      </TableRow>
+              onClick={() => deleteArea(id)} />
+        </div>
+        {i === filteredAreas.length - 1 ? null : <Divider />}
+      </React.Fragment>
     );
   });
+
+  const menuItems = locations.map(l => <MenuItem key={l.id} value={l.id}>{l.name}</MenuItem>);
+
+  const noAreas = (
+    <Paper className={classes.noAreas}>No areas</Paper>
+  );
+
+  const areasList = (
+    <Paper className={classes.areas}>
+      {areaItems}
+    </Paper>
+  );
+
+  const content = filteredAreas.length === 0 ? noAreas : areasList;
 
   return (
     <div className={classes.root}>
@@ -195,51 +234,30 @@ function List() {
             placeholder="Search..."
             onChange={(e) => setSearchTerm(e.target.value)} />
           <div className={classes.grow} />
+          <FormControl className={classes.locationSelect}>
+            <InputLabel id="location">Location</InputLabel>
+            <Select
+              labelId="location"
+              label="Location"
+              value={locationId === -1 ? '' : locationId}
+              onChange={(e) => setLocationId(e.target.value)}>
+                <MenuItem key={-1} value={-1}>All</MenuItem>
+                {menuItems}
+            </Select>
+          </FormControl>
           <Button 
             variant="contained"
             color="secondary"
             onClick={handleNewClick}>New area</Button>
         </div>
-        <TableContainer component={Paper}>
-          <Table className={classes.table} aria-label="areas table">
-            <TableHead>
-              <TableRow>
-                <TableSortCell
-                  name="name"
-                  orderBy={orderBy}
-                  order={order}
-                  onClick={sortByName}>Name</TableSortCell>
-                <TableFilterCell
-                  menuId="location-menu"
-                  items={locations}
-                  selectedItemId={locationId}
-                  filter={(locationId) => setLocationId(locationId)}>Location</TableFilterCell>
-                <TableCell align="left">Administrators</TableCell>
-                <TableSortCell
-                  align="right"
-                  name="activeUserCount"
-                  orderBy={orderBy}
-                  order={order}
-                  onClick={sortByActiveUserCount}>Users</TableSortCell>
-                <TableCell align="right"></TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {tableRows}
-            </TableBody>
-            <TableFooter>
-              <TableRow>
-                <TablePagination
-                  rowsPerPageOptions={[]}
-                  colSpan={5}
-                  count={count}
-                  rowsPerPage={rowsPerPage}
-                  page={page}
-                  onPageChange={(e, page) => setPage(page)} />
-              </TableRow>
-            </TableFooter>
-          </Table>
-        </TableContainer>
+        {content}
+        <PageButtons 
+          onBack={() => setPage(page => page - 1)}
+          onForward={() => setPage(page => page + 1)}
+          onBackToStart={() => setPage(0)}
+          page={page}
+          count={filteredAreas.length}
+          itemsPerPage={10} />
         <Detail 
           selectedArea={selectedArea}
           setSelectedArea={setSelectedArea}

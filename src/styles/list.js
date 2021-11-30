@@ -46,10 +46,6 @@ const styles = (theme) => ({
   },
   name: {
     color: 'inherit',
-    fontWeight: 600
-  },
-  clickableName: {
-    color: 'inherit',
     fontWeight: 600,
     cursor: 'pointer'
   },
