@@ -157,7 +157,7 @@ function List() {
   const loading = useFetch([
     { url: '/users/find', handler: usersHandler, data: query, unstable: count === null },
     { url: '/roles/getSelectListItems', handler: rolesHandler },
-    { url: '/areas/getSelectListItems', handler: areasHandler }]);
+    { url: '/areas/getItemsAsAdmin', handler: areasHandler }]);
 
   if (loading) {
     return <Progress loading={loading} />;
